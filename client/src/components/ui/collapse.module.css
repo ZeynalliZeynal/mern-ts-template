@@ -1,0 +1,11 @@
+.collapse-group {
+  @apply border-b
+}
+
+.collapse-item {
+  @apply border-t
+}
+
+.text-wrapper {
+  @apply [var(--text-size, 1.5rem)] [var(--text-line-height, 2rem)] [var(--text-weight, 600)]
+}

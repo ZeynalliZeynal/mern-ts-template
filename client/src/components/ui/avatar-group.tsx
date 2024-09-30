@@ -13,7 +13,7 @@ export default function AvatarGroup({
   size,
   placeholder,
 }: AvatarGroupProps) {
-  if (!limit) return null;
+  if (limit === 0) return null;
   return (
     <div className="flex items-center">
       {members.map(

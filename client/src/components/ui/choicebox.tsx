@@ -34,12 +34,6 @@ const ChoiceboxContext = createContext<ChoiceboxConext<
   string | string[]
 > | null>(null);
 
-const useChoiceboxContext = () => {
-  const context = useContext(ChoiceboxContext);
-  if (!context) throw new Error("Context is outside of the provider");
-  return context;
-};
-
 export default function ChoiceboxGroup<T extends string | string[]>({
   children,
   direction = "row",
@@ -70,7 +64,7 @@ export default function ChoiceboxGroup<T extends string | string[]>({
       <div
         aria-multiselectable={type === "checkbox"}
         role="radiogroup"
-        className="flex flex-col gap-2"
+        className="flex flex-col gap-2 w-full"
       >
         {label && (
           <label tabIndex={-1} className="text-el">
@@ -78,9 +72,9 @@ export default function ChoiceboxGroup<T extends string | string[]>({
           </label>
         )}
         <ul
-          className={cn("flex items-stretch w-full gap-3", {
-            "flex-row": direction === "row",
-            "flex-col": direction === "col",
+          className={cn("items-stretch w-full gap-3", {
+            "grid grid-cols-1": direction === "row",
+            "grid grid-cols-2": direction === "col",
           })}
         >
           {children}
@@ -96,7 +90,10 @@ const ChoiceboxGroupItem = ({
   title,
   description,
 }: ChoiceboxItem) => {
-  const { selected, onChoose } = useChoiceboxContext();
+  const context = useContext(ChoiceboxContext);
+  if (!context) throw new Error("Context is outside of the provider");
+
+  const { selected, onChoose } = context;
 
   const handleChangeBetween: KeyboardEventHandler<HTMLLabelElement> = (
     event,

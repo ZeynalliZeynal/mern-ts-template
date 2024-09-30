@@ -7,6 +7,8 @@ import AvatarGroup from "@/components/ui/avatar-group.tsx";
 import Checkbox from "@/components/ui/checkbox.tsx";
 import { useState } from "react";
 import ChoiceboxGroup from "@/components/ui/choicebox.tsx";
+import Stack from "@/components/stack.tsx";
+import CollapseGroup, { Collapse } from "@/components/ui/collapse.tsx";
 
 const avatars = [
   {
@@ -42,71 +44,98 @@ export default function HomePage() {
 
   return (
     <article className="flex flex-col w-full items-center gap-4">
-      <Button size="sm">Button</Button>
-      <Button size="sm" primary prefix={<Spinner />} disabled>
-        Disabled button
-      </Button>
-      <Button size="sm" primary>
-        Primary button
-      </Button>
+      <Stack>
+        <Button size="sm">Button</Button>
+        <Button size="sm" primary prefix={<Spinner />} disabled>
+          Disabled button
+        </Button>
+        <Button size="sm" primary>
+          Primary button
+        </Button>
+      </Stack>
       <ThemeSwitcher />
       <Spinner size="md" />
-      <Badge size="md" icon={<ArrowDown />} style="purple-subtle">
-        Badge
-      </Badge>
-      <Badge size="md" style="green" icon={<ThumbsUpIcon />}>
-        Badge with icon
-      </Badge>
-      <AvatarGroup members={avatars} size={32} limit={4} />
-      <Checkbox
-        checked={checked}
-        onChange={() => setChecked((prevState) => !prevState)}
-      >
-        Checkbox
-      </Checkbox>
-      <Checkbox disabled>Disabled Checkbox</Checkbox>
-      <ChoiceboxGroup label="Radio group" value={choice} onChange={setChoice}>
-        <ChoiceboxGroup.Item value="free" title="Free" description="Free" />
-        <ChoiceboxGroup.Item
-          value="trial"
-          title="Pro trial"
-          description="Free for two weeks"
-        />
-        <ChoiceboxGroup.Item
-          value="pro"
-          title="Pro"
-          description="Get started now"
-        />
-        <ChoiceboxGroup.Item
-          value="beta"
-          title="Beta"
-          description="Will be available soon"
-        />
-      </ChoiceboxGroup>
-      <ChoiceboxGroup
-        label="Multiselect group"
-        value={choices}
-        onChange={setChoices}
-        type="checkbox"
-        direction="col"
-      >
-        <ChoiceboxGroup.Item value="free" title="Free" description="Free" />
-        <ChoiceboxGroup.Item
-          value="trial"
-          title="Pro trial"
-          description="Free for two weeks"
-        />
-        <ChoiceboxGroup.Item
-          value="pro"
-          title="Pro"
-          description="Get started now"
-        />
-        <ChoiceboxGroup.Item
-          value="beta"
-          title="Beta"
-          description="Will be available soon"
-        />
-      </ChoiceboxGroup>
+      <Stack>
+        <Badge size="md" icon={<ArrowDown />} style="purple-subtle">
+          Badge
+        </Badge>
+        <Badge size="md" style="green" icon={<ThumbsUpIcon />}>
+          Badge with icon
+        </Badge>
+      </Stack>
+      <Stack gap={4}>
+        <AvatarGroup members={avatars} size={32} limit={4} />
+        <AvatarGroup members={avatars} size={32} />
+      </Stack>
+      <Stack>
+        <CollapseGroup>
+          <Collapse title="Question A" size="sm">
+            Lorem ipsum dolor sit amet, consectetur adipisicing elit. Quas
+            repellat repudiandae voluptates. Alias eaque esse eum ex facilis
+            maxime neque non omnis praesentium, quae, quaerat quo unde? Ea fuga,
+            nulla!
+          </Collapse>
+          <Collapse title="Question B">
+            Lorem ipsum dolor sit amet, consectetur adipisicing elit. Quas
+            repellat repudiandae voluptates. Alias eaque esse eum ex facilis
+            maxime neque non omnis praesentium, quae, quaerat quo unde? Ea fuga,
+            nulla!
+          </Collapse>
+        </CollapseGroup>
+      </Stack>
+      <Stack>
+        <Checkbox
+          checked={checked}
+          onChange={() => setChecked((prevState) => !prevState)}
+        >
+          Checkbox
+        </Checkbox>
+        <Checkbox disabled>Disabled Checkbox</Checkbox>
+      </Stack>
+      <Stack>
+        <ChoiceboxGroup label="Radio group" value={choice} onChange={setChoice}>
+          <ChoiceboxGroup.Item value="free" title="Free" description="Free" />
+          <ChoiceboxGroup.Item
+            value="trial"
+            title="Pro trial"
+            description="Free for two weeks"
+          />
+          <ChoiceboxGroup.Item
+            value="pro"
+            title="Pro"
+            description="Get started now"
+          />
+          <ChoiceboxGroup.Item
+            value="beta"
+            title="Beta"
+            description="Will be available soon"
+          />
+        </ChoiceboxGroup>
+        <ChoiceboxGroup
+          label="Multiselect group"
+          value={choices}
+          onChange={setChoices}
+          type="checkbox"
+          direction="col"
+        >
+          <ChoiceboxGroup.Item value="free" title="Free" description="Free" />
+          <ChoiceboxGroup.Item
+            value="trial"
+            title="Pro trial"
+            description="Free for two weeks"
+          />
+          <ChoiceboxGroup.Item
+            value="pro"
+            title="Pro"
+            description="Get started now"
+          />
+          <ChoiceboxGroup.Item
+            value="beta"
+            title="Beta"
+            description="Will be available soon"
+          />
+        </ChoiceboxGroup>
+      </Stack>
     </article>
   );
 }

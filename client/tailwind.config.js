@@ -17,7 +17,7 @@ export default {
         "button-invert-hover": "hsla(var(--button-invert-hover-dark))",
         "button-invert-disabled": "hsla(var(--button-invert-disabled-dark))",
         foreground: {
-          DEFAULT: "hsla(var(--ds-foreground))",
+          DEFAULT: "hsla(var(--ds-gray-1000))",
         },
         background: {
           100: "hsla(var(--ds-background-100))",
