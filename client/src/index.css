@@ -230,6 +230,10 @@
     font-family: "Inter", sans-serif;
   }
 
+  * {
+    @apply focus-visible:ring ring-blue-900 outline-0
+  }
+
   body {
     @apply bg-background-100 text-foreground text-sm font-['Inter'];
   }
@@ -244,6 +248,10 @@
 
   input, textarea {
     @apply size-full
+  }
+
+  button, select, input, textarea {
+    @apply disabled:cursor-not-allowed
   }
 
   .sr-only {

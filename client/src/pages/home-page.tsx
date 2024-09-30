@@ -6,6 +6,7 @@ import { ArrowDown, ThumbsUpIcon } from "lucide-react";
 import AvatarGroup from "@/components/ui/avatar-group.tsx";
 import Checkbox from "@/components/ui/checkbox.tsx";
 import { useState } from "react";
+import ChoiceboxGroup from "@/components/ui/choicebox.tsx";
 
 const avatars = [
   {
@@ -36,6 +37,9 @@ const avatars = [
 
 export default function HomePage() {
   const [checked, setChecked] = useState<boolean>(false);
+  const [choice, setChoice] = useState<string>("trial");
+  const [choices, setChoices] = useState([] as string[]);
+
   return (
     <article className="flex flex-col w-full items-center gap-4">
       <Button size="sm">Button</Button>
@@ -60,6 +64,49 @@ export default function HomePage() {
       >
         Checkbox
       </Checkbox>
+      <Checkbox disabled>Disabled Checkbox</Checkbox>
+      <ChoiceboxGroup label="Radio group" value={choice} onChange={setChoice}>
+        <ChoiceboxGroup.Item value="free" title="Free" description="Free" />
+        <ChoiceboxGroup.Item
+          value="trial"
+          title="Pro trial"
+          description="Free for two weeks"
+        />
+        <ChoiceboxGroup.Item
+          value="pro"
+          title="Pro"
+          description="Get started now"
+        />
+        <ChoiceboxGroup.Item
+          value="beta"
+          title="Beta"
+          description="Will be available soon"
+        />
+      </ChoiceboxGroup>
+      <ChoiceboxGroup
+        label="Multiselect group"
+        value={choices}
+        onChange={setChoices}
+        type="checkbox"
+        direction="col"
+      >
+        <ChoiceboxGroup.Item value="free" title="Free" description="Free" />
+        <ChoiceboxGroup.Item
+          value="trial"
+          title="Pro trial"
+          description="Free for two weeks"
+        />
+        <ChoiceboxGroup.Item
+          value="pro"
+          title="Pro"
+          description="Get started now"
+        />
+        <ChoiceboxGroup.Item
+          value="beta"
+          title="Beta"
+          description="Will be available soon"
+        />
+      </ChoiceboxGroup>
     </article>
   );
 }

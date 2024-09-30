@@ -7,6 +7,9 @@ export default {
       body: ['"Inter"', "sans-serif"],
     },
     extend: {
+      fontSize: {
+        el: ".8125rem",
+      },
       container: {
         center: true,
       },
