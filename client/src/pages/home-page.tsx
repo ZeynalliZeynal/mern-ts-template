@@ -7,8 +7,9 @@ import AvatarGroup from "@/components/ui/avatar-group.tsx";
 import Checkbox from "@/components/ui/checkbox.tsx";
 import { useState } from "react";
 import ChoiceboxGroup from "@/components/ui/choicebox.tsx";
-import Stack from "@/components/stack.tsx";
+import Stack from "@/components/ui/stack.tsx";
 import CollapseGroup, { Collapse } from "@/components/ui/collapse.tsx";
+import Combobox from "@/components/ui/combobox.tsx";
 
 const avatars = [
   {
@@ -37,10 +38,26 @@ const avatars = [
   },
 ];
 
+const comboboxValues = [
+  {
+    value: "zeynal",
+    label: "Frontend",
+  },
+  {
+    value: "samir",
+    label: "Backend",
+  },
+  {
+    value: "negrito",
+    label: "Cango",
+  },
+];
+
 export default function HomePage() {
   const [checked, setChecked] = useState<boolean>(false);
   const [choice, setChoice] = useState<string>("trial");
   const [choices, setChoices] = useState([] as string[]);
+  const [comboboxValue, setComboboxValue] = useState("");
 
   return (
     <article className="flex flex-col w-full items-center gap-4">
@@ -91,6 +108,18 @@ export default function HomePage() {
           Checkbox
         </Checkbox>
         <Checkbox disabled>Disabled Checkbox</Checkbox>
+      </Stack>
+      <Stack>
+        <Combobox value={comboboxValue} onChange={setComboboxValue}>
+          <Combobox.Input />
+          <Combobox.List>
+            {comboboxValues.map((v) => (
+              <Combobox.Option value={v.value} key={v.value}>
+                {v.label}
+              </Combobox.Option>
+            ))}
+          </Combobox.List>
+        </Combobox>
       </Stack>
       <Stack>
         <ChoiceboxGroup label="Radio group" value={choice} onChange={setChoice}>

@@ -246,7 +246,7 @@
   }
 
   input, textarea {
-    @apply size-full
+    @apply size-full bg-transparent focus-visible:ring-0 placeholder:text-inherit
   }
 
   button, select, input, textarea {

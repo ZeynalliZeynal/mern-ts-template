@@ -138,7 +138,7 @@ export default {
       boxShadow: {
         "header-border": "hsla(var(--header-border))",
         input:
-          "0 0 0 1px hsla(var(--ds-gray-alpha-600)), 0 0 0 2px hsla(0,0%,100%,.24)",
+          "0 0 0 1px hsla(var(--ds-gray-alpha-600)), 0 0 0 4px hsla(0,0%,100%,.24)",
         border: "0 0 0 1px hsla(var(--ds-gray-alpha-400))",
       },
       animation: {
