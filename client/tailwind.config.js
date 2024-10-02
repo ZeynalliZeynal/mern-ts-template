@@ -145,8 +145,8 @@ export default {
         spinner: "spinner 1.1s linear infinite",
         in: "in 300ms forwards",
         out: "out 300ms forwards",
-        fadeIn: "fadeIn 300ms forwards",
-        fadeOut: "fadeOut 300ms forwards",
+        fadeIn: "fadeIn 150ms forwards",
+        fadeOut: "fadeOut 150ms forwards",
       },
       keyframes: {
         spinner: {

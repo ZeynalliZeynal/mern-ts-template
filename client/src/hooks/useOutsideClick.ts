@@ -2,16 +2,17 @@ import { MutableRefObject, useEffect } from "react";
 
 export const useOutsideClick = (
   ref: MutableRefObject<HTMLElement | null>,
-  cb: () => void,
+  cb: (event: MouseEvent) => void,
 ) => {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
         ref.current &&
         !ref.current.contains(event.target as Node) &&
-        !(event.target as HTMLElement).closest(`[data-combobox="popup"]`)
+        !(event.target as HTMLElement).closest(`[data-combobox="popup"]`) &&
+        !(event.target as HTMLElement).closest(`[data-context="popup"]`)
       ) {
-        cb();
+        cb(event);
       }
     };
 
@@ -19,5 +20,5 @@ export const useOutsideClick = (
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, []);
+  }, [ref, cb]);
 };

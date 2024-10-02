@@ -1,4 +1,4 @@
-import { useThemeSwitcher } from "@/contexts/theme-context";
+import { useThemeSwitcher } from "@/context/theme-context";
 import { cn } from "@/lib/utils";
 import { DeviceAlternate, Moon, Sun } from "@/components/icons/geist.tsx";
 

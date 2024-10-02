@@ -2,7 +2,7 @@ import { RouterProvider } from "react-router-dom";
 import { router } from "@/router.tsx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { ThemeSwitcher } from "@/contexts/theme-context.tsx";
+import { ThemeSwitcher } from "@/context/theme-context.tsx";
 
 const queryClient = new QueryClient();
 

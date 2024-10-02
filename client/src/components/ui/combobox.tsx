@@ -13,10 +13,14 @@ import {
 import { IoCheckmark, IoChevronDown, IoClose, IoSearch } from "react-icons/io5";
 import { createPortal } from "react-dom";
 import { useOutsideClick } from "@/hooks/useOutsideClick.ts";
+import { calculateAvailableRoom } from "@/utils/calculateAvailableRoom.ts";
+import { cn } from "@/lib/utils.ts";
 
 interface ComboboxContext {
   open: boolean;
-  setOpen: Dispatch<SetStateAction<boolean>>;
+  animate: boolean;
+  handleClose: () => void;
+  handleOpen: () => void;
   inputRef: MutableRefObject<HTMLInputElement | null>;
   rect: DOMRect | null;
   values: string[];
@@ -47,6 +51,7 @@ export default function Combobox({
   value: string;
   onChange: Dispatch<SetStateAction<string>>;
 }) {
+  const [animate, setAnimate] = useState(false);
   const [values, setValues] = useState<string[]>([]);
   const [rect, setRect] = useState<DOMRect | null>(null);
   const [inputValue, setInputValue] = useState("");
@@ -56,6 +61,19 @@ export default function Combobox({
   const comboboxRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const listboxRef = useRef<HTMLDivElement | null>(null);
+
+  const handleOpen = () => {
+    setAnimate(false);
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setAnimate(true);
+    setTimeout(() => {
+      setOpen(false);
+      setAnimate(false);
+    }, 150);
+  };
 
   useOutsideClick(comboboxRef, () => {
     setOpen(false);
@@ -109,7 +127,9 @@ export default function Combobox({
     <ComboboxContext.Provider
       value={{
         open,
-        setOpen,
+        animate,
+        handleClose,
+        handleOpen,
         inputRef,
         rect,
         values,
@@ -131,7 +151,7 @@ export default function Combobox({
         tabIndex={0}
         className="w-full rounded-md border focus-within:shadow-input transition group"
         onKeyDown={(event) => {
-          if (open && event.code === "Escape") setOpen(false);
+          if (open && event.code === "Escape") handleClose();
         }}
       >
         {children}
@@ -142,11 +162,13 @@ export default function Combobox({
 
 const ComboboxInput = () => {
   const {
+    open,
     currentValue,
     inputRef,
     onChange,
     listboxRef,
-    setOpen,
+    handleOpen,
+    handleClose,
     inputValue,
     setInputValue,
     setHoveredOption,
@@ -168,7 +190,7 @@ const ComboboxInput = () => {
           placeholder="Search..."
           className="placeholder:text-gray-700 px-10 text-foreground"
           onChange={(event) => setInputValue(event.target.value)}
-          onFocus={() => setOpen(true)}
+          onFocus={handleOpen}
           onKeyDown={(event) => {
             if (event.code === "ArrowDown" && listboxRef.current) {
               event.preventDefault();
@@ -204,7 +226,7 @@ const ComboboxInput = () => {
         </button>
       ) : (
         <button
-          onClick={() => setOpen((prev) => !prev)}
+          onClick={() => (open ? handleClose() : handleOpen())}
           className="inline-flex z-[1] absolute top-1/2 right-0 -translate-y-1/2 items-center justify-center size-10 p-[11px] hover:text-foreground group-aria-expanded:rotate-180"
         >
           <IoChevronDown />
@@ -215,20 +237,23 @@ const ComboboxInput = () => {
 };
 
 const ComboboxList = ({ children }: { children: ReactNode }) => {
-  const { open, rect, listboxRef } = useCombobox();
+  const { open, rect, listboxRef, animate } = useCombobox();
 
   if (!open || !rect) return null;
 
-  const availableSpaceBelow = window.innerHeight - rect.bottom;
-  const availableSpaceAbove = rect.top;
-  const placeAbove =
-    availableSpaceBelow < 200 && availableSpaceAbove > availableSpaceBelow;
+  const placeAbove = calculateAvailableRoom(rect.top, rect.bottom);
 
   return createPortal(
     <div
       ref={listboxRef}
       data-combobox="popup"
-      className="rounded-xl border p-2 flex-col min-w-40 fixed z-50 bg-background-100"
+      className={cn(
+        "rounded-lg border p-1 flex-col min-w-40 fixed z-50 bg-background-100",
+        {
+          "animate-fadeIn": !animate,
+          "animate-fadeOut": animate,
+        },
+      )}
       style={{
         left: rect.left,
         width: rect.width,
@@ -254,7 +279,7 @@ const ComboboxOption = ({
     listboxRef,
     setValues,
     onChange,
-    setOpen,
+    handleClose,
     setInputValue,
     hoveredOption,
     setHoveredOption,
@@ -266,9 +291,7 @@ const ComboboxOption = ({
   const handleSelectValue = () => {
     onChange(children);
     setInputValue(children);
-    setTimeout(() => {
-      setOpen(false);
-    }, 0);
+    handleClose();
   };
 
   const handleNavigate: KeyboardEventHandler<HTMLButtonElement> = (event) => {
@@ -312,7 +335,7 @@ const ComboboxOption = ({
       data-value={value}
       data-hover={hoveredOption === value ? true : null}
       aria-selected={children.toLowerCase() === currentValue?.toLowerCase()}
-      className="text-gray-700 justify-between rounded data-[hover]:bg-gray-200 data-[hover]:text-foreground px-3 py-2 w-full focus:ring-0 cursor-default"
+      className="text-gray-700 justify-between rounded data-[hover]:bg-gray-200 data-[hover]:text-foreground px-3 py-1.5 w-full focus:ring-0 cursor-default"
       onClick={handleSelectValue}
       onMouseEnter={(event) => {
         event.currentTarget.focus();
@@ -332,5 +355,5 @@ const ComboboxOption = ({
 };
 
 Combobox.Input = ComboboxInput;
-Combobox.List = ComboboxList;
-Combobox.Option = ComboboxOption;
+Combobox.Content = ComboboxList;
+Combobox.Item = ComboboxOption;

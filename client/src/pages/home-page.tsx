@@ -10,6 +10,7 @@ import ChoiceboxGroup from "@/components/ui/choicebox.tsx";
 import Stack from "@/components/ui/stack.tsx";
 import CollapseGroup, { Collapse } from "@/components/ui/collapse.tsx";
 import Combobox from "@/components/ui/combobox.tsx";
+import ContextMenu from "@/components/ui/context-menu.tsx";
 
 const avatars = [
   {
@@ -112,14 +113,35 @@ export default function HomePage() {
       <Stack>
         <Combobox value={comboboxValue} onChange={setComboboxValue}>
           <Combobox.Input />
-          <Combobox.List>
+          <Combobox.Content>
             {comboboxValues.map((v) => (
-              <Combobox.Option value={v.value} key={v.value}>
+              <Combobox.Item value={v.value} key={v.value}>
                 {v.label}
-              </Combobox.Option>
+              </Combobox.Item>
             ))}
-          </Combobox.List>
+          </Combobox.Content>
         </Combobox>
+      </Stack>
+      <Stack>
+        <ContextMenu>
+          <ContextMenu.Trigger>
+            <div
+              style={{
+                width: 300,
+                padding: "45px 0",
+                border: "1px hsla(var(--ds-gray-alpha-600)) dashed",
+                borderRadius: 4,
+                textAlign: "center",
+                fontSize: 14,
+              }}
+            >
+              Right click here
+            </div>
+          </ContextMenu.Trigger>
+          <ContextMenu.Content>
+            <ContextMenu.Item>test</ContextMenu.Item>
+          </ContextMenu.Content>
+        </ContextMenu>
       </Stack>
       <Stack>
         <ChoiceboxGroup label="Radio group" value={choice} onChange={setChoice}>
