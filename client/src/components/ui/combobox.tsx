@@ -25,6 +25,9 @@ interface ComboboxContext {
   currentValue: string;
   inputValue: string;
   setInputValue: Dispatch<SetStateAction<string>>;
+  listboxRef: MutableRefObject<HTMLDivElement | null>;
+  hoveredOption: string;
+  setHoveredOption: Dispatch<SetStateAction<string>>;
 }
 
 const ComboboxContext = createContext<ComboboxContext | null>(null);
@@ -48,8 +51,11 @@ export default function Combobox({
   const [rect, setRect] = useState<DOMRect | null>(null);
   const [inputValue, setInputValue] = useState("");
   const [open, setOpen] = useState(false);
+  const [hoveredOption, setHoveredOption] = useState("");
+
   const comboboxRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const listboxRef = useRef<HTMLDivElement | null>(null);
 
   useOutsideClick(comboboxRef, () => {
     setOpen(false);
@@ -58,7 +64,6 @@ export default function Combobox({
   useEffect(() => {
     if (open) inputRef.current?.focus();
     else {
-      console.log(values, value);
       inputRef.current?.blur();
       if (values.map((v) => v.toLowerCase()).includes(inputValue.toLowerCase()))
         onChange(inputValue);
@@ -113,6 +118,9 @@ export default function Combobox({
         onChange,
         inputValue,
         setInputValue,
+        listboxRef,
+        hoveredOption,
+        setHoveredOption,
       }}
     >
       <div
@@ -122,6 +130,9 @@ export default function Combobox({
         ref={comboboxRef}
         tabIndex={0}
         className="w-full rounded-md border focus-within:shadow-input transition group"
+        onKeyDown={(event) => {
+          if (open && event.code === "Escape") setOpen(false);
+        }}
       >
         {children}
       </div>
@@ -134,9 +145,11 @@ const ComboboxInput = () => {
     currentValue,
     inputRef,
     onChange,
+    listboxRef,
     setOpen,
     inputValue,
     setInputValue,
+    setHoveredOption,
   } = useCombobox();
 
   return (
@@ -150,12 +163,33 @@ const ComboboxInput = () => {
       <div className="h-10 relative z-[1] w-full">
         <input
           ref={inputRef}
-          onFocus={() => setOpen(true)}
           type="text"
           value={inputValue}
-          onChange={(event) => setInputValue(event.target.value)}
           placeholder="Search..."
           className="placeholder:text-gray-700 px-10 text-foreground"
+          onChange={(event) => setInputValue(event.target.value)}
+          onFocus={() => setOpen(true)}
+          onKeyDown={(event) => {
+            if (event.code === "ArrowDown" && listboxRef.current) {
+              event.preventDefault();
+              (
+                listboxRef.current.firstElementChild as HTMLButtonElement
+              ).focus();
+              setHoveredOption(
+                (listboxRef.current.firstElementChild as HTMLButtonElement)
+                  .dataset.value as string,
+              );
+            } else if (event.code === "ArrowUp" && listboxRef.current) {
+              event.preventDefault();
+              (
+                listboxRef.current.lastElementChild as HTMLButtonElement
+              ).focus();
+              setHoveredOption(
+                (listboxRef.current.lastElementChild as HTMLButtonElement)
+                  .dataset.value as string,
+              );
+            }
+          }}
         />
       </div>
       {currentValue ? (
@@ -181,7 +215,7 @@ const ComboboxInput = () => {
 };
 
 const ComboboxList = ({ children }: { children: ReactNode }) => {
-  const { open, rect } = useCombobox();
+  const { open, rect, listboxRef } = useCombobox();
 
   if (!open || !rect) return null;
 
@@ -192,8 +226,9 @@ const ComboboxList = ({ children }: { children: ReactNode }) => {
 
   return createPortal(
     <div
+      ref={listboxRef}
       data-combobox="popup"
-      className="rounded-lg border p-2 flex-col min-w-40 fixed z-50 bg-background-100"
+      className="rounded-xl border p-2 flex-col min-w-40 fixed z-50 bg-background-100"
       style={{
         left: rect.left,
         width: rect.width,
@@ -214,10 +249,18 @@ const ComboboxOption = ({
   children: string;
   value: string;
 }) => {
-  const [hovered, setHovered] = useState("");
+  const {
+    currentValue,
+    listboxRef,
+    setValues,
+    onChange,
+    setOpen,
+    setInputValue,
+    hoveredOption,
+    setHoveredOption,
+    inputRef,
+  } = useCombobox();
 
-  const { currentValue, setValues, onChange, setOpen, setInputValue } =
-    useCombobox();
   const ref = useRef<HTMLButtonElement | null>(null);
 
   const handleSelectValue = () => {
@@ -229,12 +272,32 @@ const ComboboxOption = ({
   };
 
   const handleNavigate: KeyboardEventHandler<HTMLButtonElement> = (event) => {
-    if ((event.code === "Space" || event.code === "Enter") && hovered)
-      onChange(hovered);
+    if ((event.code === "Space" || event.code === "Enter") && hoveredOption)
+      onChange(hoveredOption);
+
+    if (event.code === "ArrowUp") {
+      event.preventDefault();
+      const prevSibling = event.currentTarget.previousElementSibling;
+      if (prevSibling) {
+        (prevSibling as HTMLElement).focus();
+        setHoveredOption(
+          (prevSibling as HTMLButtonElement).dataset.value as string,
+        );
+      } else inputRef.current?.focus();
+    } else if (event.code === "ArrowDown") {
+      event.preventDefault();
+      const nextSibling = event.currentTarget.nextElementSibling;
+      if (nextSibling) {
+        (nextSibling as HTMLElement).focus();
+        setHoveredOption(
+          (nextSibling as HTMLButtonElement).dataset.value as string,
+        );
+      } else inputRef.current?.focus();
+    }
   };
 
   useEffect(() => {
-    if (ref.current) {
+    if (listboxRef.current) {
       setValues((prevState) => {
         const valueSet = new Set(prevState);
         if (!valueSet.has(children)) valueSet.add(children);
@@ -247,12 +310,15 @@ const ComboboxOption = ({
     <button
       ref={ref}
       data-value={value}
-      data-hover={hovered === children ? "" : null}
+      data-hover={hoveredOption === value ? true : null}
       aria-selected={children.toLowerCase() === currentValue?.toLowerCase()}
-      className="text-gray-700 justify-between rounded-md data-[hover]:bg-gray-200 data-[hover]:text-foreground px-3 py-2 w-full"
+      className="text-gray-700 justify-between rounded data-[hover]:bg-gray-200 data-[hover]:text-foreground px-3 py-2 w-full focus:ring-0 cursor-default"
       onClick={handleSelectValue}
-      onMouseEnter={() => setHovered(children)}
-      onMouseLeave={() => setHovered("")}
+      onMouseEnter={(event) => {
+        event.currentTarget.focus();
+        setHoveredOption(value);
+      }}
+      onMouseLeave={() => setHoveredOption("")}
       onKeyDown={handleNavigate}
     >
       {children}
