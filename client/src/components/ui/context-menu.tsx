@@ -4,7 +4,6 @@ import {
   Dispatch,
   forwardRef,
   isValidElement,
-  KeyboardEventHandler,
   MouseEventHandler,
   ReactElement,
   ReactNode,
@@ -18,6 +17,7 @@ import {
 import { createPortal } from "react-dom";
 import { useOutsideClick } from "@/hooks/useOutsideClick.ts";
 import { cn } from "@/lib/utils.ts";
+import { useContextMenuSub } from "@/components/ui/context-menu/context-menu-sub.tsx";
 
 interface ContextMenuContext {
   open: boolean;
@@ -190,57 +190,22 @@ const ContextMenuItem = forwardRef<HTMLDivElement, ContextMenuItem>(
     }: ContextMenuItem,
     forwardRef,
   ) => {
-    const { open, handleClose } = useContextMenu();
+    const { handleClose } = useContextMenu();
+    const { handleCloseSub } = useContextMenuSub();
     const [highlighted, setHighlighted] = useState(false);
     const ref = useRef<HTMLDivElement | null>(null);
     useImperativeHandle(forwardRef, () => ref.current as HTMLDivElement);
 
-    const findNextMenuItem = (
-      currentElement: HTMLElement,
-      direction: "next" | "previous",
-    ) => {
-      const root = currentElement.closest('[role="menu"]');
-      if (!root) return null;
-
-      const menuItems = Array.from(
-        root.querySelectorAll('[role="menuitem"]:not([data-disabled="true"])'),
-      ) as HTMLElement[];
-
-      const currentIndex = menuItems.indexOf(currentElement);
-
-      if (currentIndex === -1) return null;
-
-      const totalItems = menuItems.length;
-      let nextIndex;
-      if (direction === "next") {
-        nextIndex = currentIndex === totalItems - 1 ? 0 : currentIndex + 1;
-      } else {
-        nextIndex = currentIndex === 0 ? totalItems - 1 : currentIndex - 1;
-      }
-
-      return menuItems[nextIndex];
-    };
-
-    const handleNavigate: KeyboardEventHandler<HTMLDivElement> = (event) => {
-      if (event.code === "ArrowUp" || event.code === "ArrowDown") {
-        event.preventDefault();
-        const direction = event.code === "ArrowUp" ? "previous" : "next";
-        const nextMenuItem = findNextMenuItem(event.currentTarget, direction);
-
-        if (nextMenuItem) nextMenuItem.focus();
-      } else if (
-        (event.code === "Space" || event.code === "Enter") &&
-        !disabled
-      ) {
-        event.preventDefault();
-        if (ref.current) ref.current.click();
-      }
-    };
-
     const handleClick: MouseEventHandler<HTMLElement> = (event) => {
       if (disabled) return;
       onClick?.(event);
-      handleClose();
+      if (
+        (event.currentTarget.parentElement as HTMLElement).closest(
+          "[data-contextsub]",
+        )
+      )
+        handleCloseSub();
+      else handleClose();
     };
 
     const commonProps = {
@@ -260,38 +225,7 @@ const ContextMenuItem = forwardRef<HTMLDivElement, ContextMenuItem>(
       onMouseLeave: () => !disabled && setHighlighted(false),
       onFocus: () => !disabled && setHighlighted(true),
       onBlur: () => !disabled && setHighlighted(false),
-      onKeyDown: handleNavigate,
     };
-
-    useEffect(() => {
-      if (!open) return;
-
-      const handleKeyDown = (event: KeyboardEvent) => {
-        if (!ref.current || !ref.current.parentElement) return;
-
-        if (event.code === "ArrowDown" || event.code === "ArrowUp") {
-          event.preventDefault();
-          const root = ref.current.closest('[role="menu"]');
-          if (!root) return null;
-
-          const menuItems = Array.from(
-            root.querySelectorAll(
-              '[role="menuitem"]:not([data-disabled="true"])',
-            ),
-          ) as HTMLElement[];
-
-          const direction = event.code === "ArrowUp" ? "previous" : "next";
-          direction === "next"
-            ? menuItems[0].focus()
-            : menuItems[menuItems.length - 1].focus();
-        } else if (event.code === "Tab") {
-          handleClose();
-        }
-      };
-
-      document.addEventListener("keydown", handleKeyDown, true);
-      return () => document.removeEventListener("keydown", handleKeyDown, true);
-    }, [open, ref, handleClose]);
 
     return asChild && isValidElement(children) ? (
       cloneElement(children, commonProps)

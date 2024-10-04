@@ -26,60 +26,60 @@ export default function ContextDemo() {
           </div>
         </ContextMenu.Trigger>
         <ContextMenu.Content>
-          <ContextMenu.Group>
-            <ContextMenu.Item onClick={() => navigate(-1)}>
-              Back{" "}
-              <div className="flex items-center gap-1">
-                <span className="size-4">
-                  <LuCommand />
-                </span>
-                <span>[</span>
-              </div>
-            </ContextMenu.Item>
-            <ContextMenu.Item disabled onClick={() => navigate(1)}>
-              Forward
-              <div className="flex items-center gap-1">
-                <span className="size-4">
-                  <LuCommand />
-                </span>
-                <span>]</span>
-              </div>
-            </ContextMenu.Item>
-          </ContextMenu.Group>
-          <ContextMenu.Separator />
-          <ContextMenu.Group>
-            <ContextMenu.Item asChild>
-              <Link to="/" className="cursor-pointer">
-                Dashboard{" "}
-                <span className="size-4">
-                  <ArrowUpRight />
-                </span>
-              </Link>
-            </ContextMenu.Item>
-          </ContextMenu.Group>
-          <ContextMenu.Separator />
-          <ContextMenu.Group>
-            <ContextMenu.Item onClick={() => window.location.reload()}>
-              Reload
-              <div className="flex items-center gap-1">
-                <span className="size-4">
-                  <LuCommand />
-                </span>
-                <span>R</span>
-              </div>
-            </ContextMenu.Item>
-            <ContextMenuSub>
+          <ContextMenuSub>
+            <ContextMenu.Group>
+              <ContextMenu.Item onClick={() => navigate(-1)}>
+                Back{" "}
+                <div className="flex items-center gap-1">
+                  <span className="size-4">
+                    <LuCommand />
+                  </span>
+                  <span>[</span>
+                </div>
+              </ContextMenu.Item>
+              <ContextMenu.Item disabled onClick={() => navigate(1)}>
+                Forward
+                <div className="flex items-center gap-1">
+                  <span className="size-4">
+                    <LuCommand />
+                  </span>
+                  <span>]</span>
+                </div>
+              </ContextMenu.Item>
+            </ContextMenu.Group>
+            <ContextMenu.Separator />
+            <ContextMenu.Group>
+              <ContextMenu.Item asChild>
+                <Link to="/" className="cursor-pointer">
+                  Dashboard{" "}
+                  <span className="size-4">
+                    <ArrowUpRight />
+                  </span>
+                </Link>
+              </ContextMenu.Item>
+            </ContextMenu.Group>
+            <ContextMenu.Separator />
+            <ContextMenu.Group>
+              <ContextMenu.Item onClick={() => window.location.reload()}>
+                Reload
+                <div className="flex items-center gap-1">
+                  <span className="size-4">
+                    <LuCommand />
+                  </span>
+                  <span>R</span>
+                </div>
+              </ContextMenu.Item>
               <ContextMenuSub.Trigger>People</ContextMenuSub.Trigger>
               <ContextMenuSub.Content>
                 <ContextMenu.Item>test</ContextMenu.Item>
               </ContextMenuSub.Content>
-            </ContextMenuSub>
-            <ContextMenu.Item
-              onClick={(event) => console.log(event?.currentTarget.innerText)}
-            >
-              Zeynalli Zeynal
-            </ContextMenu.Item>
-          </ContextMenu.Group>
+              <ContextMenu.Item
+                onClick={(event) => console.log(event?.currentTarget.innerText)}
+              >
+                Zeynalli Zeynal
+              </ContextMenu.Item>
+            </ContextMenu.Group>
+          </ContextMenuSub>
         </ContextMenu.Content>
       </ContextMenu>
     </Stack>

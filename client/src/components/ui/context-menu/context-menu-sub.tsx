@@ -11,7 +11,6 @@ import { useContextMenu } from "@/components/ui/context-menu.tsx";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils.ts";
 import { ChevronRight } from "lucide-react";
-import { useOutsideClick } from "@/hooks/useOutsideClick.ts";
 
 interface ContextMenuSubContext {
   openSub: boolean;
@@ -81,8 +80,6 @@ const ContextMenuSubTrigger = ({
 
   const ref = useRef<HTMLDivElement | null>(null);
 
-  useOutsideClick(ref, handleCloseSub);
-
   return (
     <div
       tabIndex={-1}
@@ -103,7 +100,6 @@ const ContextMenuSubTrigger = ({
         setSubRect(event.currentTarget.getBoundingClientRect());
       }}
       onMouseLeave={() => {
-        handleCloseSub();
         setHighlighted(false);
       }}
     >
@@ -117,13 +113,13 @@ const ContextMenuSubTrigger = ({
 
 const ContextMenuSubContent = ({ children }: { children: ReactNode }) => {
   const { clientPosition } = useContextMenu();
-  const { subRect, animate } = useContextMenuSub();
+  const { subRect, openSub, animate } = useContextMenuSub();
 
-  if (!open || !subRect || !clientPosition) return null;
+  if (!openSub || !subRect || !clientPosition) return null;
 
   return createPortal(
     <div
-      data-context="popup"
+      data-contextsub="popup"
       data-state={!animate}
       className={cn(
         "rounded-ui-content focus:ring-0 border flex-col p-ui-content min-w-64 fixed z-50 bg-ui-background",
