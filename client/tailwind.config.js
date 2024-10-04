@@ -16,7 +16,7 @@ export default {
       colors: {
         border: "hsla(var(--ds-gray-alpha-400))",
         "ui-background": "hsla(var(--ds-background-100))",
-        "ui-foreground": "hsla(var(--ds-gray-900))",
+        "ui-disabled-foreground": "hsla(var(--ds-gray-800))",
         "ui-item-foreground-hover": "hsla(var(--ds-gray-1000))",
         "ui-item-background-hover": "hsla(var(--ds-gray-200))",
         "button-invert-hover": "hsla(var(--button-invert-hover-dark))",

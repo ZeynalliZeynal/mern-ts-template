@@ -11,6 +11,7 @@ import {
   SetStateAction,
   useContext,
   useEffect,
+  useImperativeHandle,
   useRef,
   useState,
 } from "react";
@@ -27,12 +28,11 @@ interface ContextMenuContext {
     SetStateAction<{ clientY: number; clientX: number } | null>
   >;
   animate: boolean;
-  setAnimate: Dispatch<SetStateAction<boolean>>;
 }
 
 const ContextMenuContext = createContext<ContextMenuContext | null>(null);
 
-const useContextMenu = () => {
+export const useContextMenu = () => {
   const context = useContext(ContextMenuContext);
   if (!context) throw new Error("Context is outside of the provider");
   return context;
@@ -87,7 +87,6 @@ export default function ContextMenu({ children }: { children: ReactNode }) {
         clientPosition,
         setClientPosition,
         animate,
-        setAnimate,
       }}
     >
       {children}
@@ -105,7 +104,12 @@ const ContextMenuTrigger = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <div tabIndex={0} onContextMenu={handleContextMenu} className="select-none">
+    <div
+      tabIndex={0}
+      data-context="trigger"
+      onContextMenu={handleContextMenu}
+      className="select-none"
+    >
       {children}
     </div>
   );
@@ -132,7 +136,11 @@ const ContextMenuContent = ({ children }: { children: ReactNode }) => {
 
   useOutsideClick(ref, (event) => {
     if (event) {
-      if (event.button === 2) {
+      if (
+        event.button === 2 &&
+        (event.target as HTMLElement).parentElement?.dataset.context ===
+          "trigger"
+      ) {
         handleOpen(event.clientX, event.clientY);
       } else {
         handleClose();
@@ -149,7 +157,7 @@ const ContextMenuContent = ({ children }: { children: ReactNode }) => {
       data-context="popup"
       data-state={!animate}
       className={cn(
-        "rounded-ui-content focus:ring-0 border flex-col p-ui-content min-w-40 fixed z-50 bg-ui-background",
+        "rounded-ui-content focus:ring-0 border flex-col p-ui-content min-w-64 fixed z-50 bg-ui-background",
         "data-[state='true']:animate-in data-[state='false']:animate-out data-[state='true']:zoom-in data-[state='false']:zoom-out",
       )}
       style={{
@@ -167,18 +175,25 @@ interface ContextMenuItem {
   children: ReactNode | ReactElement;
   onClick?: MouseEventHandler<HTMLElement>;
   asChild?: boolean;
+  disabled?: boolean;
   className?: string;
 }
 
 const ContextMenuItem = forwardRef<HTMLDivElement, ContextMenuItem>(
   (
-    { children, onClick, className, asChild = false }: ContextMenuItem,
+    {
+      children,
+      onClick,
+      className,
+      asChild = false,
+      disabled = false,
+    }: ContextMenuItem,
     forwardRef,
   ) => {
     const { open, handleClose } = useContextMenu();
     const [highlighted, setHighlighted] = useState(false);
-    const innerRef = useRef<HTMLDivElement | null>(null);
-    const ref = innerRef || forwardRef;
+    const ref = useRef<HTMLDivElement | null>(null);
+    useImperativeHandle(forwardRef, () => ref.current as HTMLDivElement);
 
     const findNextMenuItem = (
       currentElement: HTMLElement,
@@ -188,17 +203,20 @@ const ContextMenuItem = forwardRef<HTMLDivElement, ContextMenuItem>(
       if (!root) return null;
 
       const menuItems = Array.from(
-        root.querySelectorAll('[role="menuitem"]'),
+        root.querySelectorAll('[role="menuitem"]:not([data-disabled="true"])'),
       ) as HTMLElement[];
 
       const currentIndex = menuItems.indexOf(currentElement);
 
       if (currentIndex === -1) return null;
 
+      const totalItems = menuItems.length;
       let nextIndex;
-      if (direction === "next")
-        nextIndex = (currentIndex + 1) % menuItems.length;
-      else nextIndex = (currentIndex - 1) % menuItems.length;
+      if (direction === "next") {
+        nextIndex = currentIndex === totalItems - 1 ? 0 : currentIndex + 1;
+      } else {
+        nextIndex = currentIndex === 0 ? totalItems - 1 : currentIndex - 1;
+      }
 
       return menuItems[nextIndex];
     };
@@ -210,13 +228,17 @@ const ContextMenuItem = forwardRef<HTMLDivElement, ContextMenuItem>(
         const nextMenuItem = findNextMenuItem(event.currentTarget, direction);
 
         if (nextMenuItem) nextMenuItem.focus();
-      } else if (event.code === "Space" || event.code === "Enter") {
+      } else if (
+        (event.code === "Space" || event.code === "Enter") &&
+        !disabled
+      ) {
         event.preventDefault();
         if (ref.current) ref.current.click();
       }
     };
 
     const handleClick: MouseEventHandler<HTMLElement> = (event) => {
+      if (disabled) return;
       onClick?.(event);
       handleClose();
     };
@@ -226,16 +248,18 @@ const ContextMenuItem = forwardRef<HTMLDivElement, ContextMenuItem>(
       ref,
       role: "menuitem",
       "data-highlighted": highlighted ? true : null,
+      "data-disabled": disabled ? true : undefined,
+      "aria-disabled": disabled ? true : undefined,
       className: cn(
-        "text-ui-foreground justify-between rounded-ui-item p-ui-item w-full focus:ring-0 cursor-default transition-colors",
-        "data-[highlighted]:bg-ui-item-background-hover data-[highlighted]:text-ui-item-foreground-hover",
+        "text-foreground flex justify-between items-center rounded-ui-item p-ui-item w-full focus:ring-0 cursor-default transition-colors",
+        "data-[highlighted]:bg-ui-item-background-hover data-[disabled]:text-ui-disabled-foreground data-[disabled]:select-none",
         className,
       ),
       onClick: handleClick,
-      onMouseEnter: () => setHighlighted(true),
-      onMouseLeave: () => setHighlighted(false),
-      onFocus: () => setHighlighted(true),
-      onBlur: () => setHighlighted(false),
+      onMouseEnter: () => !disabled && setHighlighted(true),
+      onMouseLeave: () => !disabled && setHighlighted(false),
+      onFocus: () => !disabled && setHighlighted(true),
+      onBlur: () => !disabled && setHighlighted(false),
       onKeyDown: handleNavigate,
     };
 
@@ -245,10 +269,21 @@ const ContextMenuItem = forwardRef<HTMLDivElement, ContextMenuItem>(
       const handleKeyDown = (event: KeyboardEvent) => {
         if (!ref.current || !ref.current.parentElement) return;
 
-        if (event.code === "ArrowDown") {
-          (ref.current.parentElement.firstElementChild as HTMLElement)?.focus();
-        } else if (event.code === "ArrowUp") {
-          (ref.current.parentElement.lastElementChild as HTMLElement)?.focus();
+        if (event.code === "ArrowDown" || event.code === "ArrowUp") {
+          event.preventDefault();
+          const root = ref.current.closest('[role="menu"]');
+          if (!root) return null;
+
+          const menuItems = Array.from(
+            root.querySelectorAll(
+              '[role="menuitem"]:not([data-disabled="true"])',
+            ),
+          ) as HTMLElement[];
+
+          const direction = event.code === "ArrowUp" ? "previous" : "next";
+          direction === "next"
+            ? menuItems[0].focus()
+            : menuItems[menuItems.length - 1].focus();
         } else if (event.code === "Tab") {
           handleClose();
         }
@@ -256,7 +291,7 @@ const ContextMenuItem = forwardRef<HTMLDivElement, ContextMenuItem>(
 
       document.addEventListener("keydown", handleKeyDown, true);
       return () => document.removeEventListener("keydown", handleKeyDown, true);
-    }, [open, ref]);
+    }, [open, ref, handleClose]);
 
     return asChild && isValidElement(children) ? (
       cloneElement(children, commonProps)
@@ -273,12 +308,17 @@ const ContextMenuGroup = ({
   children: ReactNode;
   className?: string;
 }) => {
-  return <div className={cn(className)}>{children}</div>;
+  return (
+    <div role="group" className={cn(className)}>
+      {children}
+    </div>
+  );
 };
 
 const ContextMenuSeparator = ({ className }: { className?: string }) => {
   return (
     <div
+      role="separator"
       className={cn("h-px -mx-ui-content my-ui-content bg-border", className)}
     />
   );
