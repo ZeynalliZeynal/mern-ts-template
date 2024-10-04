@@ -15,7 +15,6 @@ import {
   useState,
 } from "react";
 import { createPortal } from "react-dom";
-import { calculateAvailableRoom } from "@/utils/calculateAvailableRoom.ts";
 import { useOutsideClick } from "@/hooks/useOutsideClick.ts";
 import { cn } from "@/lib/utils.ts";
 
@@ -143,24 +142,19 @@ const ContextMenuContent = ({ children }: { children: ReactNode }) => {
 
   if (!open || !clientPosition) return null;
 
-  const placeAbove = calculateAvailableRoom(
-    clientPosition.clientY,
-    clientPosition.clientX,
-  );
-
   return createPortal(
     <div
+      role="menu"
       ref={ref}
       data-context="popup"
       data-state={!animate}
       className={cn(
-        "rounded-ui-content focus:ring-0 border p-ui-content flex-col min-w-40 fixed z-50 bg-ui-background",
+        "rounded-ui-content focus:ring-0 border flex-col p-ui-content min-w-40 fixed z-50 bg-ui-background",
         "data-[state='true']:animate-in data-[state='false']:animate-out data-[state='true']:zoom-in data-[state='false']:zoom-out",
       )}
       style={{
         left: clientPosition.clientX,
         top: clientPosition.clientY,
-        transform: placeAbove ? "translateY(-100%)" : "translateY(0)",
       }}
     >
       {children}
@@ -186,18 +180,36 @@ const ContextMenuItem = forwardRef<HTMLDivElement, ContextMenuItem>(
     const innerRef = useRef<HTMLDivElement | null>(null);
     const ref = innerRef || forwardRef;
 
+    const findNextMenuItem = (
+      currentElement: HTMLElement,
+      direction: "next" | "previous",
+    ) => {
+      const root = currentElement.closest('[role="menu"]');
+      if (!root) return null;
+
+      const menuItems = Array.from(
+        root.querySelectorAll('[role="menuitem"]'),
+      ) as HTMLElement[];
+
+      const currentIndex = menuItems.indexOf(currentElement);
+
+      if (currentIndex === -1) return null;
+
+      let nextIndex;
+      if (direction === "next")
+        nextIndex = (currentIndex + 1) % menuItems.length;
+      else nextIndex = (currentIndex - 1) % menuItems.length;
+
+      return menuItems[nextIndex];
+    };
+
     const handleNavigate: KeyboardEventHandler<HTMLDivElement> = (event) => {
       if (event.code === "ArrowUp" || event.code === "ArrowDown") {
         event.preventDefault();
-        console.log(event.currentTarget);
-        const sibling =
-          event.code === "ArrowUp"
-            ? event.currentTarget.previousElementSibling
-            : event.currentTarget.nextElementSibling;
+        const direction = event.code === "ArrowUp" ? "previous" : "next";
+        const nextMenuItem = findNextMenuItem(event.currentTarget, direction);
 
-        if (sibling) {
-          (sibling as HTMLElement).focus();
-        }
+        if (nextMenuItem) nextMenuItem.focus();
       } else if (event.code === "Space" || event.code === "Enter") {
         event.preventDefault();
         if (ref.current) ref.current.click();
@@ -254,6 +266,26 @@ const ContextMenuItem = forwardRef<HTMLDivElement, ContextMenuItem>(
   },
 );
 
+const ContextMenuGroup = ({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) => {
+  return <div className={cn(className)}>{children}</div>;
+};
+
+const ContextMenuSeparator = ({ className }: { className?: string }) => {
+  return (
+    <div
+      className={cn("h-px -mx-ui-content my-ui-content bg-border", className)}
+    />
+  );
+};
+
 ContextMenu.Trigger = ContextMenuTrigger;
-ContextMenu.Content = ContextMenuContent;
 ContextMenu.Item = ContextMenuItem;
+ContextMenu.Separator = ContextMenuSeparator;
+ContextMenu.Group = ContextMenuGroup;
+ContextMenu.Content = ContextMenuContent;

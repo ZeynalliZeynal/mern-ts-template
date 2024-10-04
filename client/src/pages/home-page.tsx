@@ -140,11 +140,14 @@ export default function HomePage() {
             </div>
           </ContextMenu.Trigger>
           <ContextMenu.Content>
-            <ContextMenu.Item
-              onClick={(event) => console.log(event?.currentTarget.innerText)}
-            >
-              Back
-            </ContextMenu.Item>
+            <ContextMenu.Group>
+              <ContextMenu.Item
+                onClick={(event) => console.log(event?.currentTarget.innerText)}
+              >
+                Back
+              </ContextMenu.Item>
+            </ContextMenu.Group>
+            <ContextMenu.Separator />
             <ContextMenu.Item asChild>
               <Link to="/dashboard" className="cursor-pointer">
                 Dashboard{" "}

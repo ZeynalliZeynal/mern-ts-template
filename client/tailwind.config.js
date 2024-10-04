@@ -14,6 +14,7 @@ export default {
         center: true,
       },
       colors: {
+        border: "hsla(var(--ds-gray-alpha-400))",
         "ui-background": "hsla(var(--ds-background-100))",
         "ui-foreground": "hsla(var(--ds-gray-900))",
         "ui-item-foreground-hover": "hsla(var(--ds-gray-1000))",
@@ -153,6 +154,7 @@ export default {
         "ui-content": ".25rem",
         "ui-item": ".375rem .5rem .375rem 2rem",
       },
+      margin: ({ theme }) => theme("padding"),
       animation: {
         spinner: "spinner 1.1s linear infinite",
         in: "in 300ms forwards",
