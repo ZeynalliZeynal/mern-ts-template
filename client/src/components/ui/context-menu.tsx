@@ -1,6 +1,10 @@
 import {
+  cloneElement,
   createContext,
   Dispatch,
+  forwardRef,
+  isValidElement,
+  KeyboardEventHandler,
   MouseEventHandler,
   ReactElement,
   ReactNode,
@@ -102,21 +106,33 @@ const ContextMenuTrigger = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <div onContextMenu={handleContextMenu} className="select-none">
+    <div tabIndex={0} onContextMenu={handleContextMenu} className="select-none">
       {children}
     </div>
   );
 };
 
-const ContextMenuContent = ({ children }: { children: ReactElement }) => {
+const ContextMenuContent = ({ children }: { children: ReactNode }) => {
   const { open, clientPosition, handleClose, animate, handleOpen } =
     useContextMenu();
 
   const ref = useRef<HTMLDivElement | null>(null);
 
+  useEffect(() => {
+    if (open && ref.current) {
+      document.addEventListener("keydown", (event) => {
+        if (event.code === "Escape") handleClose();
+      });
+    }
+
+    return () =>
+      document.removeEventListener("keydown", (event) => {
+        if (event.code === "Escape") handleClose();
+      });
+  }, [open]);
+
   useOutsideClick(ref, (event) => {
     if (event) {
-      console.log(event.button);
       if (event.button === 2) {
         handleOpen(event.clientX, event.clientY);
       } else {
@@ -136,13 +152,8 @@ const ContextMenuContent = ({ children }: { children: ReactElement }) => {
     <div
       ref={ref}
       data-context="popup"
-      className={cn(
-        "rounded-lg border p-1 flex-col min-w-40 fixed z-50 bg-background-100",
-        {
-          "animate-fadeIn": !animate,
-          "animate-fadeOut": animate,
-        },
-      )}
+      data-state={!animate}
+      className="rounded-md border p-1 flex-col min-w-40 fixed z-50 bg-background-100 data-[state='true']:animate-in data-[state='false']:animate-out data-[state='true']:zoom-in data-[state='false']:zoom-out focus:ring-0"
       style={{
         left: clientPosition.clientX,
         top: clientPosition.clientY,
@@ -155,24 +166,89 @@ const ContextMenuContent = ({ children }: { children: ReactElement }) => {
   );
 };
 
-const ContextMenuItem = ({ children }: { children: ReactNode }) => {
-  const [hoveredOption, setHoveredOption] = useState("");
+interface ContextMenuItem {
+  children: ReactNode | ReactElement;
+  onClick?: MouseEventHandler<HTMLElement>;
+  asChild?: boolean;
+  className?: string;
+}
 
-  return (
-    <button
-      tabIndex={0}
-      data-hover={hoveredOption === JSON.stringify(children) ? true : null}
-      className="text-gray-700 justify-between rounded data-[hover]:bg-gray-200 data-[hover]:text-foreground px-3 py-1.5 w-full focus:ring-0 cursor-default"
-      onMouseEnter={(event) => {
-        event.currentTarget.focus();
-        setHoveredOption(JSON.stringify(children));
-      }}
-      onMouseLeave={() => setHoveredOption("")}
-    >
-      {children}
-    </button>
-  );
-};
+const ContextMenuItem = forwardRef<HTMLDivElement, ContextMenuItem>(
+  (
+    { children, onClick, className, asChild = false }: ContextMenuItem,
+    forwardRef,
+  ) => {
+    const { open, handleClose } = useContextMenu();
+    const [highlighted, setHighlighted] = useState(false);
+    const innerRef = useRef<HTMLDivElement | null>(null);
+    const ref = innerRef || forwardRef;
+
+    const handleNavigate: KeyboardEventHandler<HTMLDivElement> = (event) => {
+      if (event.code === "ArrowUp" || event.code === "ArrowDown") {
+        event.preventDefault();
+        console.log(event.currentTarget);
+        const sibling =
+          event.code === "ArrowUp"
+            ? event.currentTarget.previousElementSibling
+            : event.currentTarget.nextElementSibling;
+
+        if (sibling) {
+          (sibling as HTMLElement).focus();
+        }
+      } else if (event.code === "Space" || event.code === "Enter") {
+        event.preventDefault();
+        if (ref.current) ref.current.click();
+      }
+    };
+
+    const handleClick: MouseEventHandler<HTMLElement> = (event) => {
+      onClick?.(event);
+      handleClose();
+    };
+
+    const commonProps = {
+      tabIndex: -1,
+      ref,
+      role: "menuitem",
+      "data-highlighted": highlighted ? true : null,
+      className: cn(
+        "text-gray-700 justify-between rounded pl-8 pr-2 py-1.5 w-full data-[highlighted]:bg-gray-200 data-[highlighted]:text-foreground focus:ring-0 cursor-default transition-colors",
+        className,
+      ),
+      onClick: handleClick,
+      onMouseEnter: () => setHighlighted(true),
+      onMouseLeave: () => setHighlighted(false),
+      onFocus: () => setHighlighted(true),
+      onBlur: () => setHighlighted(false),
+      onKeyDown: handleNavigate,
+    };
+
+    useEffect(() => {
+      if (!open) return;
+
+      const handleKeyDown = (event: KeyboardEvent) => {
+        if (!ref.current || !ref.current.parentElement) return;
+
+        if (event.code === "ArrowDown") {
+          (ref.current.parentElement.firstElementChild as HTMLElement)?.focus();
+        } else if (event.code === "ArrowUp") {
+          (ref.current.parentElement.lastElementChild as HTMLElement)?.focus();
+        } else if (event.code === "Tab") {
+          handleClose();
+        }
+      };
+
+      document.addEventListener("keydown", handleKeyDown, true);
+      return () => document.removeEventListener("keydown", handleKeyDown, true);
+    }, [open, ref]);
+
+    return asChild && isValidElement(children) ? (
+      cloneElement(children, commonProps)
+    ) : (
+      <div {...commonProps}>{children}</div>
+    );
+  },
+);
 
 ContextMenu.Trigger = ContextMenuTrigger;
 ContextMenu.Content = ContextMenuContent;

@@ -2,7 +2,7 @@ import Button from "@/components/ui/button.tsx";
 import ThemeSwitcher from "@/components/ui/theme.tsx";
 import Spinner from "@/components/ui/spinner.tsx";
 import Badge from "@/components/ui/badge.tsx";
-import { ArrowDown, ThumbsUpIcon } from "lucide-react";
+import { ArrowDown, ArrowUpRight, ThumbsUpIcon } from "lucide-react";
 import AvatarGroup from "@/components/ui/avatar-group.tsx";
 import Checkbox from "@/components/ui/checkbox.tsx";
 import { useState } from "react";
@@ -11,6 +11,7 @@ import Stack from "@/components/ui/stack.tsx";
 import CollapseGroup, { Collapse } from "@/components/ui/collapse.tsx";
 import Combobox from "@/components/ui/combobox.tsx";
 import ContextMenu from "@/components/ui/context-menu.tsx";
+import { Link } from "react-router-dom";
 
 const avatars = [
   {
@@ -139,7 +140,34 @@ export default function HomePage() {
             </div>
           </ContextMenu.Trigger>
           <ContextMenu.Content>
-            <ContextMenu.Item>test</ContextMenu.Item>
+            <ContextMenu.Item
+              onClick={(event) => console.log(event?.currentTarget.innerText)}
+            >
+              Back
+            </ContextMenu.Item>
+            <ContextMenu.Item asChild>
+              <Link to="/dashboard" className="cursor-pointer">
+                Dashboard{" "}
+                <span className="size-4">
+                  <ArrowUpRight />
+                </span>
+              </Link>
+            </ContextMenu.Item>
+            <ContextMenu.Item
+              onClick={(event) => console.log(event?.currentTarget.innerText)}
+            >
+              Reload
+            </ContextMenu.Item>
+            <ContextMenu.Item
+              onClick={(event) => console.log(event?.currentTarget.innerText)}
+            >
+              People
+            </ContextMenu.Item>
+            <ContextMenu.Item
+              onClick={(event) => console.log(event?.currentTarget.innerText)}
+            >
+              Zeynalli Zeynal
+            </ContextMenu.Item>
           </ContextMenu.Content>
         </ContextMenu>
       </Stack>

@@ -14,7 +14,6 @@ import { IoCheckmark, IoChevronDown, IoClose, IoSearch } from "react-icons/io5";
 import { createPortal } from "react-dom";
 import { useOutsideClick } from "@/hooks/useOutsideClick.ts";
 import { calculateAvailableRoom } from "@/utils/calculateAvailableRoom.ts";
-import { cn } from "@/lib/utils.ts";
 
 interface ComboboxContext {
   open: boolean;
@@ -247,13 +246,8 @@ const ComboboxList = ({ children }: { children: ReactNode }) => {
     <div
       ref={listboxRef}
       data-combobox="popup"
-      className={cn(
-        "rounded-lg border p-1 flex-col min-w-40 fixed z-50 bg-background-100",
-        {
-          "animate-fadeIn": !animate,
-          "animate-fadeOut": animate,
-        },
-      )}
+      data-state={!animate}
+      className="rounded-lg border p-1 flex-col min-w-40 fixed z-50 bg-background-100 data-[state='true']:animate-in data-[state='false']:animate-out data-[state='true']:zoom-in data-[state='false']:zoom-out"
       style={{
         left: rect.left,
         width: rect.width,
@@ -333,9 +327,9 @@ const ComboboxOption = ({
     <button
       ref={ref}
       data-value={value}
-      data-hover={hoveredOption === value ? true : null}
+      data-highlighted={hoveredOption === value ? true : null}
       aria-selected={children.toLowerCase() === currentValue?.toLowerCase()}
-      className="text-gray-700 justify-between rounded data-[hover]:bg-gray-200 data-[hover]:text-foreground px-3 py-1.5 w-full focus:ring-0 cursor-default"
+      className="text-gray-700 justify-between rounded data-[highlighted]:bg-gray-200 data-[highlighted]:text-foreground px-3 py-1.5 w-full focus:ring-0 cursor-default"
       onClick={handleSelectValue}
       onMouseEnter={(event) => {
         event.currentTarget.focus();
