@@ -14,6 +14,7 @@ import { IoCheckmark, IoChevronDown, IoClose, IoSearch } from "react-icons/io5";
 import { createPortal } from "react-dom";
 import { useOutsideClick } from "@/hooks/useOutsideClick.ts";
 import { calculateAvailableRoom } from "@/utils/calculateAvailableRoom.ts";
+import { cn } from "@/lib/utils.ts";
 
 interface ComboboxContext {
   open: boolean;
@@ -174,7 +175,7 @@ const ComboboxInput = () => {
   } = useCombobox();
 
   return (
-    <div className="w-full relative place-items-center text-gray-700">
+    <div className="w-full relative place-items-center text-gray-900">
       <span
         aria-hidden="true"
         className="inline-flex absolute top-1/2 left-0 -translate-y-1/2 items-center justify-center size-10 p-[11px]"
@@ -247,7 +248,10 @@ const ComboboxList = ({ children }: { children: ReactNode }) => {
       ref={listboxRef}
       data-combobox="popup"
       data-state={!animate}
-      className="rounded-lg border p-1 flex-col min-w-40 fixed z-50 bg-background-100 data-[state='true']:animate-in data-[state='false']:animate-out data-[state='true']:zoom-in data-[state='false']:zoom-out"
+      className={cn(
+        "rounded-ui-content focus:ring-0 border p-ui-content flex-col min-w-40 fixed z-50 bg-ui-background",
+        "data-[state='true']:animate-in data-[state='false']:animate-out data-[state='true']:zoom-in data-[state='false']:zoom-out",
+      )}
       style={{
         left: rect.left,
         width: rect.width,
@@ -329,7 +333,10 @@ const ComboboxOption = ({
       data-value={value}
       data-highlighted={hoveredOption === value ? true : null}
       aria-selected={children.toLowerCase() === currentValue?.toLowerCase()}
-      className="text-gray-700 justify-between rounded data-[highlighted]:bg-gray-200 data-[highlighted]:text-foreground px-3 py-1.5 w-full focus:ring-0 cursor-default"
+      className={cn(
+        "text-ui-foreground justify-between rounded-ui-item p-ui-item w-full focus:ring-0 cursor-default transition-colors",
+        "data-[highlighted]:bg-ui-item-background-hover data-[highlighted]:text-ui-item-foreground-hover",
+      )}
       onClick={handleSelectValue}
       onMouseEnter={(event) => {
         event.currentTarget.focus();

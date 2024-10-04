@@ -9,7 +9,6 @@
     &, &.light {
       --ds-background-100: 0, 0%, 100%;
       --ds-background-200: 0, 0%, 98%;
-      --ds-foreground: 0, 0%, 0%;
 
       --ds-gray-100: 0, 0%, 95%;
       --ds-gray-200: 0, 0%, 92%;

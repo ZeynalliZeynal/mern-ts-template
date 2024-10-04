@@ -53,7 +53,7 @@ const Button = ({
             : "text-gray-500 border-gray-200 bg-gray-1000 data-[hover]:text-background-100 data-[hover]:bg-button-invert-hover disabled:bg-button-invert-disabled disabled:text-gray-700 disabled:border-gray-400"
         } ${size === "md" ? "px-2.5 h-10 text-sm" : size === "lg" ? "px-3.5 h-12" : "text-sm h-8 px-1.5"} ${full ? "w-full" : "w-fit"} rounded-${rounded}`}
         onClick={onClick}
-        data-hover={hovering ? "" : null}
+        data-hover={hovering ? true : null}
         disabled={disabled}
         onMouseEnter={() => setHovering(true)}
         onMouseLeave={() => setHovering(false)}

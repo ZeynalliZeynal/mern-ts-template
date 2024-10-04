@@ -153,7 +153,10 @@ const ContextMenuContent = ({ children }: { children: ReactNode }) => {
       ref={ref}
       data-context="popup"
       data-state={!animate}
-      className="rounded-md border p-1 flex-col min-w-40 fixed z-50 bg-background-100 data-[state='true']:animate-in data-[state='false']:animate-out data-[state='true']:zoom-in data-[state='false']:zoom-out focus:ring-0"
+      className={cn(
+        "rounded-ui-content focus:ring-0 border p-ui-content flex-col min-w-40 fixed z-50 bg-ui-background",
+        "data-[state='true']:animate-in data-[state='false']:animate-out data-[state='true']:zoom-in data-[state='false']:zoom-out",
+      )}
       style={{
         left: clientPosition.clientX,
         top: clientPosition.clientY,
@@ -212,7 +215,8 @@ const ContextMenuItem = forwardRef<HTMLDivElement, ContextMenuItem>(
       role: "menuitem",
       "data-highlighted": highlighted ? true : null,
       className: cn(
-        "text-gray-700 justify-between rounded pl-8 pr-2 py-1.5 w-full data-[highlighted]:bg-gray-200 data-[highlighted]:text-foreground focus:ring-0 cursor-default transition-colors",
+        "text-ui-foreground justify-between rounded-ui-item p-ui-item w-full focus:ring-0 cursor-default transition-colors",
+        "data-[highlighted]:bg-ui-item-background-hover data-[highlighted]:text-ui-item-foreground-hover",
         className,
       ),
       onClick: handleClick,

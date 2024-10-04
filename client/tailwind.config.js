@@ -14,6 +14,10 @@ export default {
         center: true,
       },
       colors: {
+        "ui-background": "hsla(var(--ds-background-100))",
+        "ui-foreground": "hsla(var(--ds-gray-900))",
+        "ui-item-foreground-hover": "hsla(var(--ds-gray-1000))",
+        "ui-item-background-hover": "hsla(var(--ds-gray-200))",
         "button-invert-hover": "hsla(var(--button-invert-hover-dark))",
         "button-invert-disabled": "hsla(var(--button-invert-disabled-dark))",
         foreground: {
@@ -140,6 +144,14 @@ export default {
         input:
           "0 0 0 1px hsla(var(--ds-gray-alpha-600)), 0 0 0 4px hsla(0,0%,100%,.24)",
         border: "0 0 0 1px hsla(var(--ds-gray-alpha-400))",
+      },
+      borderRadius: {
+        "ui-content": ".375rem",
+        "ui-item": ".25rem",
+      },
+      padding: {
+        "ui-content": ".25rem",
+        "ui-item": ".375rem .5rem .375rem 2rem",
       },
       animation: {
         spinner: "spinner 1.1s linear infinite",
