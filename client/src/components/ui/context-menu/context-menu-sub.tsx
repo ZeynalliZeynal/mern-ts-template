@@ -76,9 +76,11 @@ export default function ContextMenuSub({ children }: { children: ReactNode }) {
 const ContextMenuSubTrigger = ({
   children,
   className,
+  inset = false,
 }: {
   children: ReactNode;
   className?: string;
+  inset?: boolean;
 }) => {
   const { isHighlighted, handleHighlight } = useContextMenu();
   const { openSub, handleOpenSub, setSubRect, handleCloseSub } =
@@ -93,6 +95,7 @@ const ContextMenuSubTrigger = ({
   };
 
   const handleMouseLeave = (event: React.MouseEvent) => {
+    handleHighlight(-1);
     const relatedTarget = event.relatedTarget as HTMLElement;
     if (!relatedTarget || !relatedTarget.closest('[data-contextsub="popup"]')) {
       handleCloseSub();
@@ -117,11 +120,16 @@ const ContextMenuSubTrigger = ({
       aria-expanded={openSub}
       data-state={openSub}
       data-highlighted={
-        ref.current && isHighlighted(ref.current) ? true : undefined
+        ref.current && isHighlighted(ref.current) ? "" : undefined
       }
+      data-contextsub="trigger"
       className={cn(
-        "text-foreground flex justify-between items-center rounded-ui-item p-ui-item w-full focus:ring-0 cursor-default transition-colors",
+        "text-foreground flex justify-between items-center rounded-ui-item w-full focus:ring-0 cursor-default transition-colors",
         "data-[highlighted]:bg-ui-item-background-hover data-[state='true']:bg-ui-item-background-hover data-[disabled]:text-ui-disabled-foreground data-[disabled]:select-none",
+        {
+          "p-ui-item-inset": inset,
+          "p-ui-item": !inset,
+        },
         className,
       )}
       onMouseEnter={handleMouseEnter}
@@ -139,25 +147,31 @@ const ContextMenuSubTrigger = ({
 
 const ContextMenuSubContent = ({ children }: { children: ReactNode }) => {
   const { clientPosition } = useContextMenu();
-  const { subRect, openSub, animate } = useContextMenuSub();
+  const { subRect, openSub, animate, handleCloseSub } = useContextMenuSub();
+  const ref = useRef<HTMLDivElement | null>(null);
+
+  const handleMouseLeave = (event: React.MouseEvent) => {
+    const relatedTarget = event.relatedTarget as HTMLElement;
+    if (!relatedTarget || !relatedTarget.closest('[data-contextsub="trigger"]'))
+      handleCloseSub();
+  };
 
   if (!openSub || !subRect || !clientPosition) return null;
 
   return createPortal(
     <div
+      ref={ref}
       data-contextsub="popup"
       data-state={!animate}
       className={cn(
-        "rounded-ui-content focus:ring-0 border flex-col p-ui-content min-w-64 fixed z-50 bg-ui-background",
+        "rounded-ui-content focus:ring-0 border flex-col p-ui-content min-w-40 fixed z-50 bg-ui-background",
         "data-[state='true']:animate-in data-[state='false']:animate-out data-[state='true']:fade-in data-[state='false']:fade-out data-[state='true']:slide-in-from-right-4 data-[state='false']:slide-out-to-right-4",
       )}
       style={{
         left: subRect.width + 4,
         top: subRect.top - clientPosition.clientY,
       }}
-      onMouseEnter={() => {
-        // Keep the submenu open when the mouse enters it
-      }}
+      onMouseLeave={handleMouseLeave}
     >
       {children}
     </div>,

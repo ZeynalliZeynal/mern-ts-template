@@ -236,7 +236,7 @@ const ComboboxInput = () => {
   );
 };
 
-const ComboboxList = ({ children }: { children: ReactNode }) => {
+const ComboboxContent = ({ children }: { children: ReactNode }) => {
   const { open, rect, listboxRef, animate } = useCombobox();
 
   if (!open || !rect) return null;
@@ -265,7 +265,7 @@ const ComboboxList = ({ children }: { children: ReactNode }) => {
   );
 };
 
-const ComboboxOption = ({
+const ComboboxItem = ({
   children,
   value,
 }: {
@@ -356,5 +356,5 @@ const ComboboxOption = ({
 };
 
 Combobox.Input = ComboboxInput;
-Combobox.Content = ComboboxList;
-Combobox.Item = ComboboxOption;
+Combobox.Content = ComboboxContent;
+Combobox.Item = ComboboxItem;

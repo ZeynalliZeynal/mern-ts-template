@@ -1,6 +1,7 @@
 import React, {
   cloneElement,
   createContext,
+  CSSProperties,
   Dispatch,
   forwardRef,
   isValidElement,
@@ -17,6 +18,7 @@ import React, {
 import { createPortal } from "react-dom";
 import { useOutsideClick } from "@/hooks/useOutsideClick.ts";
 import { cn } from "@/lib/utils.ts";
+import { Link } from "react-router-dom";
 
 interface ContextMenuContext {
   open: boolean;
@@ -126,6 +128,7 @@ const ContextMenuTrigger = ({ children }: { children: ReactNode }) => {
 
   const handleContextMenu: MouseEventHandler<HTMLDivElement> = (event) => {
     event.preventDefault();
+    console.log(event.clientX, window.innerWidth);
     const { clientY, clientX } = event;
     handleOpen(clientX, clientY);
   };
@@ -145,6 +148,9 @@ const ContextMenuTrigger = ({ children }: { children: ReactNode }) => {
 const ContextMenuContent = ({ children }: { children: ReactNode }) => {
   const { open, clientPosition, handleClose, animate, handleOpen } =
     useContextMenu();
+  const [menuStyle, setMenuStyle] = useState<CSSProperties | undefined>(
+    undefined,
+  );
 
   const ref = useRef<HTMLDivElement | null>(null);
 
@@ -175,6 +181,29 @@ const ContextMenuContent = ({ children }: { children: ReactNode }) => {
     }
   });
 
+  useEffect(() => {
+    if (!ref.current || !open || !clientPosition) return;
+
+    const newMenuStyle = { ...menuStyle };
+
+    const isEnoughSpaceBelow =
+      window.innerHeight - clientPosition.clientY > ref.current.clientHeight;
+    const isEnoughSpaceRight =
+      window.innerWidth - clientPosition.clientX > ref.current.clientWidth;
+
+    newMenuStyle.top = isEnoughSpaceBelow ? clientPosition.clientY : undefined;
+    newMenuStyle.bottom = !isEnoughSpaceBelow
+      ? window.innerHeight - clientPosition.clientY
+      : undefined;
+
+    newMenuStyle.left = isEnoughSpaceRight ? clientPosition.clientX : undefined;
+    newMenuStyle.right = !isEnoughSpaceRight
+      ? window.innerWidth - clientPosition.clientX
+      : undefined;
+
+    setMenuStyle(newMenuStyle);
+  }, [handleOpen, open]);
+
   if (!open || !clientPosition) return null;
 
   return createPortal(
@@ -187,10 +216,7 @@ const ContextMenuContent = ({ children }: { children: ReactNode }) => {
         "rounded-ui-content focus:ring-0 border flex-col p-ui-content min-w-64 fixed z-50 bg-ui-background",
         "data-[state='true']:animate-in data-[state='false']:animate-out data-[state='true']:zoom-in data-[state='false']:zoom-out data-[state='true']:fade-in data-[state='false']:fade-out",
       )}
-      style={{
-        left: clientPosition.clientX,
-        top: clientPosition.clientY,
-      }}
+      style={menuStyle}
     >
       {children}
     </div>,
@@ -204,9 +230,16 @@ interface ContextMenuItem {
   asChild?: boolean;
   disabled?: boolean;
   className?: string;
+  inset?: boolean;
+  href?: string;
+  prefix?: ReactNode;
+  suffix?: ReactNode;
 }
 
-const ContextMenuItem = forwardRef<HTMLDivElement, ContextMenuItem>(
+const ContextMenuItem = forwardRef<
+  HTMLDivElement | HTMLAnchorElement,
+  ContextMenuItem
+>(
   (
     {
       children,
@@ -214,12 +247,19 @@ const ContextMenuItem = forwardRef<HTMLDivElement, ContextMenuItem>(
       className,
       asChild = false,
       disabled = false,
+      inset = false,
+      href,
+      suffix,
+      prefix,
     }: ContextMenuItem,
     forwardRef,
   ) => {
     const { handleClose, handleHighlight, isHighlighted } = useContextMenu();
-    const ref = useRef<HTMLDivElement | null>(null);
-    useImperativeHandle(forwardRef, () => ref.current as HTMLDivElement);
+    const ref = useRef<HTMLDivElement | HTMLAnchorElement | null>(null);
+    useImperativeHandle(
+      forwardRef,
+      () => ref.current as HTMLDivElement | HTMLAnchorElement,
+    );
 
     const handleClick: MouseEventHandler<HTMLElement> = (event) => {
       if (disabled) return;
@@ -236,24 +276,52 @@ const ContextMenuItem = forwardRef<HTMLDivElement, ContextMenuItem>(
         ref.current && isHighlighted(ref.current) && !disabled ? true : null,
       "data-disabled": disabled ? true : undefined,
       "aria-disabled": disabled ? true : undefined,
+      "data-contextsub":
+        ref.current &&
+        ref.current.closest("[data-contextsub='popup']") &&
+        "item",
       className: cn(
-        "text-foreground flex justify-between items-center rounded-ui-item p-ui-item w-full focus:ring-0 cursor-default transition-colors",
-        "data-[highlighted]:bg-ui-item-background-hover data-[disabled]:text-ui-disabled-foreground data-[disabled]:select-none",
+        "text-foreground flex items-center rounded-ui-item w-full focus:ring-0 cursor-default transition-colors",
+        "data-[highlighted]:bg-ui-item-background-hover data-[disabled]:text-ui-disabled-foreground data-[disabled]:pointer-events-none data-[disabled]:select-none",
+        {
+          "cursor-pointer": href,
+          "justify-between": suffix,
+          "gap-2": prefix,
+          "p-ui-item-inset": inset,
+          "p-ui-item": !inset,
+        },
         className,
       ),
       onClick: handleClick,
-      onMouseEnter: (event: React.MouseEvent<HTMLDivElement>) =>
-        !disabled && handleHighlight(event.currentTarget),
+      onMouseEnter: (
+        event: React.MouseEvent<HTMLDivElement | HTMLAnchorElement>,
+      ) => !disabled && handleHighlight(event.currentTarget),
       onMouseLeave: () => !disabled && handleHighlight(-1),
-      onFocus: (event: React.FocusEvent<HTMLDivElement>) =>
+      onFocus: (event: React.FocusEvent<HTMLDivElement | HTMLAnchorElement>) =>
         !disabled && handleHighlight(event.currentTarget),
       onBlur: () => !disabled && handleHighlight(-1),
     };
 
     return asChild && isValidElement(children) ? (
       cloneElement(children, commonProps)
+    ) : href ? (
+      <Link
+        to={href}
+        {...(commonProps as React.AnchorHTMLAttributes<HTMLAnchorElement>)}
+      >
+        {prefix && <span className="size-4">{prefix}</span>}
+        {children}
+        {suffix && <span className="size-4">{suffix}</span>}
+      </Link>
     ) : (
-      <div {...commonProps}>{children}</div>
+      <div
+        {...(commonProps as React.HTMLAttributes<HTMLDivElement>)}
+        onClick={handleClick}
+      >
+        {prefix && <span className="size-4">{prefix}</span>}
+        {children}
+        {suffix && <span className="size-4">{suffix}</span>}
+      </div>
     );
   },
 );

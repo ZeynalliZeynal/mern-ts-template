@@ -152,7 +152,8 @@ export default {
       },
       padding: {
         "ui-content": ".25rem",
-        "ui-item": ".375rem .5rem .375rem 2rem",
+        "ui-item-inset": ".375rem .5rem .375rem 2rem",
+        "ui-item": ".375rem .5rem",
       },
       margin: ({ theme }) => theme("padding"),
       animation: {
