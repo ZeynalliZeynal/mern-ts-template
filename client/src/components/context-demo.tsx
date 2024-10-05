@@ -72,7 +72,41 @@ export default function ContextDemo() {
             <ContextMenuSub>
               <ContextMenuSub.Trigger>People</ContextMenuSub.Trigger>
               <ContextMenuSub.Content>
-                <ContextMenu.Item>test</ContextMenu.Item>
+                <ContextMenu.Item
+                  onClick={({ currentTarget }) =>
+                    console.log(currentTarget.innerText)
+                  }
+                >
+                  Telman
+                </ContextMenu.Item>
+                <ContextMenu.Item
+                  onClick={({ currentTarget }) =>
+                    console.log(currentTarget.innerText)
+                  }
+                >
+                  Simran
+                </ContextMenu.Item>
+                <ContextMenu.Item
+                  onClick={({ currentTarget }) =>
+                    console.log(currentTarget.innerText)
+                  }
+                >
+                  Samir
+                </ContextMenu.Item>
+                <ContextMenu.Item
+                  onClick={({ currentTarget }) =>
+                    console.log(currentTarget.innerText)
+                  }
+                >
+                  Femil
+                </ContextMenu.Item>
+                <ContextMenu.Item
+                  onClick={({ currentTarget }) =>
+                    console.log(currentTarget.innerText)
+                  }
+                >
+                  Josef
+                </ContextMenu.Item>
               </ContextMenuSub.Content>
             </ContextMenuSub>
             <ContextMenu.Item

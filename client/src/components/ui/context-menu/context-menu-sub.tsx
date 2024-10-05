@@ -1,10 +1,6 @@
 import React, {
-  Children,
-  cloneElement,
   createContext,
   Dispatch,
-  isValidElement,
-  ReactElement,
   ReactNode,
   SetStateAction,
   useContext,
@@ -143,8 +139,7 @@ const ContextMenuSubTrigger = ({
 
 const ContextMenuSubContent = ({ children }: { children: ReactNode }) => {
   const { clientPosition } = useContextMenu();
-  const { subRect, openSub, animate, handleOpenSub, handleCloseSub } =
-    useContextMenuSub();
+  const { subRect, openSub, animate } = useContextMenuSub();
 
   if (!openSub || !subRect || !clientPosition) return null;
 
@@ -154,7 +149,7 @@ const ContextMenuSubContent = ({ children }: { children: ReactNode }) => {
       data-state={!animate}
       className={cn(
         "rounded-ui-content focus:ring-0 border flex-col p-ui-content min-w-64 fixed z-50 bg-ui-background",
-        "data-[state='true']:animate-in data-[state='false']:animate-out data-[state='true']:zoom-in data-[state='false']:zoom-out",
+        "data-[state='true']:animate-in data-[state='false']:animate-out data-[state='true']:fade-in data-[state='false']:fade-out data-[state='true']:slide-in-from-right-4 data-[state='false']:slide-out-to-right-4",
       )}
       style={{
         left: subRect.width + 4,
@@ -164,20 +159,7 @@ const ContextMenuSubContent = ({ children }: { children: ReactNode }) => {
         // Keep the submenu open when the mouse enters it
       }}
     >
-      {Children.map(children, (child) => {
-        if (isValidElement(child)) {
-          return cloneElement(child as ReactElement<HTMLElement>, {
-            onClick(e: React.MouseEvent<HTMLElement>) {
-              if (child.props.onClick) {
-                child.props.onClick(e);
-              }
-              e.stopPropagation();
-              handleCloseSub();
-            },
-          });
-        }
-        return child;
-      })}
+      {children}
     </div>,
     document.querySelector('[data-context="popup"]') as HTMLElement,
   );
