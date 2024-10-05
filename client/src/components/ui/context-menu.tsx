@@ -1,4 +1,4 @@
-import {
+import React, {
   cloneElement,
   createContext,
   Dispatch,
@@ -17,7 +17,6 @@ import {
 import { createPortal } from "react-dom";
 import { useOutsideClick } from "@/hooks/useOutsideClick.ts";
 import { cn } from "@/lib/utils.ts";
-import { useContextMenuSub } from "@/components/ui/context-menu/context-menu-sub.tsx";
 
 interface ContextMenuContext {
   open: boolean;
@@ -28,6 +27,8 @@ interface ContextMenuContext {
     SetStateAction<{ clientY: number; clientX: number } | null>
   >;
   animate: boolean;
+  handleHighlight: (value: HTMLElement | number) => void;
+  isHighlighted: (currentElement: HTMLElement) => boolean;
 }
 
 const ContextMenuContext = createContext<ContextMenuContext | null>(null);
@@ -40,6 +41,8 @@ export const useContextMenu = () => {
 
 export default function ContextMenu({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
+  const [highlighted, setHighlighted] = useState<number | undefined>(-1);
+
   const [clientPosition, setClientPosition] = useState<{
     clientX: number;
     clientY: number;
@@ -68,6 +71,28 @@ export default function ContextMenu({ children }: { children: ReactNode }) {
     }, 150);
   };
 
+  const findMenuItem = (currentElement: HTMLElement) => {
+    const root = currentElement.closest("[role='menu']");
+    if (!root) return;
+
+    const menuItems = Array.from(
+      root.querySelectorAll("[role='menuitem']:not([data-disabled])"),
+    );
+
+    return menuItems.indexOf(currentElement);
+  };
+
+  const handleHighlight = (value: HTMLElement | number) => {
+    if (typeof value === "number") setHighlighted(value);
+    else {
+      const currentIndex = findMenuItem(value);
+      setHighlighted(currentIndex);
+    }
+  };
+
+  const isHighlighted = (currentElement: HTMLElement) =>
+    highlighted === findMenuItem(currentElement);
+
   useEffect(() => {
     if (open) {
       document.body.style.marginRight = "6px";
@@ -87,6 +112,8 @@ export default function ContextMenu({ children }: { children: ReactNode }) {
         clientPosition,
         setClientPosition,
         animate,
+        isHighlighted,
+        handleHighlight,
       }}
     >
       {children}
@@ -190,29 +217,23 @@ const ContextMenuItem = forwardRef<HTMLDivElement, ContextMenuItem>(
     }: ContextMenuItem,
     forwardRef,
   ) => {
-    const { handleClose } = useContextMenu();
-    const { handleCloseSub } = useContextMenuSub();
-    const [highlighted, setHighlighted] = useState(false);
+    const { handleClose, handleHighlight, isHighlighted } = useContextMenu();
     const ref = useRef<HTMLDivElement | null>(null);
     useImperativeHandle(forwardRef, () => ref.current as HTMLDivElement);
 
     const handleClick: MouseEventHandler<HTMLElement> = (event) => {
       if (disabled) return;
       onClick?.(event);
-      if (
-        (event.currentTarget.parentElement as HTMLElement).closest(
-          "[data-contextsub]",
-        )
-      )
-        handleCloseSub();
-      else handleClose();
+      if (!event.currentTarget.closest('[data-contextsub="popup"]'))
+        handleClose();
     };
 
     const commonProps = {
       tabIndex: -1,
       ref,
       role: "menuitem",
-      "data-highlighted": highlighted ? true : null,
+      "data-highlighted":
+        ref.current && isHighlighted(ref.current) && !disabled ? true : null,
       "data-disabled": disabled ? true : undefined,
       "aria-disabled": disabled ? true : undefined,
       className: cn(
@@ -221,10 +242,12 @@ const ContextMenuItem = forwardRef<HTMLDivElement, ContextMenuItem>(
         className,
       ),
       onClick: handleClick,
-      onMouseEnter: () => !disabled && setHighlighted(true),
-      onMouseLeave: () => !disabled && setHighlighted(false),
-      onFocus: () => !disabled && setHighlighted(true),
-      onBlur: () => !disabled && setHighlighted(false),
+      onMouseEnter: (event: React.MouseEvent<HTMLDivElement>) =>
+        !disabled && handleHighlight(event.currentTarget),
+      onMouseLeave: () => !disabled && handleHighlight(-1),
+      onFocus: (event: React.FocusEvent<HTMLDivElement>) =>
+        !disabled && handleHighlight(event.currentTarget),
+      onBlur: () => !disabled && handleHighlight(-1),
     };
 
     return asChild && isValidElement(children) ? (

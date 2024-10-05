@@ -1,9 +1,14 @@
-import {
+import React, {
+  Children,
+  cloneElement,
   createContext,
   Dispatch,
+  isValidElement,
+  ReactElement,
   ReactNode,
   SetStateAction,
   useContext,
+  useEffect,
   useRef,
   useState,
 } from "react";
@@ -50,6 +55,12 @@ export default function ContextMenuSub({ children }: { children: ReactNode }) {
     }, 150);
   };
 
+  useEffect(() => {
+    if (!open) {
+      handleCloseSub();
+    }
+  }, [open]);
+
   return (
     <ContextMenuSubContext.Provider
       value={{
@@ -73,35 +84,54 @@ const ContextMenuSubTrigger = ({
   children: ReactNode;
   className?: string;
 }) => {
-  const { openSub, handleOpenSub, handleCloseSub, setSubRect } =
+  const { isHighlighted, handleHighlight } = useContextMenu();
+  const { openSub, handleOpenSub, setSubRect, handleCloseSub } =
     useContextMenuSub();
-
-  const [highlighted, setHighlighted] = useState(false);
 
   const ref = useRef<HTMLDivElement | null>(null);
 
+  const handleMouseEnter = (event: React.MouseEvent<HTMLDivElement>) => {
+    handleOpenSub();
+    handleHighlight(event.currentTarget);
+    setSubRect(event.currentTarget.getBoundingClientRect());
+  };
+
+  const handleMouseLeave = (event: React.MouseEvent) => {
+    const relatedTarget = event.relatedTarget as HTMLElement;
+    if (!relatedTarget || !relatedTarget.closest('[data-contextsub="popup"]')) {
+      handleCloseSub();
+    }
+  };
+
+  const handleFocus = (event: React.FocusEvent<HTMLDivElement>) => {
+    handleOpenSub();
+    handleHighlight(event.currentTarget);
+  };
+
+  const handleBlur = () => {
+    handleHighlight(-1);
+  };
+
   return (
     <div
-      tabIndex={-1}
+      tabIndex={0}
       ref={ref}
       role="menuitem"
       aria-haspopup="menu"
       aria-expanded={openSub}
       data-state={openSub}
-      data-highlighted={highlighted ? true : undefined}
+      data-highlighted={
+        ref.current && isHighlighted(ref.current) ? true : undefined
+      }
       className={cn(
         "text-foreground flex justify-between items-center rounded-ui-item p-ui-item w-full focus:ring-0 cursor-default transition-colors",
-        "data-[highlighted]:bg-ui-item-background-hover data-[disabled]:text-ui-disabled-foreground data-[disabled]:select-none",
+        "data-[highlighted]:bg-ui-item-background-hover data-[state='true']:bg-ui-item-background-hover data-[disabled]:text-ui-disabled-foreground data-[disabled]:select-none",
         className,
       )}
-      onMouseEnter={(event) => {
-        handleOpenSub();
-        setHighlighted(true);
-        setSubRect(event.currentTarget.getBoundingClientRect());
-      }}
-      onMouseLeave={() => {
-        setHighlighted(false);
-      }}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      onFocus={handleFocus}
+      onBlur={handleBlur}
     >
       {children}
       <span className="size-4">
@@ -113,7 +143,8 @@ const ContextMenuSubTrigger = ({
 
 const ContextMenuSubContent = ({ children }: { children: ReactNode }) => {
   const { clientPosition } = useContextMenu();
-  const { subRect, openSub, animate } = useContextMenuSub();
+  const { subRect, openSub, animate, handleOpenSub, handleCloseSub } =
+    useContextMenuSub();
 
   if (!openSub || !subRect || !clientPosition) return null;
 
@@ -129,8 +160,24 @@ const ContextMenuSubContent = ({ children }: { children: ReactNode }) => {
         left: subRect.width + 4,
         top: subRect.top - clientPosition.clientY,
       }}
+      onMouseEnter={() => {
+        // Keep the submenu open when the mouse enters it
+      }}
     >
-      {children}
+      {Children.map(children, (child) => {
+        if (isValidElement(child)) {
+          return cloneElement(child as ReactElement<HTMLElement>, {
+            onClick(e: React.MouseEvent<HTMLElement>) {
+              if (child.props.onClick) {
+                child.props.onClick(e);
+              }
+              e.stopPropagation();
+              handleCloseSub();
+            },
+          });
+        }
+        return child;
+      })}
     </div>,
     document.querySelector('[data-context="popup"]') as HTMLElement,
   );
