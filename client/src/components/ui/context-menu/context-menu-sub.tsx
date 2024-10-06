@@ -2,6 +2,7 @@ import React, {
   createContext,
   CSSProperties,
   Dispatch,
+  MutableRefObject,
   ReactNode,
   SetStateAction,
   useContext,
@@ -21,6 +22,7 @@ interface ContextMenuSubContext {
   subRect: DOMRect | null;
   setSubRect: Dispatch<SetStateAction<DOMRect | null>>;
   animate: boolean;
+  triggerRef: MutableRefObject<HTMLElement | null>;
 }
 
 const ContextMenuSubContext = createContext<ContextMenuSubContext | null>(null);
@@ -37,6 +39,7 @@ export default function ContextMenuSub({ children }: { children: ReactNode }) {
   const [openSub, setOpenSub] = useState(false);
   const [subRect, setSubRect] = useState<DOMRect | null>(null);
   const [animate, setAnimate] = useState(false);
+  const triggerRef = useRef<HTMLElement | null>(null);
 
   const handleOpenSub = () => {
     if (!open) return;
@@ -67,6 +70,7 @@ export default function ContextMenuSub({ children }: { children: ReactNode }) {
         animate,
         handleOpenSub,
         handleCloseSub,
+        triggerRef,
       }}
     >
       {children}
@@ -84,12 +88,13 @@ const ContextMenuSubTrigger = ({
   inset?: boolean;
 }) => {
   const { isHighlighted, handleHighlight } = useContextMenu();
-  const { openSub, handleOpenSub, setSubRect, handleCloseSub } =
+  const { openSub, handleOpenSub, setSubRect, handleCloseSub, triggerRef } =
     useContextMenuSub();
 
   const ref = useRef<HTMLDivElement | null>(null);
 
   const handleMouseEnter = (event: React.MouseEvent<HTMLDivElement>) => {
+    triggerRef.current = event.currentTarget;
     handleOpenSub();
     handleHighlight(event.currentTarget);
     setSubRect(event.currentTarget.getBoundingClientRect());
@@ -148,14 +153,20 @@ const ContextMenuSubTrigger = ({
 
 const ContextMenuSubContent = ({ children }: { children: ReactNode }) => {
   const { clientPosition } = useContextMenu();
-  const { subRect, openSub, animate, handleCloseSub } = useContextMenuSub();
+  const { subRect, openSub, animate, handleCloseSub, triggerRef } =
+    useContextMenuSub();
   const [menuStyle, setMenuStyle] = useState<CSSProperties>({});
 
   const ref = useRef<HTMLDivElement | null>(null);
 
   const handleMouseLeave = (event: React.MouseEvent) => {
+    console.log(triggerRef.current);
     const relatedTarget = event.relatedTarget as HTMLElement;
-    if (!relatedTarget || !relatedTarget.closest('[data-contextsub="trigger"]'))
+    if (
+      !relatedTarget ||
+      relatedTarget.closest('[data-contextsub="trigger"]') !==
+        triggerRef.current
+    )
       handleCloseSub();
   };
 
