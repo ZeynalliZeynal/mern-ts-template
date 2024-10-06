@@ -128,7 +128,6 @@ const ContextMenuTrigger = ({ children }: { children: ReactNode }) => {
 
   const handleContextMenu: MouseEventHandler<HTMLDivElement> = (event) => {
     event.preventDefault();
-    console.log(event.clientX, window.innerWidth);
     const { clientY, clientX } = event;
     handleOpen(clientX, clientY);
   };

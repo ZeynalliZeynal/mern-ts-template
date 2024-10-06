@@ -1,5 +1,6 @@
 import React, {
   createContext,
+  CSSProperties,
   Dispatch,
   ReactNode,
   SetStateAction,
@@ -148,6 +149,8 @@ const ContextMenuSubTrigger = ({
 const ContextMenuSubContent = ({ children }: { children: ReactNode }) => {
   const { clientPosition } = useContextMenu();
   const { subRect, openSub, animate, handleCloseSub } = useContextMenuSub();
+  const [menuStyle, setMenuStyle] = useState<CSSProperties>({});
+
   const ref = useRef<HTMLDivElement | null>(null);
 
   const handleMouseLeave = (event: React.MouseEvent) => {
@@ -155,6 +158,35 @@ const ContextMenuSubContent = ({ children }: { children: ReactNode }) => {
     if (!relatedTarget || !relatedTarget.closest('[data-contextsub="trigger"]'))
       handleCloseSub();
   };
+
+  useEffect(() => {
+    if (!ref.current || !openSub || !subRect) return;
+
+    const updatePosition = () => {
+      const newMenuStyle: CSSProperties = {};
+      const parentMenu = document.querySelector(
+        '[data-context="popup"]',
+      ) as HTMLElement;
+      const parentRect = parentMenu.getBoundingClientRect();
+
+      const isEnoughSpaceRight =
+        window.innerWidth - (parentRect.width + parentRect.left) >
+        ref.current!.offsetWidth;
+      const isEnoughSpaceBelow =
+        window.innerHeight - subRect.top > ref.current!.offsetHeight;
+
+      if (isEnoughSpaceRight) newMenuStyle.left = `${parentRect.width - 6}px`;
+      else newMenuStyle.right = `${parentRect.width - 6}px`;
+
+      if (isEnoughSpaceBelow)
+        newMenuStyle.top = `${Math.abs(subRect.top - parentRect.top) - 4}px`;
+      else newMenuStyle.bottom = `${window.innerHeight - subRect.bottom}px`;
+
+      setMenuStyle(newMenuStyle);
+    };
+
+    updatePosition();
+  }, [openSub, subRect]);
 
   if (!openSub || !subRect || !clientPosition) return null;
 
@@ -167,10 +199,7 @@ const ContextMenuSubContent = ({ children }: { children: ReactNode }) => {
         "rounded-ui-content focus:ring-0 border flex-col p-ui-content min-w-40 fixed z-50 bg-ui-background",
         "data-[state='true']:animate-in data-[state='false']:animate-out data-[state='true']:fade-in data-[state='false']:fade-out data-[state='true']:slide-in-from-right-4 data-[state='false']:slide-out-to-right-4",
       )}
-      style={{
-        left: subRect.width + 4,
-        top: subRect.top - clientPosition.clientY,
-      }}
+      style={menuStyle}
       onMouseLeave={handleMouseLeave}
     >
       {children}
