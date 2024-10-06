@@ -5,6 +5,8 @@ import React, {
   Dispatch,
   forwardRef,
   isValidElement,
+  KeyboardEvent,
+  MouseEvent,
   MouseEventHandler,
   ReactElement,
   ReactNode,
@@ -31,6 +33,8 @@ interface ContextMenuContext {
   animate: boolean;
   handleHighlight: (value: HTMLElement | number) => void;
   isHighlighted: (currentElement: HTMLElement) => boolean;
+  currentMenuItem: number | undefined;
+  setCurrentMenuItem: Dispatch<SetStateAction<number | undefined>>;
 }
 
 const ContextMenuContext = createContext<ContextMenuContext | null>(null);
@@ -44,6 +48,9 @@ export const useContextMenu = () => {
 export default function ContextMenu({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const [highlighted, setHighlighted] = useState<number | undefined>(-1);
+  const [currentMenuItem, setCurrentMenuItem] = useState<number | undefined>(
+    undefined,
+  );
 
   const [clientPosition, setClientPosition] = useState<{
     clientX: number;
@@ -71,6 +78,7 @@ export default function ContextMenu({ children }: { children: ReactNode }) {
       setOpen(false);
       setAnimate(false);
     }, 150);
+    setCurrentMenuItem(undefined);
   };
 
   const findMenuItem = (currentElement: HTMLElement) => {
@@ -88,6 +96,7 @@ export default function ContextMenu({ children }: { children: ReactNode }) {
     if (typeof value === "number") setHighlighted(value);
     else {
       const currentIndex = findMenuItem(value);
+      setCurrentMenuItem(currentIndex);
       setHighlighted(currentIndex);
     }
   };
@@ -99,9 +108,17 @@ export default function ContextMenu({ children }: { children: ReactNode }) {
     if (open) {
       document.body.style.marginRight = "6px";
       document.body.style.overflow = "hidden";
+      document.body.style.pointerEvents = "none";
     } else {
       document.body.style.marginRight = "0px";
-      document.body.style.overflow = "auto";
+      document.body.style.overflow = "";
+      document.body.style.pointerEvents = "auto";
+    }
+  }, [open]);
+
+  useEffect(() => {
+    if (open) {
+      (document.querySelector('[role="menu"]') as HTMLElement).focus();
     }
   }, [open]);
 
@@ -116,6 +133,8 @@ export default function ContextMenu({ children }: { children: ReactNode }) {
         animate,
         isHighlighted,
         handleHighlight,
+        currentMenuItem,
+        setCurrentMenuItem,
       }}
     >
       {children}
@@ -134,10 +153,10 @@ const ContextMenuTrigger = ({ children }: { children: ReactNode }) => {
 
   return (
     <div
-      tabIndex={0}
+      tabIndex={-1}
       data-context="trigger"
       onContextMenu={handleContextMenu}
-      className="select-none"
+      className="select-none pointer-events-auto"
     >
       {children}
     </div>
@@ -145,26 +164,57 @@ const ContextMenuTrigger = ({ children }: { children: ReactNode }) => {
 };
 
 const ContextMenuContent = ({ children }: { children: ReactNode }) => {
-  const { open, clientPosition, handleClose, animate, handleOpen } =
-    useContextMenu();
+  const {
+    open,
+    clientPosition,
+    handleClose,
+    animate,
+    handleOpen,
+    handleHighlight,
+    currentMenuItem,
+  } = useContextMenu();
   const [menuStyle, setMenuStyle] = useState<CSSProperties | undefined>(
     undefined,
   );
 
   const ref = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
-    if (open && ref.current) {
-      document.addEventListener("keydown", (event) => {
-        if (event.code === "Escape") handleClose();
-      });
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
+    const root = (event.target as HTMLElement).closest('[role="menu"]');
+
+    if (!ref.current || !root) return;
+    if (event.code === "Escape") {
+      event.preventDefault();
+      handleClose();
     }
 
-    return () =>
-      document.removeEventListener("keydown", (event) => {
-        if (event.code === "Escape") handleClose();
-      });
-  }, [open]);
+    if (event.code === "ArrowUp" || event.code === "ArrowDown") {
+      event.preventDefault();
+      const direction: "next" | "previous" =
+        event.code === "ArrowUp" ? "previous" : "next";
+
+      const menuItems = Array.from(
+        root.querySelectorAll(
+          '[role="menuitem"]:not([data-disabled]):not([data-contextsub="item"])',
+        ),
+      );
+
+      let nextIndex: number;
+      if (direction === "next") {
+        nextIndex =
+          currentMenuItem === undefined
+            ? 0
+            : (currentMenuItem + 1) % menuItems.length;
+      } else {
+        nextIndex =
+          currentMenuItem === undefined
+            ? 0
+            : (currentMenuItem - 1 + menuItems.length) % menuItems.length;
+      }
+
+      handleHighlight(menuItems[nextIndex] as HTMLElement);
+    }
+  };
 
   useOutsideClick(ref, (event) => {
     if (event) {
@@ -207,15 +257,17 @@ const ContextMenuContent = ({ children }: { children: ReactNode }) => {
 
   return createPortal(
     <div
+      tabIndex={-1}
       role="menu"
       ref={ref}
       data-context="popup"
       data-state={!animate}
       className={cn(
-        "rounded-ui-content focus:ring-0 border flex-col p-ui-content min-w-64 fixed z-50 bg-ui-background",
+        "pointer-events-auto rounded-ui-content focus:ring-0 border flex-col p-ui-content min-w-64 fixed z-50 bg-ui-background",
         "data-[state='true']:animate-in data-[state='false']:animate-out data-[state='true']:zoom-in data-[state='false']:zoom-out data-[state='true']:fade-in data-[state='false']:fade-out",
       )}
       style={menuStyle}
+      onKeyDown={handleKeyDown}
     >
       {children}
     </div>,
@@ -260,11 +312,18 @@ const ContextMenuItem = forwardRef<
       () => ref.current as HTMLDivElement | HTMLAnchorElement,
     );
 
-    const handleClick: MouseEventHandler<HTMLElement> = (event) => {
+    const handleClick = (event: MouseEvent | KeyboardEvent) => {
       if (disabled) return;
-      onClick?.(event);
+      onClick?.(event as React.MouseEvent<HTMLElement>);
       // if (!event.currentTarget.closest('[data-contextsub="popup"]'))
       handleClose();
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.code === "Enter" || event.code === "Space") {
+        event.preventDefault();
+        handleClick(event);
+      }
     };
 
     const commonProps = {
@@ -299,6 +358,7 @@ const ContextMenuItem = forwardRef<
       onFocus: (event: React.FocusEvent<HTMLDivElement | HTMLAnchorElement>) =>
         !disabled && handleHighlight(event.currentTarget),
       onBlur: () => !disabled && handleHighlight(-1),
+      onKeyDown: handleKeyDown,
     };
 
     return asChild && isValidElement(children) ? (

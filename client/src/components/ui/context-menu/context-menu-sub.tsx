@@ -109,6 +109,7 @@ const ContextMenuSubTrigger = ({
   };
 
   const handleFocus = (event: React.FocusEvent<HTMLDivElement>) => {
+    triggerRef.current = event.currentTarget;
     handleOpenSub();
     handleHighlight(event.currentTarget);
   };
@@ -119,7 +120,7 @@ const ContextMenuSubTrigger = ({
 
   return (
     <div
-      tabIndex={0}
+      tabIndex={-1}
       ref={ref}
       role="menuitem"
       aria-haspopup="menu"
@@ -160,7 +161,6 @@ const ContextMenuSubContent = ({ children }: { children: ReactNode }) => {
   const ref = useRef<HTMLDivElement | null>(null);
 
   const handleMouseLeave = (event: React.MouseEvent) => {
-    console.log(triggerRef.current);
     const relatedTarget = event.relatedTarget as HTMLElement;
     if (
       !relatedTarget ||
