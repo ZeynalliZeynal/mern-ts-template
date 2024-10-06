@@ -202,15 +202,18 @@ const ContextMenuContent = ({ children }: { children: ReactNode }) => {
       let nextIndex: number;
       if (direction === "next") {
         nextIndex =
-          currentMenuItem === undefined
-            ? 0
-            : (currentMenuItem + 1) % menuItems.length;
+          currentMenuItem === undefined ||
+          currentMenuItem === menuItems.length - 1
+            ? menuItems.indexOf(menuItems[menuItems.length - 1])
+            : currentMenuItem + 1;
       } else {
         nextIndex =
-          currentMenuItem === undefined
+          currentMenuItem === undefined || currentMenuItem === 0
             ? 0
-            : (currentMenuItem - 1 + menuItems.length) % menuItems.length;
+            : currentMenuItem - 1;
       }
+
+      console.log(nextIndex);
 
       handleHighlight(menuItems[nextIndex] as HTMLElement);
     }
