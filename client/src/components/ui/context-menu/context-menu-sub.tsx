@@ -2,7 +2,6 @@ import React, {
   createContext,
   CSSProperties,
   Dispatch,
-  MutableRefObject,
   ReactNode,
   SetStateAction,
   useContext,
@@ -17,12 +16,13 @@ import { ChevronRight } from "lucide-react";
 
 interface ContextMenuSubContext {
   openSub: boolean;
-  handleOpenSub: () => void;
+  handleOpenSub: (element: HTMLElement) => void;
   handleCloseSub: () => void;
   subRect: DOMRect | null;
   setSubRect: Dispatch<SetStateAction<DOMRect | null>>;
   animate: boolean;
-  triggerRef: MutableRefObject<HTMLElement | null>;
+  currentMenuItem: number | undefined;
+  setCurrentMenuItem: Dispatch<SetStateAction<number | undefined>>;
 }
 
 const ContextMenuSubContext = createContext<ContextMenuSubContext | null>(null);
@@ -39,12 +39,15 @@ export default function ContextMenuSub({ children }: { children: ReactNode }) {
   const [openSub, setOpenSub] = useState(false);
   const [subRect, setSubRect] = useState<DOMRect | null>(null);
   const [animate, setAnimate] = useState(false);
-  const triggerRef = useRef<HTMLElement | null>(null);
+  const [currentMenuItem, setCurrentMenuItem] = useState<number | undefined>(
+    undefined,
+  );
 
-  const handleOpenSub = () => {
+  const handleOpenSub = (element: HTMLElement) => {
     if (!open) return;
     setAnimate(false);
     setOpenSub(true);
+    setSubRect(element.getBoundingClientRect());
   };
 
   const handleCloseSub = () => {
@@ -70,7 +73,8 @@ export default function ContextMenuSub({ children }: { children: ReactNode }) {
         animate,
         handleOpenSub,
         handleCloseSub,
-        triggerRef,
+        currentMenuItem,
+        setCurrentMenuItem,
       }}
     >
       {children}
@@ -88,16 +92,28 @@ const ContextMenuSubTrigger = ({
   inset?: boolean;
 }) => {
   const { isHighlighted, handleHighlight } = useContextMenu();
-  const { openSub, handleOpenSub, setSubRect, handleCloseSub, triggerRef } =
-    useContextMenuSub();
+  const { openSub, handleOpenSub, handleCloseSub } = useContextMenuSub();
 
   const ref = useRef<HTMLDivElement | null>(null);
 
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
+    if (!isHighlighted(event.currentTarget)) return;
+    if (event.code === "ArrowRight" || event.code === "ArrowLeft") {
+      event.preventDefault();
+      const action: "open" | "close" =
+        event.code === "ArrowLeft" ? "close" : "open";
+
+      if (action === "open") {
+        handleOpenSub(event.currentTarget);
+      } else {
+        handleCloseSub();
+      }
+    }
+  };
+
   const handleMouseEnter = (event: React.MouseEvent<HTMLDivElement>) => {
-    triggerRef.current = event.currentTarget;
-    handleOpenSub();
     handleHighlight(event.currentTarget);
-    setSubRect(event.currentTarget.getBoundingClientRect());
+    handleOpenSub(event.currentTarget);
   };
 
   const handleMouseLeave = (event: React.MouseEvent) => {
@@ -109,13 +125,14 @@ const ContextMenuSubTrigger = ({
   };
 
   const handleFocus = (event: React.FocusEvent<HTMLDivElement>) => {
-    triggerRef.current = event.currentTarget;
-    handleOpenSub();
     handleHighlight(event.currentTarget);
   };
 
-  const handleBlur = () => {
+  const handleBlur = (event: React.FocusEvent<HTMLDivElement>) => {
     handleHighlight(-1);
+    const relatedTarget = event.relatedTarget as HTMLDivElement;
+    if (!relatedTarget || !relatedTarget.closest('[data-contextsub="popup"]'))
+      handleCloseSub();
   };
 
   return (
@@ -143,6 +160,7 @@ const ContextMenuSubTrigger = ({
       onMouseLeave={handleMouseLeave}
       onFocus={handleFocus}
       onBlur={handleBlur}
+      onKeyDown={handleKeyDown}
     >
       {children}
       <span className="size-4">
@@ -154,20 +172,20 @@ const ContextMenuSubTrigger = ({
 
 const ContextMenuSubContent = ({ children }: { children: ReactNode }) => {
   const { clientPosition } = useContextMenu();
-  const { subRect, openSub, animate, handleCloseSub, triggerRef } =
-    useContextMenuSub();
+  const { subRect, openSub, animate, handleCloseSub } = useContextMenuSub();
   const [menuStyle, setMenuStyle] = useState<CSSProperties>({});
 
   const ref = useRef<HTMLDivElement | null>(null);
 
-  const handleMouseLeave = (event: React.MouseEvent) => {
+  const handleMouseLeave = (event: React.MouseEvent<HTMLElement>) => {
     const relatedTarget = event.relatedTarget as HTMLElement;
-    if (
-      !relatedTarget ||
-      relatedTarget.closest('[data-contextsub="trigger"]') !==
-        triggerRef.current
-    )
+
+    if (!relatedTarget || relatedTarget.closest('[data-contextsub="trigger"]'))
       handleCloseSub();
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
+    console.log(event.target);
   };
 
   useEffect(() => {
@@ -203,6 +221,7 @@ const ContextMenuSubContent = ({ children }: { children: ReactNode }) => {
 
   return createPortal(
     <div
+      tabIndex={-1}
       ref={ref}
       data-contextsub="popup"
       data-state={!animate}
@@ -212,6 +231,7 @@ const ContextMenuSubContent = ({ children }: { children: ReactNode }) => {
       )}
       style={menuStyle}
       onMouseLeave={handleMouseLeave}
+      onKeyDown={handleKeyDown}
     >
       {children}
     </div>,

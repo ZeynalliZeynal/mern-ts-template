@@ -21,6 +21,7 @@ import { createPortal } from "react-dom";
 import { useOutsideClick } from "@/hooks/useOutsideClick.ts";
 import { cn } from "@/lib/utils.ts";
 import { Link } from "react-router-dom";
+import { navigateItems } from "@/utils/navigateItems.ts";
 
 interface ContextMenuContext {
   open: boolean;
@@ -96,8 +97,9 @@ export default function ContextMenu({ children }: { children: ReactNode }) {
     if (typeof value === "number") setHighlighted(value);
     else {
       const currentIndex = findMenuItem(value);
-      setCurrentMenuItem(currentIndex);
+      // setCurrentMenuItem(currentIndex);
       setHighlighted(currentIndex);
+      value.focus();
     }
   };
 
@@ -172,6 +174,7 @@ const ContextMenuContent = ({ children }: { children: ReactNode }) => {
     handleOpen,
     handleHighlight,
     currentMenuItem,
+    setCurrentMenuItem,
   } = useContextMenu();
   const [menuStyle, setMenuStyle] = useState<CSSProperties | undefined>(
     undefined,
@@ -180,43 +183,16 @@ const ContextMenuContent = ({ children }: { children: ReactNode }) => {
   const ref = useRef<HTMLDivElement | null>(null);
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
-    const root = (event.target as HTMLElement).closest('[role="menu"]');
-
-    if (!ref.current || !root) return;
-    if (event.code === "Escape") {
-      event.preventDefault();
-      handleClose();
-    }
-
-    if (event.code === "ArrowUp" || event.code === "ArrowDown") {
-      event.preventDefault();
-      const direction: "next" | "previous" =
-        event.code === "ArrowUp" ? "previous" : "next";
-
-      const menuItems = Array.from(
-        root.querySelectorAll(
-          '[role="menuitem"]:not([data-disabled]):not([data-contextsub="item"])',
-        ),
-      );
-
-      let nextIndex: number;
-      if (direction === "next") {
-        nextIndex =
-          currentMenuItem === undefined ||
-          currentMenuItem === menuItems.length - 1
-            ? menuItems.indexOf(menuItems[menuItems.length - 1])
-            : currentMenuItem + 1;
-      } else {
-        nextIndex =
-          currentMenuItem === undefined || currentMenuItem === 0
-            ? 0
-            : currentMenuItem - 1;
-      }
-
-      console.log(nextIndex);
-
-      handleHighlight(menuItems[nextIndex] as HTMLElement);
-    }
+    navigateItems({
+      event,
+      itemSelector:
+        '[role="menuitem"]:not([data-disabled]):not([data-contextsub="item"])',
+      currentMenuItem,
+      setCurrentMenuItem,
+      handleClose,
+      handleHighlight,
+      root: (event.target as HTMLElement).closest('[role="menu"]'),
+    });
   };
 
   useOutsideClick(ref, (event) => {
