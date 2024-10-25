@@ -202,7 +202,10 @@ const ContextMenuContent = ({ children }: { children: ReactNode }) => {
         (event.target as HTMLElement).parentElement?.dataset.context ===
           "trigger"
       ) {
-        handleOpen(event.clientX, event.clientY);
+        handleClose();
+        setTimeout(() => {
+          handleOpen(event.clientX, event.clientY);
+        }, 150);
       } else {
         handleClose();
       }
