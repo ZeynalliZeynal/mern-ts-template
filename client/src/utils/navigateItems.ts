@@ -35,16 +35,12 @@ export const navigateItems = ({
       nextIndex =
         currentMenuItem === undefined
           ? 0
-          : currentMenuItem === menuItems.length - 1
-            ? menuItems.indexOf(menuItems[menuItems.length - 1])
-            : currentMenuItem + 1;
+          : (currentMenuItem + 1) % menuItems.length;
     } else {
       nextIndex =
         currentMenuItem === undefined
           ? 0
-          : currentMenuItem === 0
-            ? 0
-            : currentMenuItem - 1;
+          : (currentMenuItem - 1 + menuItems.length) % menuItems.length;
     }
 
     setCurrentMenuItem(nextIndex);

@@ -183,6 +183,7 @@ const ContextMenuContent = ({ children }: { children: ReactNode }) => {
   const ref = useRef<HTMLDivElement | null>(null);
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
+    if (document.querySelector("[data-contextsub='popup']")) return false;
     navigateItems({
       event,
       itemSelector:
@@ -250,6 +251,7 @@ const ContextMenuContent = ({ children }: { children: ReactNode }) => {
       )}
       style={menuStyle}
       onKeyDown={handleKeyDown}
+      // onContextMenu={(event) => event.preventDefault()}
     >
       {children}
     </div>,
