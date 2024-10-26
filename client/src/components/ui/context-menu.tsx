@@ -97,7 +97,7 @@ export default function ContextMenu({ children }: { children: ReactNode }) {
     if (typeof value === "number") setHighlighted(value);
     else {
       const currentIndex = findMenuItem(value);
-      // setCurrentMenuItem(currentIndex);
+      setCurrentMenuItem(currentIndex);
       setHighlighted(currentIndex);
       value.focus();
     }

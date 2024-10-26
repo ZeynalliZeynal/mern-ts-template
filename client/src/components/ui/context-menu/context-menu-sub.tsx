@@ -24,6 +24,7 @@ interface ContextMenuSubContext {
   animate: boolean;
   currentMenuItem: number | undefined;
   setCurrentMenuItem: Dispatch<SetStateAction<number | undefined>>;
+  activeTrigger: HTMLElement | null;
 }
 
 const ContextMenuSubContext = createContext<ContextMenuSubContext | null>(null);
@@ -43,8 +44,10 @@ export default function ContextMenuSub({ children }: { children: ReactNode }) {
   const [currentMenuItem, setCurrentMenuItem] = useState<number | undefined>(
     undefined,
   );
+  const [activeTrigger, setActiveTrigger] = useState<HTMLElement | null>(null);
 
   const handleOpenSub = (element: HTMLElement) => {
+    setActiveTrigger(element as HTMLElement);
     const subRoot = document.querySelector('[data-contextsub="popup"]');
     if (!open) return;
     setAnimate(false);
@@ -84,6 +87,7 @@ export default function ContextMenuSub({ children }: { children: ReactNode }) {
         handleCloseSub,
         currentMenuItem,
         setCurrentMenuItem,
+        activeTrigger,
       }}
     >
       {children}
@@ -191,6 +195,7 @@ const ContextMenuSubContent = ({ children }: { children: ReactNode }) => {
     handleCloseSub,
     currentMenuItem,
     setCurrentMenuItem,
+    activeTrigger,
   } = useContextMenuSub();
   const [menuStyle, setMenuStyle] = useState<CSSProperties>({});
 
@@ -199,8 +204,11 @@ const ContextMenuSubContent = ({ children }: { children: ReactNode }) => {
   const handleMouseLeave = (event: React.MouseEvent<HTMLElement>) => {
     const relatedTarget = event.relatedTarget as HTMLElement;
 
-    if (!relatedTarget || relatedTarget.closest('[data-contextsub="trigger"]'))
-      handleCloseSub();
+    const isOwnTrigger =
+      (relatedTarget as HTMLElement).closest('[data-contextsub="trigger"]') ===
+      activeTrigger;
+
+    if (!relatedTarget || !isOwnTrigger) handleCloseSub();
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
