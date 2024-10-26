@@ -227,9 +227,7 @@ const ContextMenuSubContent = ({ children }: { children: ReactNode }) => {
       handleCloseSub();
       const mainPopup = event.currentTarget.closest('[role="menu"]');
       if (!mainPopup) return false;
-      handleHighlight(
-        mainPopup.querySelector('[role="menuitem"]') as HTMLElement,
-      );
+      handleHighlight(activeTrigger as HTMLElement);
     }
   };
 
