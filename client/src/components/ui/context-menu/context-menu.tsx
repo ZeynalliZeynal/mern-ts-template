@@ -22,6 +22,7 @@ import { useOutsideClick } from "@/hooks/useOutsideClick.ts";
 import { cn } from "@/lib/utils.ts";
 import { Link } from "react-router-dom";
 import { navigateItems } from "@/utils/navigateItems.ts";
+import { ANIMATION_TIMEOUT } from "@/components/ui/context-menu/context-parameters.ts";
 
 interface ContextMenuContext {
   open: boolean;
@@ -49,8 +50,6 @@ interface ContextMenuItem {
   prefix?: ReactNode;
   suffix?: ReactNode;
 }
-
-const ANIMATION_TIMEOUT = 150;
 
 const ContextMenuContext = createContext<ContextMenuContext | null>(null);
 

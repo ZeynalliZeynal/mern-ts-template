@@ -1,5 +1,5 @@
 import Stack from "@/components/ui/stack.tsx";
-import ContextMenu from "@/components/ui/context-menu.tsx";
+import ContextMenu from "@/components/ui/context-menu/context-menu.tsx";
 import { ArrowUpRight } from "lucide-react";
 import ContextMenuSub from "@/components/ui/context-menu/context-menu-sub.tsx";
 import { MdOutlineAccountCircle } from "react-icons/md";

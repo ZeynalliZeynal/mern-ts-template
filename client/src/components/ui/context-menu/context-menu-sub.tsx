@@ -9,7 +9,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { useContextMenu } from "@/components/ui/context-menu.tsx";
+import { useContextMenu } from "@/components/ui/context-menu/context-menu.tsx";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils.ts";
 import { ChevronRight } from "lucide-react";
@@ -55,10 +55,8 @@ export default function ContextMenuSub({ children }: { children: ReactNode }) {
     setSubRect(element.getBoundingClientRect());
     if (subRoot) {
       const subItem = subRoot.querySelector('[role="menuitem"]') as HTMLElement;
-      setTimeout(() => {
-        handleHighlight(subItem);
-        setCurrentMenuItem(0);
-      }, 10);
+      handleHighlight(subItem);
+      setCurrentMenuItem(0);
     }
   };
 
