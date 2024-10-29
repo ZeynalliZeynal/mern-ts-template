@@ -38,6 +38,20 @@ interface ContextMenuContext {
   setCurrentMenuItem: Dispatch<SetStateAction<number | undefined>>;
 }
 
+interface ContextMenuItem {
+  children: ReactNode | ReactElement;
+  onClick?: MouseEventHandler<HTMLElement>;
+  asChild?: boolean;
+  disabled?: boolean;
+  className?: string;
+  inset?: boolean;
+  href?: string;
+  prefix?: ReactNode;
+  suffix?: ReactNode;
+}
+
+const ANIMATION_TIMEOUT = 150;
+
 const ContextMenuContext = createContext<ContextMenuContext | null>(null);
 
 export const useContextMenu = () => {
@@ -78,7 +92,7 @@ export default function ContextMenu({ children }: { children: ReactNode }) {
     setTimeout(() => {
       setOpen(false);
       setAnimate(false);
-    }, 150);
+    }, ANIMATION_TIMEOUT);
     setCurrentMenuItem(undefined);
   };
 
@@ -145,12 +159,18 @@ export default function ContextMenu({ children }: { children: ReactNode }) {
 }
 
 const ContextMenuTrigger = ({ children }: { children: ReactNode }) => {
-  const { handleOpen } = useContextMenu();
+  const { handleOpen, open } = useContextMenu();
 
   const handleContextMenu: MouseEventHandler<HTMLDivElement> = (event) => {
     event.preventDefault();
     const { clientY, clientX } = event;
-    handleOpen(clientX, clientY);
+    if (open) {
+      setTimeout(() => {
+        handleOpen(clientX, clientY);
+      }, ANIMATION_TIMEOUT);
+    } else {
+      handleOpen(clientX, clientY);
+    }
   };
 
   return (
@@ -196,19 +216,7 @@ const ContextMenuContent = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  useOutsideClick(ref, (event) => {
-    if (event) {
-      if (
-        event.button === 2 &&
-        (event.target as HTMLElement).parentElement?.dataset.context ===
-          "trigger"
-      ) {
-        handleOpen(event.clientX, event.clientY);
-      } else {
-        handleClose();
-      }
-    }
-  });
+  useOutsideClick(ref, handleClose);
 
   useEffect(() => {
     if (!ref.current || !open || !clientPosition) return;
@@ -255,18 +263,6 @@ const ContextMenuContent = ({ children }: { children: ReactNode }) => {
     document.body,
   );
 };
-
-interface ContextMenuItem {
-  children: ReactNode | ReactElement;
-  onClick?: MouseEventHandler<HTMLElement>;
-  asChild?: boolean;
-  disabled?: boolean;
-  className?: string;
-  inset?: boolean;
-  href?: string;
-  prefix?: ReactNode;
-  suffix?: ReactNode;
-}
 
 const ContextMenuItem = forwardRef<
   HTMLDivElement | HTMLAnchorElement,
