@@ -18,7 +18,7 @@ import { ANIMATION_TIMEOUT } from "@/components/ui/context-menu/context-paramete
 
 interface ContextMenuSubContext {
   openSub: boolean;
-  handleOpenSub: (element: HTMLElement) => void;
+  handleOpenSub: (element: HTMLElement, withKey?: boolean) => void;
   handleCloseSub: () => void;
   subRect: DOMRect | null;
   setSubRect: Dispatch<SetStateAction<DOMRect | null>>;
@@ -46,18 +46,16 @@ export default function ContextMenuSub({ children }: { children: ReactNode }) {
     undefined,
   );
   const [activeTrigger, setActiveTrigger] = useState<HTMLElement | null>(null);
+  const [openedWithKey, setOpenedWithKey] = useState(false);
 
-  const handleOpenSub = (element: HTMLElement) => {
+  const handleOpenSub = (element: HTMLElement, withKey: boolean = false) => {
     setActiveTrigger(element as HTMLElement);
-    const subRoot = document.querySelector('[data-contextsub="popup"]');
     if (!open) return;
     setAnimate(false);
     setOpenSub(true);
     setSubRect(element.getBoundingClientRect());
-    if (subRoot) {
-      const subItem = subRoot.querySelector('[role="menuitem"]') as HTMLElement;
-      handleHighlight(subItem);
-      setCurrentMenuItem(0);
+    if (withKey) {
+      setOpenedWithKey(withKey);
     }
   };
 
@@ -68,6 +66,18 @@ export default function ContextMenuSub({ children }: { children: ReactNode }) {
       setAnimate(false);
     }, ANIMATION_TIMEOUT);
   };
+
+  useEffect(() => {
+    if (openedWithKey) {
+      const subPopup = document.querySelector('[data-contextsub="popup"]');
+      if (subPopup) {
+        handleHighlight(
+          subPopup.querySelector('[role="menuitem"]') as HTMLElement,
+        );
+        setCurrentMenuItem(0);
+      }
+    }
+  }, [openSub]);
 
   useEffect(() => {
     if (!open) {
@@ -117,7 +127,7 @@ const ContextMenuSubTrigger = ({
         event.code === "ArrowLeft" ? "close" : "open";
 
       if (action === "open") {
-        handleOpenSub(event.currentTarget);
+        handleOpenSub(event.currentTarget, true);
       } else {
         handleCloseSub();
         handleHighlight(ref.current as HTMLElement);
@@ -212,8 +222,7 @@ export const ContextMenuSubContent = ({
 
     if (
       !relatedTarget ||
-      (relatedTarget.closest('[data-contextsub="trigger"]') !== activeTrigger &&
-        !relatedTarget.closest('[data-contextsub="popup"]'))
+      relatedTarget.closest('[data-contextsub="trigger"]') !== activeTrigger
     ) {
       handleCloseSub();
     }
