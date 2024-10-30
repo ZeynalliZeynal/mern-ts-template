@@ -316,7 +316,7 @@ const ContextMenuItem = forwardRef<
         ref.current.closest("[data-contextsub='popup']") &&
         "item",
       className: cn(
-        "text-foreground flex items-center rounded-ui-item w-full focus:ring-0 cursor-default",
+        "text-foreground flex items-center justify-start rounded-ui-item w-full focus:ring-0 cursor-default",
         "data-[highlighted]:bg-ui-item-background-hover data-[disabled]:text-ui-disabled-foreground data-[disabled]:pointer-events-none data-[disabled]:select-none",
         {
           "cursor-pointer": href,

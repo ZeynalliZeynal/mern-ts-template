@@ -12,6 +12,7 @@ import {
 } from "react-icons/io5";
 import { AiOutlineProduct } from "react-icons/ai";
 import { SiBurgerking } from "react-icons/si";
+import { toast } from "sonner";
 
 export default function ContextDemo() {
   return (
@@ -42,18 +43,30 @@ export default function ContextDemo() {
                 Zeynalli Zeynal
               </ContextMenuSub.Trigger>
               <ContextMenuSub.Content>
-                <ContextMenu.Item prefix={<MdOutlineAccountCircle />}>
+                <ContextMenu.Item
+                  prefix={<MdOutlineAccountCircle />}
+                  href="/account/profile"
+                >
                   Profile
                 </ContextMenu.Item>
-                <ContextMenu.Item prefix={<IoSettingsOutline />}>
+                <ContextMenu.Item
+                  prefix={<IoSettingsOutline />}
+                  href="/account/settings"
+                >
                   Settings
                 </ContextMenu.Item>
                 <ContextMenu.Separator />
                 <ContextMenu.Group>
-                  <ContextMenu.Item prefix={<IoBookmarksOutline />}>
+                  <ContextMenu.Item
+                    prefix={<IoBookmarksOutline />}
+                    href="/account/wishlist"
+                  >
                     Wishlist
                   </ContextMenu.Item>
-                  <ContextMenu.Item prefix={<AiOutlineProduct />}>
+                  <ContextMenu.Item
+                    prefix={<AiOutlineProduct />}
+                    href="/account/products"
+                  >
                     Products
                   </ContextMenu.Item>
                 </ContextMenu.Group>
@@ -64,37 +77,27 @@ export default function ContextDemo() {
             <ContextMenuSub.Trigger inset>People</ContextMenuSub.Trigger>
             <ContextMenuSub.Content>
               <ContextMenu.Item
-                onClick={({ currentTarget }) =>
-                  console.log(currentTarget.innerText)
-                }
+                onClick={({ currentTarget }) => toast(currentTarget.innerText)}
               >
                 Telman
               </ContextMenu.Item>
               <ContextMenu.Item
-                onClick={({ currentTarget }) =>
-                  console.log(currentTarget.innerText)
-                }
+                onClick={({ currentTarget }) => toast(currentTarget.innerText)}
               >
                 Simran
               </ContextMenu.Item>
               <ContextMenu.Item
-                onClick={({ currentTarget }) =>
-                  console.log(currentTarget.innerText)
-                }
+                onClick={({ currentTarget }) => toast(currentTarget.innerText)}
               >
                 Samir
               </ContextMenu.Item>
               <ContextMenu.Item
-                onClick={({ currentTarget }) =>
-                  console.log(currentTarget.innerText)
-                }
+                onClick={({ currentTarget }) => toast(currentTarget.innerText)}
               >
                 Femil
               </ContextMenu.Item>
               <ContextMenu.Item
-                onClick={({ currentTarget }) =>
-                  console.log(currentTarget.innerText)
-                }
+                onClick={({ currentTarget }) => toast(currentTarget.innerText)}
               >
                 Josef
               </ContextMenu.Item>
@@ -102,15 +105,15 @@ export default function ContextDemo() {
           </ContextMenuSub>
           <ContextMenu.Group>
             <ContextMenu.Item
-              onClick={() => console.log("go back")}
+              onClick={() => window.history.back()}
               inset
               suffix={<IoReturnDownBackOutline />}
+              disabled
             >
               Back
             </ContextMenu.Item>
             <ContextMenu.Item
-              disabled
-              onClick={() => console.log("go forward")}
+              onClick={() => window.history.forward()}
               inset
               suffix={<IoReturnDownForwardOutline />}
             >
@@ -119,14 +122,19 @@ export default function ContextDemo() {
           </ContextMenu.Group>
           <ContextMenu.Separator />
           <ContextMenu.Group>
-            <ContextMenu.Item asChild inset suffix={<ArrowUpRight />} href="/">
+            <ContextMenu.Item
+              asChild
+              inset
+              suffix={<ArrowUpRight />}
+              href="/account/dashboard"
+            >
               Dashboard
             </ContextMenu.Item>
           </ContextMenu.Group>
           <ContextMenu.Separator />
           <ContextMenu.Group>
             <ContextMenu.Item
-              onClick={() => console.log("reload")}
+              onClick={() => window.location.reload()}
               inset
               suffix={<IoReload />}
             >
