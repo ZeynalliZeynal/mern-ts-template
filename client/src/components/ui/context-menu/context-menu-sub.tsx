@@ -14,6 +14,7 @@ import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils.ts";
 import { ChevronRight } from "lucide-react";
 import { navigateItems } from "@/utils/navigateItems.ts";
+import { ANIMATION_TIMEOUT } from "@/components/ui/context-menu/context-parameters.ts";
 
 interface ContextMenuSubContext {
   openSub: boolean;
@@ -65,7 +66,7 @@ export default function ContextMenuSub({ children }: { children: ReactNode }) {
     setTimeout(() => {
       setOpenSub(false);
       setAnimate(false);
-    }, 150);
+    }, ANIMATION_TIMEOUT);
   };
 
   useEffect(() => {
@@ -119,7 +120,6 @@ const ContextMenuSubTrigger = ({
         handleOpenSub(event.currentTarget);
       } else {
         handleCloseSub();
-        console.log(event.currentTarget);
         handleHighlight(ref.current as HTMLElement);
       }
     }
@@ -132,7 +132,7 @@ const ContextMenuSubTrigger = ({
 
   const handleMouseLeave = (event: React.MouseEvent) => {
     handleHighlight(-1);
-    const relatedTarget = event.relatedTarget as HTMLElement;
+    const relatedTarget = event.relatedTarget as HTMLElement | null;
     if (!relatedTarget || !relatedTarget.closest('[data-contextsub="popup"]')) {
       handleCloseSub();
     }
@@ -144,9 +144,10 @@ const ContextMenuSubTrigger = ({
 
   const handleBlur = (event: React.FocusEvent<HTMLDivElement>) => {
     handleHighlight(-1);
-    const relatedTarget = event.relatedTarget as HTMLDivElement;
-    if (!relatedTarget || !relatedTarget.closest('[data-contextsub="popup"]'))
+    const relatedTarget = event.relatedTarget as HTMLElement | null;
+    if (!relatedTarget || !relatedTarget.closest('[data-contextsub="popup"]')) {
       handleCloseSub();
+    }
   };
 
   return (
@@ -184,7 +185,11 @@ const ContextMenuSubTrigger = ({
   );
 };
 
-const ContextMenuSubContent = ({ children }: { children: ReactNode }) => {
+export const ContextMenuSubContent = ({
+  children,
+}: {
+  children: ReactNode;
+}) => {
   const { clientPosition, handleHighlight } = useContextMenu();
   const {
     subRect,
@@ -200,13 +205,18 @@ const ContextMenuSubContent = ({ children }: { children: ReactNode }) => {
   const ref = useRef<HTMLDivElement | null>(null);
 
   const handleMouseLeave = (event: React.MouseEvent<HTMLElement>) => {
-    const relatedTarget = event.relatedTarget as HTMLElement;
+    const relatedTarget = document.elementFromPoint(
+      event.clientX,
+      event.clientY,
+    ) as HTMLElement | null;
 
-    const isOwnTrigger =
-      (relatedTarget as HTMLElement).closest('[data-contextsub="trigger"]') ===
-      activeTrigger;
-
-    if (!relatedTarget || !isOwnTrigger) handleCloseSub();
+    if (
+      !relatedTarget ||
+      (relatedTarget.closest('[data-contextsub="trigger"]') !== activeTrigger &&
+        !relatedTarget.closest('[data-contextsub="popup"]'))
+    ) {
+      handleCloseSub();
+    }
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {

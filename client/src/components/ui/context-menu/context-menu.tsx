@@ -73,13 +73,6 @@ export default function ContextMenu({ children }: { children: ReactNode }) {
 
   const [animate, setAnimate] = useState(false);
 
-  useEffect(() => {
-    const closeOnResize = () => setOpen(false);
-
-    window.addEventListener("resize", closeOnResize);
-    return () => window.removeEventListener("resize", closeOnResize);
-  }, []);
-
   const handleOpen = (clientX: number, clientY: number) => {
     setClientPosition({ clientX, clientY });
     setAnimate(false);
@@ -136,6 +129,13 @@ export default function ContextMenu({ children }: { children: ReactNode }) {
       (document.querySelector('[role="menu"]') as HTMLElement).focus();
     }
   }, [open]);
+
+  useEffect(() => {
+    const closeOnResize = () => setOpen(false);
+
+    window.addEventListener("resize", closeOnResize);
+    return () => window.removeEventListener("resize", closeOnResize);
+  }, []);
 
   return (
     <ContextMenuContext.Provider
@@ -229,7 +229,8 @@ const ContextMenuContent = ({ children }: { children: ReactNode }) => {
 
     newMenuStyle.top = isEnoughSpaceBelow ? clientPosition.clientY : undefined;
     newMenuStyle.bottom = !isEnoughSpaceBelow
-      ? window.innerHeight - clientPosition.clientY
+      ? // ? window.innerHeight - clientPosition.clientY
+        4
       : undefined;
 
     newMenuStyle.left = isEnoughSpaceRight ? clientPosition.clientX : undefined;
@@ -315,7 +316,7 @@ const ContextMenuItem = forwardRef<
         ref.current.closest("[data-contextsub='popup']") &&
         "item",
       className: cn(
-        "text-foreground flex items-center rounded-ui-item w-full focus:ring-0 cursor-default transition-colors",
+        "text-foreground flex items-center rounded-ui-item w-full focus:ring-0 cursor-default",
         "data-[highlighted]:bg-ui-item-background-hover data-[disabled]:text-ui-disabled-foreground data-[disabled]:pointer-events-none data-[disabled]:select-none",
         {
           "cursor-pointer": href,
