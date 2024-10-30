@@ -11,6 +11,7 @@ import {
   IoSettingsOutline,
 } from "react-icons/io5";
 import { AiOutlineProduct } from "react-icons/ai";
+import { SiBurgerking } from "react-icons/si";
 
 export default function ContextDemo() {
   return (
@@ -32,28 +33,32 @@ export default function ContextDemo() {
         </ContextMenu.Trigger>
         <ContextMenu.Content>
           <ContextMenuSub>
-            <ContextMenuSub.Trigger inset>
-              Zeynalli Zeynal
-            </ContextMenuSub.Trigger>
-            <ContextMenuSub.Content>
-              <ContextMenu.Group>
+            <ContextMenu.Group>
+              <ContextMenu.Label prefix={<SiBurgerking />}>
+                Burger KING
+              </ContextMenu.Label>
+              <ContextMenu.Separator />
+              <ContextMenuSub.Trigger inset>
+                Zeynalli Zeynal
+              </ContextMenuSub.Trigger>
+              <ContextMenuSub.Content>
                 <ContextMenu.Item prefix={<MdOutlineAccountCircle />}>
                   Profile
                 </ContextMenu.Item>
                 <ContextMenu.Item prefix={<IoSettingsOutline />}>
                   Settings
                 </ContextMenu.Item>
-              </ContextMenu.Group>
-              <ContextMenu.Separator />
-              <ContextMenu.Group>
-                <ContextMenu.Item prefix={<IoBookmarksOutline />}>
-                  Wishlist
-                </ContextMenu.Item>
-                <ContextMenu.Item prefix={<AiOutlineProduct />}>
-                  Products
-                </ContextMenu.Item>
-              </ContextMenu.Group>
-            </ContextMenuSub.Content>
+                <ContextMenu.Separator />
+                <ContextMenu.Group>
+                  <ContextMenu.Item prefix={<IoBookmarksOutline />}>
+                    Wishlist
+                  </ContextMenu.Item>
+                  <ContextMenu.Item prefix={<AiOutlineProduct />}>
+                    Products
+                  </ContextMenu.Item>
+                </ContextMenu.Group>
+              </ContextMenuSub.Content>
+            </ContextMenu.Group>
           </ContextMenuSub>
           <ContextMenuSub>
             <ContextMenuSub.Trigger inset>People</ContextMenuSub.Trigger>

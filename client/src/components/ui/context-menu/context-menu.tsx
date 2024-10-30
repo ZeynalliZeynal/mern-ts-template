@@ -45,8 +45,8 @@ interface ContextMenuItem {
   asChild?: boolean;
   disabled?: boolean;
   className?: string;
-  inset?: boolean;
   href?: string;
+  inset?: boolean;
   prefix?: ReactNode;
   suffix?: ReactNode;
 }
@@ -275,8 +275,8 @@ const ContextMenuItem = forwardRef<
       className,
       asChild = false,
       disabled = false,
-      inset = false,
       href,
+      inset = false,
       suffix,
       prefix,
     }: ContextMenuItem,
@@ -385,7 +385,42 @@ const ContextMenuSeparator = ({ className }: { className?: string }) => {
   );
 };
 
+const ContextMenuLabel = ({
+  children,
+  className,
+  inset = false,
+  suffix,
+  prefix,
+}: {
+  children: ReactNode;
+  className?: string;
+  inset?: boolean;
+  prefix?: ReactNode;
+  suffix?: ReactNode;
+}) => {
+  return (
+    <div
+      tabIndex={-1}
+      className={cn(
+        "text-foreground flex items-center w-full select-none",
+        {
+          "justify-between": suffix,
+          "gap-2": prefix,
+          "p-ui-item-inset": inset,
+          "p-ui-item": !inset,
+        },
+        className,
+      )}
+    >
+      {prefix && <span className="size-4">{prefix}</span>}
+      {children}
+      {suffix && <span className="size-4">{suffix}</span>}
+    </div>
+  );
+};
+
 ContextMenu.Trigger = ContextMenuTrigger;
+ContextMenu.Label = ContextMenuLabel;
 ContextMenu.Item = ContextMenuItem;
 ContextMenu.Separator = ContextMenuSeparator;
 ContextMenu.Group = ContextMenuGroup;
