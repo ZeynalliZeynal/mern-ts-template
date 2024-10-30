@@ -64,6 +64,7 @@ export default function ContextMenuSub({ children }: { children: ReactNode }) {
     setTimeout(() => {
       setOpenSub(false);
       setAnimate(false);
+      setCurrentMenuItem(undefined);
     }, ANIMATION_TIMEOUT);
   };
 
