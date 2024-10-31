@@ -22,7 +22,7 @@ export default function DropdownDemo() {
   return (
     <Stack>
       <DropdownMenu>
-        <DropdownMenu.Trigger>Open</DropdownMenu.Trigger>
+        <DropdownMenu.Trigger>Open dropdown</DropdownMenu.Trigger>
         <DropdownMenu.Content>
           <DropdownMenu.Label>My Account</DropdownMenu.Label>
           <DropdownMenu.Separator />
