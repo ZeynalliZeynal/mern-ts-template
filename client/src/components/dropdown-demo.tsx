@@ -17,12 +17,13 @@ import {
 } from "react-icons/lu";
 import DropdownMenuSub from "@/components/ui/dropdown-menu/dropdown-menu-sub.tsx";
 import { HiOutlineSupport } from "react-icons/hi";
+import { QuestionMarkCircledIcon } from "@radix-ui/react-icons";
 
 export default function DropdownDemo() {
   return (
     <Stack>
       <DropdownMenu>
-        <DropdownMenu.Trigger>Open dropdown</DropdownMenu.Trigger>
+        <DropdownMenu.Trigger>Samir Zeymurlu</DropdownMenu.Trigger>
         <DropdownMenu.Content>
           <DropdownMenu.Label>My Account</DropdownMenu.Label>
           <DropdownMenu.Separator />
@@ -84,6 +85,16 @@ export default function DropdownDemo() {
           <DropdownMenu.Group>
             <DropdownMenu.Item prefix={<LuLogOut />}>Log out</DropdownMenu.Item>
           </DropdownMenu.Group>
+        </DropdownMenu.Content>
+      </DropdownMenu>
+      <DropdownMenu>
+        <DropdownMenu.Trigger asChild>
+          <button>Open second one</button>
+        </DropdownMenu.Trigger>
+        <DropdownMenu.Content>
+          <DropdownMenu.Item prefix={<QuestionMarkCircledIcon />}>
+            why not?
+          </DropdownMenu.Item>
         </DropdownMenu.Content>
       </DropdownMenu>
     </Stack>

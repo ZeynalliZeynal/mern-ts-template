@@ -37,7 +37,7 @@ import { ANIMATION_TIMEOUT } from "@/components/ui/parameters.ts";
 
 const DropdownMenuContext = createContext<
   | ({
-      handleOpen: (rect: DOMRect) => void;
+      handleOpen: (element: HTMLElement) => void;
       clientPosition: DOMRect | null;
       setClientPosition: Dispatch<SetStateAction<DOMRect | null>>;
     } & MenuContextProps)
@@ -56,12 +56,15 @@ export default function DropdownMenu({ children }: { children: ReactNode }) {
   const [currentMenuItem, setCurrentMenuItem] = useState<number | undefined>(
     undefined,
   );
+  const [activeTrigger, setActiveTrigger] = useState<HTMLElement | null>(null);
 
   const [clientPosition, setClientPosition] = useState<DOMRect | null>(null);
 
   const [animate, setAnimate] = useState(false);
 
-  const handleOpen = (rect: DOMRect) => {
+  const handleOpen = (element: HTMLElement) => {
+    const rect = element.getBoundingClientRect();
+    setActiveTrigger(element as HTMLElement);
     setClientPosition(rect);
     setAnimate(false);
     setOpen(true);
@@ -72,10 +75,14 @@ export default function DropdownMenu({ children }: { children: ReactNode }) {
     setTimeout(() => {
       setOpen(false);
       setAnimate(false);
-      (
-        document.querySelector('[data-dropdown="trigger"]') as HTMLElement
-      ).focus();
+
+      const triggers = Array.from(
+        document.querySelectorAll('[data-dropdown="trigger"]'),
+      ) as HTMLElement[];
+      const findActive = triggers.indexOf(activeTrigger as HTMLElement);
+      triggers[findActive].focus();
     }, ANIMATION_TIMEOUT);
+    setActiveTrigger(null);
     setCurrentMenuItem(undefined);
   };
 
@@ -151,10 +158,8 @@ const DropdownMenuTrigger = forwardRef<HTMLElement, MenuTriggerProps>(
     const handleClick: MouseEventHandler<HTMLElement> = (event) => {
       event.preventDefault();
 
-      const rect = event.currentTarget.getBoundingClientRect();
-
       if (!open) {
-        handleOpen(rect);
+        handleOpen(event.currentTarget as HTMLElement);
       }
     };
 
@@ -174,6 +179,7 @@ const DropdownMenuTrigger = forwardRef<HTMLElement, MenuTriggerProps>(
         },
         className,
       ),
+      onClick: handleClick,
       onMouseEnter: () => setHovering(true),
       onMouseLeave: () => setHovering(false),
     };

@@ -27,7 +27,7 @@ import { ANIMATION_TIMEOUT } from "@/components/ui/parameters.ts";
 
 const ContextMenuContext = createContext<
   | ({
-      handleOpen: (clientX: number, clientY: number) => void;
+      handleOpen: (event: MouseEvent) => void;
       clientPosition: { clientX: number; clientY: number } | null;
       setClientPosition: Dispatch<
         SetStateAction<{ clientX: number; clientY: number } | null>
@@ -48,7 +48,7 @@ export default function ContextMenu({ children }: { children: ReactNode }) {
   const [currentMenuItem, setCurrentMenuItem] = useState<number | undefined>(
     undefined,
   );
-
+  const [activeTrigger, setActiveTrigger] = useState<HTMLElement | null>(null);
   const [clientPosition, setClientPosition] = useState<{
     clientX: number;
     clientY: number;
@@ -56,8 +56,10 @@ export default function ContextMenu({ children }: { children: ReactNode }) {
 
   const [animate, setAnimate] = useState(false);
 
-  const handleOpen = (clientX: number, clientY: number) => {
+  const handleOpen = (event: MouseEvent) => {
+    const { clientX, clientY } = event;
     setClientPosition({ clientX, clientY });
+    setActiveTrigger(event.currentTarget as HTMLElement);
     setAnimate(false);
     setOpen(true);
   };
@@ -67,9 +69,12 @@ export default function ContextMenu({ children }: { children: ReactNode }) {
     setTimeout(() => {
       setOpen(false);
       setAnimate(false);
-      (
-        document.querySelector('[data-context="trigger"]') as HTMLElement
-      ).focus();
+
+      const triggers = Array.from(
+        document.querySelectorAll('[data-context="trigger"]'),
+      ) as HTMLElement[];
+      const findActive = triggers.indexOf(activeTrigger as HTMLElement);
+      triggers[findActive].focus();
     }, ANIMATION_TIMEOUT);
     setCurrentMenuItem(undefined);
   };
@@ -138,13 +143,12 @@ const ContextMenuTrigger = ({ children }: { children: ReactNode }) => {
 
   const handleContextMenu: MouseEventHandler<HTMLDivElement> = (event) => {
     event.preventDefault();
-    const { clientY, clientX } = event;
     if (open) {
       setTimeout(() => {
-        handleOpen(clientX, clientY);
+        handleOpen(event);
       }, ANIMATION_TIMEOUT);
     } else {
-      handleOpen(clientX, clientY);
+      handleOpen(event);
     }
   };
 
