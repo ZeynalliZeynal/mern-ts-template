@@ -270,7 +270,7 @@ const DropdownMenuContent = ({ children }: { children: ReactNode }) => {
       data-dropdown="popup"
       data-state={!animate}
       className={cn(
-        "pointer-events-auto rounded-ui-content focus:ring-0 border flex-col p-ui-content min-w-64 fixed z-50 bg-ui-background",
+        "pointer-events-auto rounded-ui-content focus:ring-0 border flex-col p-ui-content min-w-56 fixed z-50 bg-ui-background",
         "data-[state='true']:animate-in data-[state='false']:animate-out data-[state='true']:zoom-in data-[state='false']:zoom-out data-[state='true']:fade-in data-[state='false']:fade-out",
       )}
       style={menuStyle}
