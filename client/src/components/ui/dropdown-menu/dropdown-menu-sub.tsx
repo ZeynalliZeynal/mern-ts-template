@@ -9,14 +9,14 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { useContextMenu } from "@/components/ui/context-menu/context-menu.tsx";
+import { useDropdownMenu } from "./dropdown-menu.tsx";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils.ts";
 import { ChevronRight } from "lucide-react";
 import { navigateItems } from "@/utils/navigateItems.ts";
 import { ANIMATION_TIMEOUT } from "@/components/ui/parameters.ts";
 
-interface ContextMenuSubContext {
+interface DropdownMenuSubContext {
   openSub: boolean;
   handleOpenSub: (element: HTMLElement, withKey?: boolean) => void;
   handleCloseSub: () => void;
@@ -28,16 +28,18 @@ interface ContextMenuSubContext {
   activeTrigger: HTMLElement | null;
 }
 
-const ContextMenuSubContext = createContext<ContextMenuSubContext | null>(null);
+const DropdownMenuSubContext = createContext<DropdownMenuSubContext | null>(
+  null,
+);
 
-export const useContextMenuSub = () => {
-  const context = useContext(ContextMenuSubContext);
+export const useDropdownMenuSub = () => {
+  const context = useContext(DropdownMenuSubContext);
   if (!context) throw new Error("Sub context is outside of the provider");
   return context;
 };
 
-export default function ContextMenuSub({ children }: { children: ReactNode }) {
-  const { open, handleHighlight } = useContextMenu();
+export default function DropdownMenuSub({ children }: { children: ReactNode }) {
+  const { open, handleHighlight } = useDropdownMenu();
 
   const [openSub, setOpenSub] = useState(false);
   const [subRect, setSubRect] = useState<DOMRect | null>(null);
@@ -87,7 +89,7 @@ export default function ContextMenuSub({ children }: { children: ReactNode }) {
   }, [open]);
 
   return (
-    <ContextMenuSubContext.Provider
+    <DropdownMenuSubContext.Provider
       value={{
         openSub,
         subRect,
@@ -101,11 +103,11 @@ export default function ContextMenuSub({ children }: { children: ReactNode }) {
       }}
     >
       {children}
-    </ContextMenuSubContext.Provider>
+    </DropdownMenuSubContext.Provider>
   );
 }
 
-const ContextMenuSubTrigger = ({
+const DropdownMenuSubTrigger = ({
   children,
   className,
   inset = false,
@@ -114,8 +116,8 @@ const ContextMenuSubTrigger = ({
   className?: string;
   inset?: boolean;
 }) => {
-  const { isHighlighted, handleHighlight } = useContextMenu();
-  const { openSub, handleOpenSub, handleCloseSub } = useContextMenuSub();
+  const { isHighlighted, handleHighlight } = useDropdownMenu();
+  const { openSub, handleOpenSub, handleCloseSub } = useDropdownMenuSub();
 
   const ref = useRef<HTMLDivElement | null>(null);
 
@@ -196,12 +198,12 @@ const ContextMenuSubTrigger = ({
   );
 };
 
-export const ContextMenuSubContent = ({
+export const DropdownMenuSubContent = ({
   children,
 }: {
   children: ReactNode;
 }) => {
-  const { clientPosition, handleHighlight } = useContextMenu();
+  const { clientPosition, handleHighlight } = useDropdownMenu();
   const {
     subRect,
     openSub,
@@ -210,7 +212,7 @@ export const ContextMenuSubContent = ({
     currentMenuItem,
     setCurrentMenuItem,
     activeTrigger,
-  } = useContextMenuSub();
+  } = useDropdownMenuSub();
   const [menuStyle, setMenuStyle] = useState<CSSProperties>({});
 
   const ref = useRef<HTMLDivElement | null>(null);
@@ -300,5 +302,5 @@ export const ContextMenuSubContent = ({
   );
 };
 
-ContextMenuSub.Trigger = ContextMenuSubTrigger;
-ContextMenuSub.Content = ContextMenuSubContent;
+DropdownMenuSub.Trigger = DropdownMenuSubTrigger;
+DropdownMenuSub.Content = DropdownMenuSubContent;

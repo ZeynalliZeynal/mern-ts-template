@@ -22,7 +22,7 @@ import { useOutsideClick } from "@/hooks/useOutsideClick.ts";
 import { cn } from "@/lib/utils.ts";
 import { Link } from "react-router-dom";
 import { navigateItems } from "@/utils/navigateItems.ts";
-import { ANIMATION_TIMEOUT } from "@/components/ui/context-menu/context-parameters.ts";
+import { ANIMATION_TIMEOUT } from "@/components/ui/parameters.ts";
 
 interface DropdownMenuDropdown {
   open: boolean;
