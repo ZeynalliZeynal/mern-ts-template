@@ -9,12 +9,12 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { useDropdownMenu } from "./dropdown-menu.tsx";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils.ts";
 import { ChevronRight } from "lucide-react";
 import { navigateItems } from "@/utils/navigateItems.ts";
-import { ANIMATION_TIMEOUT } from "@/components/ui/context-menu/context-parameters.ts";
-import { useDropdownMenu } from "@/components/ui/dropdown-menu/dropdown-menu.tsx";
+import { ANIMATION_TIMEOUT } from "@/components/ui/parameters.ts";
 
 interface DropdownMenuSubContext {
   openSub: boolean;

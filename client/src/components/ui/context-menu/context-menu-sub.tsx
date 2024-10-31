@@ -14,7 +14,7 @@ import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils.ts";
 import { ChevronRight } from "lucide-react";
 import { navigateItems } from "@/utils/navigateItems.ts";
-import { ANIMATION_TIMEOUT } from "@/components/ui/context-menu/context-parameters.ts";
+import { ANIMATION_TIMEOUT } from "@/components/ui/parameters.ts";
 
 interface ContextMenuSubContext {
   openSub: boolean;

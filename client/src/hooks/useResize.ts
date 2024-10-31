@@ -8,7 +8,6 @@ export const useResize = (
     const updateRect = () => {
       if (element) {
         callback(element.getBoundingClientRect());
-        console.log(element.getBoundingClientRect());
       }
     };
     updateRect();

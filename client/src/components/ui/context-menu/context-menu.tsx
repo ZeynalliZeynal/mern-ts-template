@@ -21,9 +21,9 @@ import { useOutsideClick } from "@/hooks/useOutsideClick.ts";
 import { cn } from "@/lib/utils.ts";
 import { Link, useNavigate } from "react-router-dom";
 import { navigateItems } from "@/utils/navigateItems.ts";
-import { ANIMATION_TIMEOUT } from "@/components/ui/context-menu/context-parameters.ts";
 import { MenuContextProps, MenuItemProps } from "@/components/ui/types.ts";
 import { useRestrictBody } from "@/hooks/useRestrictBody.ts";
+import { ANIMATION_TIMEOUT } from "@/components/ui/parameters.ts";
 
 const ContextMenuContext = createContext<
   | ({
