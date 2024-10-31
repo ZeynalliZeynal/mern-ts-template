@@ -8,7 +8,6 @@ import React, {
   KeyboardEvent,
   MouseEvent,
   MouseEventHandler,
-  ReactElement,
   ReactNode,
   SetStateAction,
   useContext,
@@ -20,38 +19,22 @@ import React, {
 import { createPortal } from "react-dom";
 import { useOutsideClick } from "@/hooks/useOutsideClick.ts";
 import { cn } from "@/lib/utils.ts";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { navigateItems } from "@/utils/navigateItems.ts";
 import { ANIMATION_TIMEOUT } from "@/components/ui/context-menu/context-parameters.ts";
+import { MenuContextProps, MenuItemProps } from "@/components/ui/types.ts";
+import { useRestrictBody } from "@/hooks/useRestrictBody.ts";
 
-interface ContextMenuContext {
-  open: boolean;
-  handleOpen: (clientX: number, clientY: number) => void;
-  handleClose: () => void;
-  clientPosition: { clientY: number; clientX: number } | null;
-  setClientPosition: Dispatch<
-    SetStateAction<{ clientY: number; clientX: number } | null>
-  >;
-  animate: boolean;
-  handleHighlight: (value: HTMLElement | number) => void;
-  isHighlighted: (currentElement: HTMLElement) => boolean;
-  currentMenuItem: number | undefined;
-  setCurrentMenuItem: Dispatch<SetStateAction<number | undefined>>;
-}
-
-interface ContextMenuItem {
-  children: ReactNode | ReactElement;
-  onClick?: MouseEventHandler<HTMLElement>;
-  asChild?: boolean;
-  disabled?: boolean;
-  className?: string;
-  href?: string;
-  inset?: boolean;
-  prefix?: ReactNode;
-  suffix?: ReactNode;
-}
-
-const ContextMenuContext = createContext<ContextMenuContext | null>(null);
+const ContextMenuContext = createContext<
+  | ({
+      handleOpen: (clientX: number, clientY: number) => void;
+      clientPosition: { clientX: number; clientY: number } | null;
+      setClientPosition: Dispatch<
+        SetStateAction<{ clientX: number; clientY: number } | null>
+      >;
+    } & MenuContextProps)
+  | null
+>(null);
 
 export const useContextMenu = () => {
   const context = useContext(ContextMenuContext);
@@ -84,6 +67,9 @@ export default function ContextMenu({ children }: { children: ReactNode }) {
     setTimeout(() => {
       setOpen(false);
       setAnimate(false);
+      (
+        document.querySelector('[data-context="trigger"]') as HTMLElement
+      ).focus();
     }, ANIMATION_TIMEOUT);
     setCurrentMenuItem(undefined);
   };
@@ -112,17 +98,7 @@ export default function ContextMenu({ children }: { children: ReactNode }) {
   const isHighlighted = (currentElement: HTMLElement) =>
     highlighted === findMenuItem(currentElement);
 
-  useEffect(() => {
-    if (open) {
-      document.body.style.marginRight = "6px";
-      document.body.style.overflow = "hidden";
-      document.body.style.pointerEvents = "none";
-    } else {
-      document.body.style.marginRight = "0px";
-      document.body.style.overflow = "";
-      document.body.style.pointerEvents = "auto";
-    }
-  }, [open]);
+  useRestrictBody(open);
 
   useEffect(() => {
     if (open) {
@@ -174,7 +150,7 @@ const ContextMenuTrigger = ({ children }: { children: ReactNode }) => {
 
   return (
     <div
-      tabIndex={-1}
+      tabIndex={0}
       data-context="trigger"
       onContextMenu={handleContextMenu}
       className="select-none pointer-events-auto"
@@ -267,7 +243,7 @@ const ContextMenuContent = ({ children }: { children: ReactNode }) => {
 
 const ContextMenuItem = forwardRef<
   HTMLDivElement | HTMLAnchorElement,
-  ContextMenuItem
+  MenuItemProps
 >(
   (
     {
@@ -280,10 +256,14 @@ const ContextMenuItem = forwardRef<
       inset = false,
       suffix,
       prefix,
-    }: ContextMenuItem,
+      shortcut,
+    }: MenuItemProps,
     forwardRef,
   ) => {
     const { handleClose, handleHighlight, isHighlighted } = useContextMenu();
+
+    const navigate = useNavigate();
+
     const ref = useRef<HTMLDivElement | HTMLAnchorElement | null>(null);
     useImperativeHandle(
       forwardRef,
@@ -300,7 +280,11 @@ const ContextMenuItem = forwardRef<
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.code === "Enter" || event.code === "Space") {
         event.preventDefault();
-        handleClick(event);
+        if (href) {
+          navigate(href);
+        } else {
+          handleClick(event);
+        }
       }
     };
 
@@ -321,7 +305,6 @@ const ContextMenuItem = forwardRef<
         "data-[highlighted]:bg-ui-item-background-hover data-[disabled]:text-ui-disabled-foreground data-[disabled]:pointer-events-none data-[disabled]:select-none",
         {
           "cursor-pointer": href,
-          "justify-between": suffix,
           "gap-2": prefix,
           "p-ui-item-inset": inset,
           "p-ui-item": !inset,
@@ -348,7 +331,16 @@ const ContextMenuItem = forwardRef<
       >
         {prefix && <span className="size-4">{prefix}</span>}
         {children}
-        {suffix && <span className="size-4">{suffix}</span>}
+        {(shortcut || suffix) && (
+          <div className="ml-auto flex items-center gap-1">
+            {suffix && <span className="size-4">{suffix}</span>}
+            {shortcut && (
+              <span className="text-xs opacity-60 tracking-widest">
+                {shortcut}
+              </span>
+            )}
+          </div>
+        )}
       </Link>
     ) : (
       <div
@@ -357,7 +349,16 @@ const ContextMenuItem = forwardRef<
       >
         {prefix && <span className="size-4">{prefix}</span>}
         {children}
-        {suffix && <span className="size-4">{suffix}</span>}
+        {(shortcut || suffix) && (
+          <div className="ml-auto flex items-center gap-1">
+            {suffix && <span className="size-4">{suffix}</span>}
+            {shortcut && (
+              <span className="text-xs opacity-60 tracking-widest">
+                {shortcut}
+              </span>
+            )}
+          </div>
+        )}
       </div>
     );
   },

@@ -1,4 +1,4 @@
-import { ReactNode, useState } from "react";
+import React, { ReactNode, useState } from "react";
 import { Link } from "react-router-dom";
 
 interface Button {
@@ -10,7 +10,7 @@ interface Button {
   prefix?: ReactNode;
   suffix?: ReactNode;
   primary?: true;
-  onClick?: () => void;
+  onClick?: (event: React.MouseEvent<HTMLElement>) => void;
   disabled?: boolean;
   type?: "button" | "submit" | "reset";
 }
@@ -27,6 +27,7 @@ const Button = ({
   disabled,
   rounded = "md",
   type = "button",
+  ...props
 }: Button) => {
   const [hovering, setHovering] = useState(false);
 
@@ -44,6 +45,7 @@ const Button = ({
         className={className}
         onMouseEnter={() => setHovering(true)}
         onMouseLeave={() => setHovering(false)}
+        {...props}
       >
         {prefix} <span className="px-1.5">{children}</span> {suffix}
       </Link>
@@ -58,6 +60,7 @@ const Button = ({
         disabled={disabled}
         onMouseEnter={() => setHovering(true)}
         onMouseLeave={() => setHovering(false)}
+        {...props}
       >
         {prefix} <span className="px-1.5">{children}</span> {suffix}
       </button>

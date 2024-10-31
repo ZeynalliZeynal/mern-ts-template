@@ -10,8 +10,7 @@ export const useOutsideClick = (
       if (
         ref.current &&
         !ref.current.contains(event.target as Node) &&
-        !(event.target as HTMLElement).closest(`[data-combobox="popup"]`) &&
-        !(event.target as HTMLElement).closest(`[data-context="popup"]`)
+        !(event.target as HTMLElement).closest(`[data-combobox="popup"]`)
       ) {
         cb(event);
       }

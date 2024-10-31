@@ -8,7 +8,6 @@ import React, {
   KeyboardEvent,
   MouseEvent,
   MouseEventHandler,
-  ReactElement,
   ReactNode,
   SetStateAction,
   useContext,
@@ -20,51 +19,33 @@ import React, {
 import { createPortal } from "react-dom";
 import { useOutsideClick } from "@/hooks/useOutsideClick.ts";
 import { cn } from "@/lib/utils.ts";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { navigateItems } from "@/utils/navigateItems.ts";
 import { ANIMATION_TIMEOUT } from "@/components/ui/context-menu/context-parameters.ts";
 import Button from "@/components/ui/button.tsx";
+import {
+  PrimitiveGroup,
+  PrimitiveLabel,
+  PrimitiveSeparator,
+} from "@/components/ui/primitives/primitive.tsx";
+import {
+  MenuContextProps,
+  MenuItemProps,
+  MenuTriggerProps,
+} from "@/components/ui/types.ts";
+import { useRestrictBody } from "@/hooks/useRestrictBody.ts";
 
-interface DropdownMenuDropdown {
-  open: boolean;
-  handleOpen: (rect: DOMRect) => void;
-  handleClose: () => void;
-  clientPosition: DOMRect | null;
-  setClientPosition: Dispatch<SetStateAction<DOMRect | null>>;
-  animate: boolean;
-  handleHighlight: (value: HTMLElement | number) => void;
-  isHighlighted: (currentElement: HTMLElement) => boolean;
-  currentMenuItem: number | undefined;
-  setCurrentMenuItem: Dispatch<SetStateAction<number | undefined>>;
-}
-
-interface DropdownMenuTriggerProps {
-  children: ReactNode;
-  asChild?: boolean;
-  disabled?: boolean;
-  className?: string;
-  inset?: boolean;
-  href?: string;
-  prefix?: ReactNode;
-  suffix?: ReactNode;
-}
-
-interface DropdownMenuItem {
-  children: ReactNode | ReactElement;
-  onClick?: MouseEventHandler<HTMLElement>;
-  asChild?: boolean;
-  disabled?: boolean;
-  className?: string;
-  inset?: boolean;
-  href?: string;
-  prefix?: ReactNode;
-  suffix?: ReactNode;
-}
-
-const DropdownMenuDropdown = createContext<DropdownMenuDropdown | null>(null);
+const DropdownMenuContext = createContext<
+  | ({
+      handleOpen: (rect: DOMRect) => void;
+      clientPosition: DOMRect | null;
+      setClientPosition: Dispatch<SetStateAction<DOMRect | null>>;
+    } & MenuContextProps)
+  | null
+>(null);
 
 export const useDropdownMenu = () => {
-  const context = useContext(DropdownMenuDropdown);
+  const context = useContext(DropdownMenuContext);
   if (!context) throw new Error("Dropdown is outside of the provider");
   return context;
 };
@@ -91,6 +72,9 @@ export default function DropdownMenu({ children }: { children: ReactNode }) {
     setTimeout(() => {
       setOpen(false);
       setAnimate(false);
+      (
+        document.querySelector('[data-dropdown="trigger"]') as HTMLElement
+      ).focus();
     }, ANIMATION_TIMEOUT);
     setCurrentMenuItem(undefined);
   };
@@ -119,26 +103,17 @@ export default function DropdownMenu({ children }: { children: ReactNode }) {
   const isHighlighted = (currentElement: HTMLElement) =>
     highlighted === findMenuItem(currentElement);
 
-  useEffect(() => {
-    if (open) {
-      document.body.style.marginRight = "6px";
-      document.body.style.overflow = "hidden";
-      document.body.style.pointerEvents = "none";
-    } else {
-      document.body.style.marginRight = "0px";
-      document.body.style.overflow = "";
-      document.body.style.pointerEvents = "auto";
-    }
-  }, [open]);
+  useRestrictBody(open);
 
   useEffect(() => {
     if (open) {
       (document.querySelector('[role="menu"]') as HTMLElement).focus();
     }
+    console.log(document.activeElement);
   }, [open]);
 
   return (
-    <DropdownMenuDropdown.Provider
+    <DropdownMenuContext.Provider
       value={{
         open,
         handleOpen,
@@ -153,11 +128,11 @@ export default function DropdownMenu({ children }: { children: ReactNode }) {
       }}
     >
       {children}
-    </DropdownMenuDropdown.Provider>
+    </DropdownMenuContext.Provider>
   );
 }
 
-const DropdownMenuTrigger = forwardRef<HTMLElement, DropdownMenuTriggerProps>(
+const DropdownMenuTrigger = forwardRef<HTMLElement, MenuTriggerProps>(
   (
     {
       children,
@@ -166,7 +141,7 @@ const DropdownMenuTrigger = forwardRef<HTMLElement, DropdownMenuTriggerProps>(
       asChild = false,
       suffix,
       prefix,
-    }: DropdownMenuTriggerProps,
+    }: MenuTriggerProps,
     forwardRef,
   ) => {
     const [hovering, setHovering] = useState(false);
@@ -186,13 +161,15 @@ const DropdownMenuTrigger = forwardRef<HTMLElement, DropdownMenuTriggerProps>(
 
     const commonProps = {
       ref,
+      "data-dropdown": "trigger",
       "data-highlighted": hovering ? true : undefined,
       "data-disabled": disabled ? true : undefined,
       "aria-disabled": disabled ? true : undefined,
       className: cn(
         "text-gray-900 border rounded-md px-2.5 h-10 text-sm border-gray-alpha-400 bg-background-100",
-        "data-[highlighted]:text-foreground data-[highlighted]:bg-gray-alpha-200 disabled:bg-gray-100 disabled:text-gray-700 disabled:border-gray-400",
+        "disabled:bg-gray-100 disabled:text-gray-700 disabled:border-gray-400",
         {
+          "text-foreground bg-gray-alpha-200": hovering,
           "justify-between": suffix,
           "gap-2": prefix,
         },
@@ -205,7 +182,13 @@ const DropdownMenuTrigger = forwardRef<HTMLElement, DropdownMenuTriggerProps>(
     return asChild && isValidElement(children) ? (
       cloneElement(children, commonProps)
     ) : (
-      <Button prefix={prefix} suffix={suffix} primary onClick={handleClick}>
+      <Button
+        data-dropdown="trigger"
+        prefix={prefix}
+        suffix={suffix}
+        primary
+        onClick={handleClick}
+      >
         {children}
       </Button>
     );
@@ -218,11 +201,9 @@ const DropdownMenuContent = ({ children }: { children: ReactNode }) => {
     clientPosition,
     handleClose,
     animate,
-    handleOpen,
     handleHighlight,
     currentMenuItem,
     setCurrentMenuItem,
-    setClientPosition,
   } = useDropdownMenu();
   const [menuStyle, setMenuStyle] = useState<CSSProperties | undefined>(
     undefined,
@@ -250,9 +231,9 @@ const DropdownMenuContent = ({ children }: { children: ReactNode }) => {
     if (!ref.current || !open || !clientPosition) return;
 
     const spaceLeftBottom = window.innerHeight - clientPosition.bottom;
-    const spaceLeftRight = window.innerWidth - clientPosition.right;
+    // const spaceLeftRight = window.innerWidth - clientPosition.right;
 
-    const canFitRight = spaceLeftRight > ref.current.clientWidth;
+    // const canFitRight = spaceLeftRight > ref.current.clientWidth;
     const canFitBottom = spaceLeftBottom > ref.current.clientHeight;
 
     const placeCenter = (window.innerWidth - ref.current.clientWidth) / 2;
@@ -287,7 +268,7 @@ const DropdownMenuContent = ({ children }: { children: ReactNode }) => {
       tabIndex={-1}
       role="menu"
       ref={ref}
-      data-context="popup"
+      data-dropdown="popup"
       data-state={!animate}
       className={cn(
         "pointer-events-auto rounded-ui-content focus:ring-0 border flex-col p-ui-content min-w-64 fixed z-50 bg-ui-background",
@@ -295,7 +276,6 @@ const DropdownMenuContent = ({ children }: { children: ReactNode }) => {
       )}
       style={menuStyle}
       onKeyDown={handleKeyDown}
-      // onDropdownMenu={(event) => event.preventDefault()}
     >
       {children}
     </div>,
@@ -305,7 +285,7 @@ const DropdownMenuContent = ({ children }: { children: ReactNode }) => {
 
 const DropdownMenuItem = forwardRef<
   HTMLDivElement | HTMLAnchorElement,
-  DropdownMenuItem
+  MenuItemProps
 >(
   (
     {
@@ -318,10 +298,14 @@ const DropdownMenuItem = forwardRef<
       asChild = false,
       suffix,
       prefix,
-    }: DropdownMenuItem,
+      shortcut,
+    }: MenuItemProps,
     forwardRef,
   ) => {
     const { handleClose, handleHighlight, isHighlighted } = useDropdownMenu();
+
+    const navigate = useNavigate();
+
     const ref = useRef<HTMLDivElement | HTMLAnchorElement | null>(null);
     useImperativeHandle(
       forwardRef,
@@ -338,7 +322,11 @@ const DropdownMenuItem = forwardRef<
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.code === "Enter" || event.code === "Space") {
         event.preventDefault();
-        handleClick(event);
+        if (href) {
+          navigate(href);
+        } else {
+          handleClick(event);
+        }
       }
     };
 
@@ -355,11 +343,10 @@ const DropdownMenuItem = forwardRef<
         ref.current.closest("[data-dropdownsub='popup']") &&
         "item",
       className: cn(
-        "text-foreground flex items-center rounded-ui-item w-full focus:ring-0 cursor-default transition-colors",
+        "text-foreground flex items-center justify-start rounded-ui-item w-full focus:ring-0 cursor-default transition-colors",
         "data-[highlighted]:bg-ui-item-background-hover data-[disabled]:text-ui-disabled-foreground data-[disabled]:pointer-events-none data-[disabled]:select-none",
         {
           "cursor-pointer": href,
-          "justify-between": suffix,
           "gap-2": prefix,
           "p-ui-item-inset": inset,
           "p-ui-item": !inset,
@@ -386,7 +373,16 @@ const DropdownMenuItem = forwardRef<
       >
         {prefix && <span className="size-4">{prefix}</span>}
         {children}
-        {suffix && <span className="size-4">{suffix}</span>}
+        {(shortcut || suffix) && (
+          <div className="ml-auto flex items-center gap-1">
+            {suffix && <span className="size-4">{suffix}</span>}
+            {shortcut && (
+              <span className="text-xs opacity-60 tracking-widest">
+                {shortcut}
+              </span>
+            )}
+          </div>
+        )}
       </Link>
     ) : (
       <div
@@ -395,37 +391,24 @@ const DropdownMenuItem = forwardRef<
       >
         {prefix && <span className="size-4">{prefix}</span>}
         {children}
-        {suffix && <span className="size-4">{suffix}</span>}
+        {(shortcut || suffix) && (
+          <div className="ml-auto flex items-center gap-1">
+            {suffix && <span className="size-4">{suffix}</span>}
+            {shortcut && (
+              <span className="text-xs opacity-60 tracking-widest">
+                {shortcut}
+              </span>
+            )}
+          </div>
+        )}
       </div>
     );
   },
 );
 
-const DropdownMenuGroup = ({
-  children,
-  className,
-}: {
-  children: ReactNode;
-  className?: string;
-}) => {
-  return (
-    <div role="group" className={cn(className)}>
-      {children}
-    </div>
-  );
-};
-
-const DropdownMenuSeparator = ({ className }: { className?: string }) => {
-  return (
-    <div
-      role="separator"
-      className={cn("h-px -mx-ui-content my-ui-content bg-border", className)}
-    />
-  );
-};
-
 DropdownMenu.Trigger = DropdownMenuTrigger;
 DropdownMenu.Item = DropdownMenuItem;
-DropdownMenu.Separator = DropdownMenuSeparator;
-DropdownMenu.Group = DropdownMenuGroup;
+DropdownMenu.Separator = PrimitiveSeparator;
+DropdownMenu.Group = PrimitiveGroup;
+DropdownMenu.Label = PrimitiveLabel;
 DropdownMenu.Content = DropdownMenuContent;

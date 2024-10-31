@@ -9,14 +9,14 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { useContextMenu } from "@/components/ui/context-menu/context-menu.tsx";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils.ts";
 import { ChevronRight } from "lucide-react";
 import { navigateItems } from "@/utils/navigateItems.ts";
 import { ANIMATION_TIMEOUT } from "@/components/ui/context-menu/context-parameters.ts";
+import { useDropdownMenu } from "@/components/ui/dropdown-menu/dropdown-menu.tsx";
 
-interface ContextMenuSubContext {
+interface DropdownMenuSubContext {
   openSub: boolean;
   handleOpenSub: (element: HTMLElement, withKey?: boolean) => void;
   handleCloseSub: () => void;
@@ -28,16 +28,18 @@ interface ContextMenuSubContext {
   activeTrigger: HTMLElement | null;
 }
 
-const ContextMenuSubContext = createContext<ContextMenuSubContext | null>(null);
+const DropdownMenuSubContext = createContext<DropdownMenuSubContext | null>(
+  null,
+);
 
-export const useContextMenuSub = () => {
-  const context = useContext(ContextMenuSubContext);
+export const useDropdownMenuSub = () => {
+  const context = useContext(DropdownMenuSubContext);
   if (!context) throw new Error("Sub context is outside of the provider");
   return context;
 };
 
-export default function ContextMenuSub({ children }: { children: ReactNode }) {
-  const { open, handleHighlight } = useContextMenu();
+export default function DropdownMenuSub({ children }: { children: ReactNode }) {
+  const { open, handleHighlight } = useDropdownMenu();
 
   const [openSub, setOpenSub] = useState(false);
   const [subRect, setSubRect] = useState<DOMRect | null>(null);
@@ -70,7 +72,7 @@ export default function ContextMenuSub({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (openedWithKey) {
-      const subPopup = document.querySelector('[data-contextsub="popup"]');
+      const subPopup = document.querySelector('[data-dropdownsub="popup"]');
       if (subPopup) {
         handleHighlight(
           subPopup.querySelector('[role="menuitem"]') as HTMLElement,
@@ -87,7 +89,7 @@ export default function ContextMenuSub({ children }: { children: ReactNode }) {
   }, [open]);
 
   return (
-    <ContextMenuSubContext.Provider
+    <DropdownMenuSubContext.Provider
       value={{
         openSub,
         subRect,
@@ -101,11 +103,11 @@ export default function ContextMenuSub({ children }: { children: ReactNode }) {
       }}
     >
       {children}
-    </ContextMenuSubContext.Provider>
+    </DropdownMenuSubContext.Provider>
   );
 }
 
-const ContextMenuSubTrigger = ({
+const DropdownMenuSubTrigger = ({
   children,
   className,
   inset = false,
@@ -116,8 +118,8 @@ const ContextMenuSubTrigger = ({
   inset?: boolean;
   prefix?: ReactNode;
 }) => {
-  const { isHighlighted, handleHighlight } = useContextMenu();
-  const { openSub, handleOpenSub, handleCloseSub } = useContextMenuSub();
+  const { isHighlighted, handleHighlight } = useDropdownMenu();
+  const { openSub, handleOpenSub, handleCloseSub } = useDropdownMenuSub();
 
   const ref = useRef<HTMLDivElement | null>(null);
 
@@ -146,7 +148,10 @@ const ContextMenuSubTrigger = ({
   const handleMouseLeave = (event: React.MouseEvent) => {
     handleHighlight(-1);
     const relatedTarget = event.relatedTarget as HTMLElement | null;
-    if (!relatedTarget || !relatedTarget.closest('[data-contextsub="popup"]')) {
+    if (
+      !relatedTarget ||
+      !relatedTarget.closest('[data-dropdownsub="popup"]')
+    ) {
       handleCloseSub();
     }
   };
@@ -158,7 +163,10 @@ const ContextMenuSubTrigger = ({
   const handleBlur = (event: React.FocusEvent<HTMLDivElement>) => {
     handleHighlight(-1);
     const relatedTarget = event.relatedTarget as HTMLElement | null;
-    if (!relatedTarget || !relatedTarget.closest('[data-contextsub="popup"]')) {
+    if (
+      !relatedTarget ||
+      !relatedTarget.closest('[data-dropdownsub="popup"]')
+    ) {
       handleCloseSub();
     }
   };
@@ -174,9 +182,9 @@ const ContextMenuSubTrigger = ({
       data-highlighted={
         ref.current && isHighlighted(ref.current) ? "" : undefined
       }
-      data-contextsub="trigger"
+      data-dropdownsub="trigger"
       className={cn(
-        "text-foreground flex justify-between items-center rounded-ui-item w-full focus:ring-0 cursor-default transition-colors",
+        "text-foreground flex justify-start items-center rounded-ui-item w-full focus:ring-0 cursor-default transition-colors",
         "data-[highlighted]:bg-ui-item-background-hover data-[state='true']:bg-ui-item-background-hover data-[disabled]:text-ui-disabled-foreground data-[disabled]:select-none",
         {
           "gap-2": prefix,
@@ -193,19 +201,19 @@ const ContextMenuSubTrigger = ({
     >
       {prefix && <span className="size-4">{prefix}</span>}
       {children}
-      <span className="size-4">
+      <span className="size-4 ml-auto">
         <ChevronRight />
       </span>
     </div>
   );
 };
 
-export const ContextMenuSubContent = ({
+export const DropdownMenuSubContent = ({
   children,
 }: {
   children: ReactNode;
 }) => {
-  const { clientPosition, handleHighlight } = useContextMenu();
+  const { clientPosition, handleHighlight } = useDropdownMenu();
   const {
     subRect,
     openSub,
@@ -214,7 +222,7 @@ export const ContextMenuSubContent = ({
     currentMenuItem,
     setCurrentMenuItem,
     activeTrigger,
-  } = useContextMenuSub();
+  } = useDropdownMenuSub();
   const [menuStyle, setMenuStyle] = useState<CSSProperties>({});
 
   const ref = useRef<HTMLDivElement | null>(null);
@@ -227,7 +235,7 @@ export const ContextMenuSubContent = ({
 
     if (
       !relatedTarget ||
-      relatedTarget.closest('[data-contextsub="trigger"]') !== activeTrigger
+      relatedTarget.closest('[data-dropdownsub="trigger"]') !== activeTrigger
     ) {
       handleCloseSub();
     }
@@ -241,7 +249,7 @@ export const ContextMenuSubContent = ({
       setCurrentMenuItem,
       handleClose: handleCloseSub,
       handleHighlight,
-      root: (event.target as HTMLElement).closest('[data-contextsub="popup"]'),
+      root: (event.target as HTMLElement).closest('[data-dropdownsub="popup"]'),
     });
 
     if (event.code === "ArrowLeft") {
@@ -259,7 +267,7 @@ export const ContextMenuSubContent = ({
     const updatePosition = () => {
       const newMenuStyle: CSSProperties = {};
       const parentMenu = document.querySelector(
-        '[data-context="popup"]',
+        '[data-dropdown="popup"]',
       ) as HTMLElement;
       const parentRect = parentMenu.getBoundingClientRect();
 
@@ -288,7 +296,7 @@ export const ContextMenuSubContent = ({
     <div
       tabIndex={-1}
       ref={ref}
-      data-contextsub="popup"
+      data-dropdownsub="popup"
       data-state={!animate}
       className={cn(
         "rounded-ui-content focus:ring-0 border flex-col p-ui-content min-w-40 fixed z-50 bg-ui-background",
@@ -300,9 +308,9 @@ export const ContextMenuSubContent = ({
     >
       {children}
     </div>,
-    document.querySelector('[data-context="popup"]') as HTMLElement,
+    document.querySelector('[data-dropdown="popup"]') as HTMLElement,
   );
 };
 
-ContextMenuSub.Trigger = ContextMenuSubTrigger;
-ContextMenuSub.Content = ContextMenuSubContent;
+DropdownMenuSub.Trigger = DropdownMenuSubTrigger;
+DropdownMenuSub.Content = DropdownMenuSubContent;
