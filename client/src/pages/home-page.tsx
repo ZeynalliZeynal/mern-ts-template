@@ -10,6 +10,7 @@ import ComboboxDemo from "@/components/combobox-demo.tsx";
 import CollapseDemo from "@/components/collapse-demo.tsx";
 import CheckboxDemo from "@/components/checkbox-demo.tsx";
 import AvatarsDemo from "@/components/avatars-demo.tsx";
+import DropdownDemo from "@/components/dropdown-demo.tsx";
 
 export default function HomePage() {
   return (
@@ -38,6 +39,7 @@ export default function HomePage() {
       <CollapseDemo />
       <ComboboxDemo />
       <ContextDemo />
+      <DropdownDemo />
       <ChoiceboxDemo />
     </article>
   );

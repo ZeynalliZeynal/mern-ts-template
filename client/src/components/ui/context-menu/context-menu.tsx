@@ -230,12 +230,13 @@ const ContextMenuContent = ({ children }: { children: ReactNode }) => {
     newMenuStyle.top = isEnoughSpaceBelow ? clientPosition.clientY : undefined;
     newMenuStyle.bottom = !isEnoughSpaceBelow
       ? // ? window.innerHeight - clientPosition.clientY
-        4
+        16
       : undefined;
 
     newMenuStyle.left = isEnoughSpaceRight ? clientPosition.clientX : undefined;
     newMenuStyle.right = !isEnoughSpaceRight
-      ? window.innerWidth - clientPosition.clientX
+      ? // ? window.innerWidth - clientPosition.clientX
+        16
       : undefined;
 
     setMenuStyle(newMenuStyle);

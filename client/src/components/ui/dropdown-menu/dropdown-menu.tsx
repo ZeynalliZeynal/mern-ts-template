@@ -23,20 +23,30 @@ import { cn } from "@/lib/utils.ts";
 import { Link } from "react-router-dom";
 import { navigateItems } from "@/utils/navigateItems.ts";
 import { ANIMATION_TIMEOUT } from "@/components/ui/context-menu/context-parameters.ts";
+import Button from "@/components/ui/button.tsx";
 
 interface DropdownMenuDropdown {
   open: boolean;
-  handleOpen: (clientX: number, clientY: number) => void;
+  handleOpen: (rect: DOMRect) => void;
   handleClose: () => void;
-  clientPosition: { clientY: number; clientX: number } | null;
-  setClientPosition: Dispatch<
-    SetStateAction<{ clientY: number; clientX: number } | null>
-  >;
+  clientPosition: DOMRect | null;
+  setClientPosition: Dispatch<SetStateAction<DOMRect | null>>;
   animate: boolean;
   handleHighlight: (value: HTMLElement | number) => void;
   isHighlighted: (currentElement: HTMLElement) => boolean;
   currentMenuItem: number | undefined;
   setCurrentMenuItem: Dispatch<SetStateAction<number | undefined>>;
+}
+
+interface DropdownMenuTriggerProps {
+  children: ReactNode;
+  asChild?: boolean;
+  disabled?: boolean;
+  className?: string;
+  inset?: boolean;
+  href?: string;
+  prefix?: ReactNode;
+  suffix?: ReactNode;
 }
 
 interface DropdownMenuItem {
@@ -66,22 +76,12 @@ export default function DropdownMenu({ children }: { children: ReactNode }) {
     undefined,
   );
 
-  const [clientPosition, setClientPosition] = useState<{
-    clientX: number;
-    clientY: number;
-  } | null>(null);
+  const [clientPosition, setClientPosition] = useState<DOMRect | null>(null);
 
   const [animate, setAnimate] = useState(false);
 
-  useEffect(() => {
-    const closeOnResize = () => setOpen(false);
-
-    window.addEventListener("resize", closeOnResize);
-    return () => window.removeEventListener("resize", closeOnResize);
-  }, []);
-
-  const handleOpen = (clientX: number, clientY: number) => {
-    setClientPosition({ clientX, clientY });
+  const handleOpen = (rect: DOMRect) => {
+    setClientPosition(rect);
     setAnimate(false);
     setOpen(true);
   };
@@ -157,32 +157,60 @@ export default function DropdownMenu({ children }: { children: ReactNode }) {
   );
 }
 
-const DropdownMenuTrigger = ({ children }: { children: ReactNode }) => {
-  const { handleOpen, open } = useDropdownMenu();
+const DropdownMenuTrigger = forwardRef<HTMLElement, DropdownMenuTriggerProps>(
+  (
+    {
+      children,
+      disabled = false,
+      className,
+      asChild = false,
+      suffix,
+      prefix,
+    }: DropdownMenuTriggerProps,
+    forwardRef,
+  ) => {
+    const [hovering, setHovering] = useState(false);
+    const { handleOpen, open } = useDropdownMenu();
+    const ref = useRef<HTMLElement | null>(null);
+    useImperativeHandle(forwardRef, () => ref.current as HTMLElement);
 
-  const handleDropdownMenu: MouseEventHandler<HTMLDivElement> = (event) => {
-    event.preventDefault();
-    const { clientY, clientX } = event;
-    if (open) {
-      setTimeout(() => {
-        handleOpen(clientX, clientY);
-      }, ANIMATION_TIMEOUT);
-    } else {
-      handleOpen(clientX, clientY);
-    }
-  };
+    const handleClick: MouseEventHandler<HTMLElement> = (event) => {
+      event.preventDefault();
 
-  return (
-    <div
-      tabIndex={-1}
-      data-context="trigger"
-      onClick={handleDropdownMenu}
-      className="select-none pointer-events-auto"
-    >
-      {children}
-    </div>
-  );
-};
+      const rect = event.currentTarget.getBoundingClientRect();
+
+      if (!open) {
+        handleOpen(rect);
+      }
+    };
+
+    const commonProps = {
+      ref,
+      "data-highlighted": hovering ? true : undefined,
+      "data-disabled": disabled ? true : undefined,
+      "aria-disabled": disabled ? true : undefined,
+      className: cn(
+        "text-gray-900 border rounded-md px-2.5 h-10 text-sm border-gray-alpha-400 bg-background-100",
+        "data-[highlighted]:text-foreground data-[highlighted]:bg-gray-alpha-200 disabled:bg-gray-100 disabled:text-gray-700 disabled:border-gray-400",
+        {
+          "justify-between": suffix,
+          "gap-2": prefix,
+        },
+        className,
+      ),
+      onMouseEnter: () => setHovering(true),
+      onMouseLeave: () => setHovering(false),
+    };
+
+    return asChild && isValidElement(children) ? (
+      cloneElement(children, commonProps)
+    ) : (
+      <Button prefix={prefix} suffix={suffix} primary onClick={handleClick}>
+        {children}
+      </Button>
+    );
+  },
+);
 
 const DropdownMenuContent = ({ children }: { children: ReactNode }) => {
   const {
@@ -194,6 +222,7 @@ const DropdownMenuContent = ({ children }: { children: ReactNode }) => {
     handleHighlight,
     currentMenuItem,
     setCurrentMenuItem,
+    setClientPosition,
   } = useDropdownMenu();
   const [menuStyle, setMenuStyle] = useState<CSSProperties | undefined>(
     undefined,
@@ -217,28 +246,39 @@ const DropdownMenuContent = ({ children }: { children: ReactNode }) => {
 
   useOutsideClick(ref, handleClose);
 
-  useEffect(() => {
+  const updateMenuPosition = () => {
     if (!ref.current || !open || !clientPosition) return;
 
-    const newMenuStyle = { ...menuStyle };
+    const spaceLeftBottom = window.innerHeight - clientPosition.bottom;
+    const spaceLeftRight = window.innerWidth - clientPosition.right;
 
-    const isEnoughSpaceBelow =
-      window.innerHeight - clientPosition.clientY > ref.current.clientHeight;
-    const isEnoughSpaceRight =
-      window.innerWidth - clientPosition.clientX > ref.current.clientWidth;
+    const canFitRight = spaceLeftRight > ref.current.clientWidth;
+    const canFitBottom = spaceLeftBottom > ref.current.clientHeight;
 
-    newMenuStyle.top = isEnoughSpaceBelow ? clientPosition.clientY : undefined;
-    newMenuStyle.bottom = !isEnoughSpaceBelow
-      ? window.innerHeight - clientPosition.clientY
-      : undefined;
+    const placeCenter = (window.innerWidth - ref.current.clientWidth) / 2;
 
-    newMenuStyle.left = isEnoughSpaceRight ? clientPosition.clientX : undefined;
-    newMenuStyle.right = !isEnoughSpaceRight
-      ? window.innerWidth - clientPosition.clientX
-      : undefined;
+    setMenuStyle({
+      top: canFitBottom
+        ? clientPosition.top + clientPosition.height + 8
+        : undefined,
+      bottom: !canFitBottom
+        ? spaceLeftBottom + clientPosition.height + 8
+        : undefined,
+      left: placeCenter,
+    });
+  };
 
-    setMenuStyle(newMenuStyle);
-  }, [handleOpen, open]);
+  useEffect(() => {
+    updateMenuPosition();
+    const handleResize = () => {
+      updateMenuPosition();
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [open, clientPosition]);
 
   if (!open || !clientPosition) return null;
 
@@ -271,11 +311,11 @@ const DropdownMenuItem = forwardRef<
     {
       children,
       onClick,
-      className,
-      asChild = false,
-      disabled = false,
       inset = false,
       href,
+      disabled = false,
+      className,
+      asChild = false,
       suffix,
       prefix,
     }: DropdownMenuItem,
