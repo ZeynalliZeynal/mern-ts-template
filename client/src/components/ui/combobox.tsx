@@ -104,7 +104,7 @@ export default function Combobox({
       else {
         if (inputValue) {
           const foundValue = values.find((v) =>
-            v.toLowerCase().includes(inputValue.toLowerCase()),
+            v.toLowerCase().includes(inputValue.toLowerCase().trim()),
           );
           if (foundValue) {
             onChange(foundValue);
@@ -114,6 +114,7 @@ export default function Combobox({
             setInputValue(values[0]);
           }
         } else onChange("");
+        setIsSearching(false);
       }
     }
   }, [open]);
@@ -353,7 +354,10 @@ const ComboboxItem = ({
         setHoveredOption(
           (prevSibling as HTMLButtonElement).dataset.value as string,
         );
-      } else inputRef.current?.focus();
+      } else {
+        inputRef.current?.focus();
+        setHoveredOption("");
+      }
     } else if (event.code === "ArrowDown") {
       event.preventDefault();
       const nextSibling = event.currentTarget.nextElementSibling;
@@ -362,7 +366,10 @@ const ComboboxItem = ({
         setHoveredOption(
           (nextSibling as HTMLButtonElement).dataset.value as string,
         );
-      } else inputRef.current?.focus();
+      } else {
+        inputRef.current?.focus();
+        setHoveredOption("");
+      }
     }
   };
 
