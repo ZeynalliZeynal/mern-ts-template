@@ -22,7 +22,7 @@ interface ComboboxContext {
   open: boolean;
   animate: boolean;
   handleClose: () => void;
-  handleOpen: () => void;
+  handleOpen: (element: HTMLElement) => void;
   inputRef: MutableRefObject<HTMLInputElement | null>;
   rect: DOMRect | null;
   values: string[];
@@ -62,12 +62,14 @@ export default function Combobox({
   const [open, setOpen] = useState(false);
   const [hoveredOption, setHoveredOption] = useState("");
   const [isSearching, setIsSearching] = useState<boolean>(false);
+  const [activeTrigger, setActiveTrigger] = useState<HTMLElement | null>(null);
 
   const comboboxRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const listboxRef = useRef<HTMLDivElement | null>(null);
 
-  const handleOpen = () => {
+  const handleOpen = (element: HTMLElement) => {
+    setActiveTrigger(element);
     setAnimate(false);
     setOpen(true);
   };
@@ -77,7 +79,14 @@ export default function Combobox({
     setTimeout(() => {
       setOpen(false);
       setAnimate(false);
+
+      const triggers = Array.from(
+        document.querySelectorAll('[role="combobox"]'),
+      ) as HTMLElement[];
+      const findActive = triggers.indexOf(activeTrigger as HTMLElement);
+      triggers[findActive].focus();
     }, ANIMATION_TIMEOUT);
+    setActiveTrigger(null);
   };
 
   useOutsideClick(comboboxRef, () => {
@@ -160,7 +169,16 @@ export default function Combobox({
         tabIndex={0}
         className="w-full rounded-md border focus-within:shadow-input transition group"
         onKeyDown={(event) => {
-          if (open && event.code === "Escape") handleClose();
+          if (open && event.code === "Escape") {
+            event.preventDefault();
+            handleClose();
+          }
+          if (open && event.code === "Tab") {
+            event.preventDefault();
+          }
+          if (event.code === "Space" || event.code === "Enter") {
+            handleOpen(event.currentTarget);
+          }
         }}
       >
         {children}
@@ -194,6 +212,7 @@ const ComboboxInput = () => {
       </span>
       <div className="h-10 relative z-[1] w-full">
         <input
+          tabIndex={-1}
           ref={inputRef}
           type="text"
           value={inputValue}
@@ -203,7 +222,11 @@ const ComboboxInput = () => {
             setIsSearching(true);
             setInputValue(event.target.value);
           }}
-          onFocus={handleOpen}
+          onFocus={(event) =>
+            handleOpen(
+              event.currentTarget.closest('[role="combobox"]') as HTMLElement,
+            )
+          }
           onKeyDown={(event) => {
             if (event.code === "ArrowDown" && listboxRef.current) {
               event.preventDefault();
@@ -229,9 +252,18 @@ const ComboboxInput = () => {
       </div>
       {currentValue ? (
         <button
+          aria-hidden={true}
           onClick={() => {
             setInputValue("");
             onChange("");
+          }}
+          onKeyDown={(event) => {
+            if (event.code === "Enter") {
+              event.preventDefault();
+
+              setInputValue("");
+              onChange("");
+            }
           }}
           className="inline-flex z-[1] absolute top-1/2 right-0 -translate-y-1/2 items-center justify-center size-10 p-[11px] hover:text-foreground"
         >
@@ -239,7 +271,27 @@ const ComboboxInput = () => {
         </button>
       ) : (
         <button
-          onClick={() => (open ? handleClose() : handleOpen())}
+          aria-hidden={true}
+          onClick={(event) =>
+            open
+              ? handleClose()
+              : handleOpen(
+                  event.currentTarget.closest(
+                    '[role="combobox"]',
+                  ) as HTMLElement,
+                )
+          }
+          onKeyDown={(event) => {
+            if (event.code === "Enter") {
+              open
+                ? handleClose()
+                : handleOpen(
+                    event.currentTarget.closest(
+                      '[role="combobox"]',
+                    ) as HTMLElement,
+                  );
+            }
+          }}
           className="inline-flex z-[1] absolute top-1/2 right-0 -translate-y-1/2 items-center justify-center size-10 p-[11px] hover:text-foreground group-aria-expanded:rotate-180"
         >
           <IoChevronDown />
@@ -288,7 +340,6 @@ const ComboboxItem = ({
   const {
     currentValue,
     listboxRef,
-    values,
     setValues,
     onChange,
     handleClose,
@@ -345,7 +396,9 @@ const ComboboxItem = ({
     }
   }, []);
 
-  const isSearched = children.toLowerCase().includes(inputValue.toLowerCase());
+  const isSearched = children
+    .toLowerCase()
+    .includes(inputValue.trim().toLowerCase());
 
   if (!isSearched && isSearching) return null;
 
@@ -368,7 +421,7 @@ const ComboboxItem = ({
       onKeyDown={handleNavigate}
     >
       {children}
-      {currentValue?.toLowerCase() === children.toLowerCase() && (
+      {inputValue?.toLowerCase() === children.toLowerCase() && (
         <span className="size-4">
           <IoCheckmark />
         </span>
