@@ -173,9 +173,6 @@ export default function Combobox({
             event.preventDefault();
             handleClose();
           }
-          if (open && event.code === "Tab") {
-            event.preventDefault();
-          }
           if (event.code === "Space" || event.code === "Enter") {
             handleOpen(event.currentTarget);
           }
@@ -252,18 +249,11 @@ const ComboboxInput = () => {
       </div>
       {currentValue ? (
         <button
+          tabIndex={-1}
           aria-hidden={true}
           onClick={() => {
             setInputValue("");
             onChange("");
-          }}
-          onKeyDown={(event) => {
-            if (event.code === "Enter") {
-              event.preventDefault();
-
-              setInputValue("");
-              onChange("");
-            }
           }}
           className="inline-flex z-[1] absolute top-1/2 right-0 -translate-y-1/2 items-center justify-center size-10 p-[11px] hover:text-foreground"
         >
@@ -271,6 +261,7 @@ const ComboboxInput = () => {
         </button>
       ) : (
         <button
+          tabIndex={-1}
           aria-hidden={true}
           onClick={(event) =>
             open
@@ -281,17 +272,6 @@ const ComboboxInput = () => {
                   ) as HTMLElement,
                 )
           }
-          onKeyDown={(event) => {
-            if (event.code === "Enter") {
-              open
-                ? handleClose()
-                : handleOpen(
-                    event.currentTarget.closest(
-                      '[role="combobox"]',
-                    ) as HTMLElement,
-                  );
-            }
-          }}
           className="inline-flex z-[1] absolute top-1/2 right-0 -translate-y-1/2 items-center justify-center size-10 p-[11px] hover:text-foreground group-aria-expanded:rotate-180"
         >
           <IoChevronDown />
