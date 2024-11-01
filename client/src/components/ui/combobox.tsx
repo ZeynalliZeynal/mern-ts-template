@@ -15,6 +15,8 @@ import { createPortal } from "react-dom";
 import { useOutsideClick } from "@/hooks/useOutsideClick.ts";
 import { calculateAvailableRoom } from "@/utils/calculateAvailableRoom.ts";
 import { cn } from "@/lib/utils.ts";
+import { ANIMATION_TIMEOUT } from "@/components/ui/parameters.ts";
+import { useRestrictBody } from "@/hooks/useRestrictBody.ts";
 
 interface ComboboxContext {
   open: boolean;
@@ -32,6 +34,8 @@ interface ComboboxContext {
   listboxRef: MutableRefObject<HTMLDivElement | null>;
   hoveredOption: string;
   setHoveredOption: Dispatch<SetStateAction<string>>;
+  isSearching: boolean;
+  setIsSearching: Dispatch<SetStateAction<boolean>>;
 }
 
 const ComboboxContext = createContext<ComboboxContext | null>(null);
@@ -57,6 +61,7 @@ export default function Combobox({
   const [inputValue, setInputValue] = useState("");
   const [open, setOpen] = useState(false);
   const [hoveredOption, setHoveredOption] = useState("");
+  const [isSearching, setIsSearching] = useState<boolean>(false);
 
   const comboboxRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -72,12 +77,14 @@ export default function Combobox({
     setTimeout(() => {
       setOpen(false);
       setAnimate(false);
-    }, 150);
+    }, ANIMATION_TIMEOUT);
   };
 
   useOutsideClick(comboboxRef, () => {
-    setOpen(false);
+    handleClose();
   });
+
+  useRestrictBody(open);
 
   useEffect(() => {
     if (open) inputRef.current?.focus();
@@ -141,6 +148,8 @@ export default function Combobox({
         listboxRef,
         hoveredOption,
         setHoveredOption,
+        isSearching,
+        setIsSearching,
       }}
     >
       <div
@@ -172,10 +181,11 @@ const ComboboxInput = () => {
     inputValue,
     setInputValue,
     setHoveredOption,
+    setIsSearching,
   } = useCombobox();
 
   return (
-    <div className="w-full relative place-items-center text-gray-900">
+    <div className="w-full relative place-items-center text-gray-900 pointer-events-auto">
       <span
         aria-hidden="true"
         className="inline-flex absolute top-1/2 left-0 -translate-y-1/2 items-center justify-center size-10 p-[11px]"
@@ -189,7 +199,10 @@ const ComboboxInput = () => {
           value={inputValue}
           placeholder="Search..."
           className="placeholder:text-gray-700 px-10 text-foreground"
-          onChange={(event) => setInputValue(event.target.value)}
+          onChange={(event) => {
+            setIsSearching(true);
+            setInputValue(event.target.value);
+          }}
           onFocus={handleOpen}
           onKeyDown={(event) => {
             if (event.code === "ArrowDown" && listboxRef.current) {
@@ -249,7 +262,7 @@ const ComboboxContent = ({ children }: { children: ReactNode }) => {
       data-combobox="popup"
       data-state={!animate}
       className={cn(
-        "rounded-ui-content focus:ring-0 border p-ui-content flex-col min-w-40 fixed z-50 bg-ui-background",
+        "rounded-ui-content focus:ring-0 border p-ui-content flex-col min-w-40 fixed z-50 bg-ui-background pointer-events-auto",
         "data-[state='true']:animate-in data-[state='false']:animate-out data-[state='true']:zoom-in data-[state='false']:zoom-out",
       )}
       style={{
@@ -275,6 +288,7 @@ const ComboboxItem = ({
   const {
     currentValue,
     listboxRef,
+    values,
     setValues,
     onChange,
     handleClose,
@@ -282,6 +296,9 @@ const ComboboxItem = ({
     hoveredOption,
     setHoveredOption,
     inputRef,
+    inputValue,
+    isSearching,
+    setIsSearching,
   } = useCombobox();
 
   const ref = useRef<HTMLButtonElement | null>(null);
@@ -290,6 +307,7 @@ const ComboboxItem = ({
     onChange(children);
     setInputValue(children);
     handleClose();
+    setIsSearching(false);
   };
 
   const handleNavigate: KeyboardEventHandler<HTMLButtonElement> = (event) => {
@@ -326,6 +344,10 @@ const ComboboxItem = ({
       });
     }
   }, []);
+
+  const isSearched = children.toLowerCase().includes(inputValue.toLowerCase());
+
+  if (!isSearched && isSearching) return null;
 
   return (
     <button
