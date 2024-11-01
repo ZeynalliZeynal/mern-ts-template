@@ -205,7 +205,7 @@ export const ContextMenuSubContent = ({
 }: {
   children: ReactNode;
 }) => {
-  const { clientPosition, handleHighlight } = useContextMenu();
+  const { clientPosition, handleHighlight, handleClose } = useContextMenu();
   const {
     subRect,
     openSub,
@@ -239,7 +239,7 @@ export const ContextMenuSubContent = ({
       itemSelector: '[role="menuitem"]:not([data-disabled])',
       currentMenuItem,
       setCurrentMenuItem,
-      handleClose: handleCloseSub,
+      handleClose,
       handleHighlight,
       root: (event.target as HTMLElement).closest('[data-contextsub="popup"]'),
     });

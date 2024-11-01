@@ -213,7 +213,7 @@ export const DropdownMenuSubContent = ({
 }: {
   children: ReactNode;
 }) => {
-  const { clientPosition, handleHighlight } = useDropdownMenu();
+  const { clientPosition, handleHighlight, handleClose } = useDropdownMenu();
   const {
     subRect,
     openSub,
@@ -247,7 +247,7 @@ export const DropdownMenuSubContent = ({
       itemSelector: '[role="menuitem"]:not([data-disabled])',
       currentMenuItem,
       setCurrentMenuItem,
-      handleClose: handleCloseSub,
+      handleClose,
       handleHighlight,
       root: (event.target as HTMLElement).closest('[data-dropdownsub="popup"]'),
     });
