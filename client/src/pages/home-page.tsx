@@ -11,6 +11,7 @@ import CollapseDemo from "@/components/collapse-demo.tsx";
 import CheckboxDemo from "@/components/checkbox-demo.tsx";
 import AvatarsDemo from "@/components/avatars-demo.tsx";
 import DropdownDemo from "@/components/dropdown-demo.tsx";
+import PopoverDemo from "@/components/popover-demo.tsx";
 
 export default function HomePage() {
   return (
@@ -40,6 +41,7 @@ export default function HomePage() {
       <ComboboxDemo />
       <ContextDemo />
       <DropdownDemo />
+      <PopoverDemo />
       <ChoiceboxDemo />
     </article>
   );

@@ -1,5 +1,5 @@
 import Stack from "@/components/ui/stack.tsx";
-import Combobox from "@/components/ui/combobox.tsx";
+import Combobox from "@/components/ui/combobox-vercel.tsx";
 import { useState } from "react";
 
 const comboboxValues = [

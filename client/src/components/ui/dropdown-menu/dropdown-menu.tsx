@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/types.ts";
 import { useRestrictBody } from "@/hooks/useRestrictBody.ts";
 import { ANIMATION_TIMEOUT } from "@/components/ui/parameters.ts";
+import { useResize } from "@/hooks/useResize.ts";
 
 const DropdownMenuContext = createContext<
   | ({
@@ -254,19 +255,9 @@ const DropdownMenuContent = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  useEffect(() => {
-    updateMenuPosition();
-    const handleResize = () => {
-      updateMenuPosition();
-    };
+  useResize(open, updateMenuPosition, [open]);
 
-    window.addEventListener("resize", handleResize);
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, [open, clientPosition]);
-
-  if (!open || !clientPosition) return null;
+  if (!open) return null;
 
   return createPortal(
     <div

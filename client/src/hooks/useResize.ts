@@ -1,23 +1,20 @@
-import { Dispatch, SetStateAction, useEffect } from "react";
+import { useEffect } from "react";
 
 export const useResize = (
-  element: HTMLElement | null,
-  callback: Dispatch<SetStateAction<DOMRect | null>>,
+  condition: boolean,
+  callback: () => void,
+  dependencies: any[],
 ) => {
   useEffect(() => {
-    const updateRect = () => {
-      if (element) {
-        callback(element.getBoundingClientRect());
-      }
-    };
-    updateRect();
+    if (condition) {
+      callback();
 
-    window.addEventListener("resize", updateRect);
-    window.addEventListener("scroll", updateRect, true);
-
+      window.addEventListener("resize", callback);
+      window.addEventListener("scroll", callback);
+    }
     return () => {
-      window.removeEventListener("resize", updateRect);
-      window.removeEventListener("scroll", updateRect, true);
+      window.removeEventListener("resize", callback);
+      window.removeEventListener("scroll", callback);
     };
-  }, []);
+  }, dependencies);
 };
