@@ -9,7 +9,6 @@ import {
   ReactNode,
   SetStateAction,
   useContext,
-  useEffect,
   useImperativeHandle,
   useRef,
   useState,
@@ -20,6 +19,7 @@ import { ANIMATION_TIMEOUT } from "@/components/ui/parameters.ts";
 import { MenuContextProps, MenuTriggerProps } from "@/components/ui/types.ts";
 import { useRestrictBody } from "@/hooks/useRestrictBody.ts";
 import { PopperWrapper } from "@/components/ui/PopperPrimitives.tsx";
+import { useResize } from "@/hooks/useResize.ts";
 
 const PopoverContext = createContext<
   | ({
@@ -57,7 +57,6 @@ export default function Popover({ children }: { children: ReactNode }) {
   };
 
   useRestrictBody(open);
-  console.log(triggerPosition);
 
   return (
     <PopoverContext.Provider
@@ -77,10 +76,10 @@ export default function Popover({ children }: { children: ReactNode }) {
 
 const PopoverTrigger = forwardRef<HTMLElement, MenuTriggerProps>(
   ({ children, prefix, suffix, className, asChild }, forwardRef) => {
-    const { open, handleOpen, setTriggerPosition, triggerPosition } =
-      usePopoverContext();
+    const { open, handleOpen, setTriggerPosition } = usePopoverContext();
     const [isHovering, setIsHovering] = useState(false);
-    const ref = useRef<HTMLElement | null>(null);
+
+    const ref = useRef<HTMLButtonElement | null>(null);
     useImperativeHandle(forwardRef, () => ref.current as HTMLElement);
 
     const handleClick: MouseEventHandler<HTMLButtonElement> = (event) => {
@@ -88,21 +87,13 @@ const PopoverTrigger = forwardRef<HTMLElement, MenuTriggerProps>(
       handleOpen(event.currentTarget);
     };
 
-    useEffect(() => {
-      const updatePosition = () => {
-        if (!open || !ref.current) return;
-        console.log(ref.current.getBoundingClientRect());
-        setTriggerPosition(ref.current.getBoundingClientRect());
-      };
-
-      window.addEventListener("resize", updatePosition);
-
-      return () => {
-        window.removeEventListener("resize", updatePosition);
-      };
-    }, [open]);
+    useResize(open, () => {
+      if (!ref.current) return;
+      setTriggerPosition(ref.current.getBoundingClientRect());
+    });
 
     const commonAttributes = {
+      ref,
       role: "combobox",
       type: "button",
       "aria-expanded": open,
@@ -114,6 +105,7 @@ const PopoverTrigger = forwardRef<HTMLElement, MenuTriggerProps>(
       cloneElement(children, commonAttributes)
     ) : (
       <button
+        ref={ref}
         type="button"
         aria-expanded={open}
         data-state={open ? "open" : "close"}
@@ -157,6 +149,7 @@ const PopoverContent = ({ children }: { children: ReactNode }) => {
       open={open}
       onClose={handleClose}
       triggerPosition={triggerPosition}
+      align="left"
     >
       {children}
     </PopperWrapper>

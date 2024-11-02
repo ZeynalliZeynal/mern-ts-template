@@ -255,7 +255,7 @@ const DropdownMenuContent = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  useResize(open, updateMenuPosition, [open]);
+  useResize(open, updateMenuPosition, clientPosition);
 
   if (!open) return null;
 

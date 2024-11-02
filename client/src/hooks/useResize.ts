@@ -3,18 +3,18 @@ import { useEffect } from "react";
 export const useResize = (
   condition: boolean,
   callback: () => void,
-  dependencies: any[],
+  position: DOMRect | null,
 ) => {
   useEffect(() => {
-    if (condition) {
-      callback();
+    if (!condition) return;
+    callback();
 
-      window.addEventListener("resize", callback);
-      window.addEventListener("scroll", callback);
-    }
+    window.addEventListener("resize", callback);
+    window.addEventListener("scroll", callback);
+
     return () => {
       window.removeEventListener("resize", callback);
       window.removeEventListener("scroll", callback);
     };
-  }, dependencies);
+  }, [condition, position]);
 };

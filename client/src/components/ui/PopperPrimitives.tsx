@@ -10,7 +10,7 @@ interface PopperWrapperProps {
   open: boolean;
   onClose: () => void;
   triggerPosition: DOMRect | null;
-  align?: "center" | "left" | "right" | "top" | "bottom";
+  align?: "center" | "left" | "right";
   width?: "fit" | "default";
 }
 
@@ -32,17 +32,29 @@ export const PopperWrapper = ({
     if (!ref.current || !open || !triggerPosition) return;
 
     const spaceLeftBottom = window.innerHeight - triggerPosition.bottom;
-    // const spaceLeftRight = window.innerWidth - triggerPosition.right;
 
     // const canFitRight = spaceLeftRight > ref.current.clientWidth;
     const canFitBottom = spaceLeftBottom > ref.current.clientHeight;
 
-    let placeCenter;
-    if (align === "center") {
-      if (width === "fit") {
-        placeCenter = triggerPosition.left;
-      } else {
-        placeCenter = (innerWidth - ref.current.clientLeft / 2) / 2;
+    const centerX = triggerPosition.left + triggerPosition.width / 2;
+    // const centerY = triggerPosition.top + triggerPosition.height / 2;
+    console.log(ref.current.clientLeft);
+
+    let left = undefined;
+    let right = undefined;
+    if (width === "fit") {
+      left = triggerPosition.left;
+    } else {
+      switch (align) {
+        case "center":
+          left = Math.max(0, centerX - ref.current.clientWidth / 2);
+          break;
+        case "left":
+          left = triggerPosition.left;
+          break;
+        case "right":
+          left = triggerPosition.right - ref.current.offsetWidth;
+          break;
       }
     }
 
@@ -53,13 +65,14 @@ export const PopperWrapper = ({
       bottom: !canFitBottom
         ? spaceLeftBottom + triggerPosition.height + 8
         : undefined,
-      left: placeCenter,
+      left,
+      right,
     });
   };
 
   useOutsideClick(ref, onClose);
 
-  useResize(open, updateMenuPosition, [open, triggerPosition]);
+  useResize(open, updateMenuPosition, triggerPosition);
 
   if (!open || !triggerPosition) return null;
 
