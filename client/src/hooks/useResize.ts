@@ -3,7 +3,7 @@ import { useEffect } from "react";
 export const useResize = (
   condition: boolean,
   callback: () => void,
-  position: DOMRect | null,
+  position?: DOMRect | null,
 ) => {
   useEffect(() => {
     if (!condition) return;

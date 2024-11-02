@@ -23,11 +23,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { navigateItems } from "@/utils/navigateItems.ts";
 import Button from "@/components/ui/button.tsx";
 import {
-  PrimitiveGroup,
-  PrimitiveLabel,
-  PrimitiveSeparator,
-} from "@/components/ui/primitives/primitive.tsx";
-import {
   MenuContextProps,
   MenuItemProps,
   MenuTriggerProps,
@@ -35,6 +30,7 @@ import {
 import { useRestrictBody } from "@/hooks/useRestrictBody.ts";
 import { ANIMATION_TIMEOUT } from "@/components/ui/parameters.ts";
 import { useResize } from "@/hooks/useResize.ts";
+import Primitive from "@/components/ui/primitives/primitive.tsx";
 
 const DropdownMenuContext = createContext<
   | ({
@@ -311,7 +307,6 @@ const DropdownMenuItem = forwardRef<
     const handleClick = (event: MouseEvent | KeyboardEvent) => {
       if (disabled) return;
       onClick?.(event as React.MouseEvent<HTMLElement>);
-      // if (!event.currentTarget.closest('[data-dropdownsub="popup"]'))
       handleClose();
     };
 
@@ -404,7 +399,7 @@ const DropdownMenuItem = forwardRef<
 
 DropdownMenu.Trigger = DropdownMenuTrigger;
 DropdownMenu.Item = DropdownMenuItem;
-DropdownMenu.Separator = PrimitiveSeparator;
-DropdownMenu.Group = PrimitiveGroup;
-DropdownMenu.Label = PrimitiveLabel;
+DropdownMenu.Separator = Primitive.Separator;
+DropdownMenu.Group = Primitive.Group;
+DropdownMenu.Label = Primitive.Label;
 DropdownMenu.Content = DropdownMenuContent;

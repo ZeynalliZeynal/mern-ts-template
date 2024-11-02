@@ -1,160 +1,85 @@
-import {
-  cloneElement,
-  createContext,
-  Dispatch,
-  forwardRef,
-  isValidElement,
-  KeyboardEventHandler,
-  MouseEventHandler,
-  ReactNode,
-  SetStateAction,
-  useContext,
-  useImperativeHandle,
-  useRef,
-  useState,
-} from "react";
+import { ReactNode } from "react";
+import { MenuItemProps, MenuTriggerProps } from "@/components/ui/types.ts";
+import Popper, {
+  PopperItem,
+  PopperTrigger,
+  PopperWrapper,
+} from "@/components/ui/popper-primitives.tsx";
 import { cn } from "@/lib/utils.ts";
-import { PiCaretUpDownBold } from "react-icons/pi";
-import { ANIMATION_TIMEOUT } from "@/components/ui/parameters.ts";
-import { MenuContextProps, MenuTriggerProps } from "@/components/ui/types.ts";
-import { useRestrictBody } from "@/hooks/useRestrictBody.ts";
-import { PopperWrapper } from "@/components/ui/PopperPrimitives.tsx";
-import { useResize } from "@/hooks/useResize.ts";
+import Primitive from "@/components/ui/primitives/primitive.tsx";
 
-const PopoverContext = createContext<
-  | ({
-      handleOpen: (element: HTMLElement) => void;
-      triggerPosition: DOMRect | null;
-      setTriggerPosition: Dispatch<SetStateAction<DOMRect | null>>;
-    } & MenuContextProps)
-  | null
->(null);
-
-const usePopoverContext = () => {
-  const context = useContext(PopoverContext);
-  if (!context) throw new Error("Popover is outside of the provider");
-  return context;
-};
-
-export default function Popover({ children }: { children: ReactNode }) {
-  const [open, setOpen] = useState(false);
-  const [triggerPosition, setTriggerPosition] = useState<DOMRect | null>(null);
-
-  const [animate, setAnimate] = useState(false);
-
-  const handleOpen = (element: HTMLElement) => {
-    setAnimate(false);
-    setOpen(true);
-    setTriggerPosition(element.getBoundingClientRect());
-  };
-
-  const handleClose = () => {
-    setAnimate(true);
-    setTimeout(() => {
-      setOpen(false);
-      setAnimate(false);
-    }, ANIMATION_TIMEOUT);
-  };
-
-  useRestrictBody(open);
-
+export default function Popover({
+  children,
+  defaultValue,
+}: {
+  children: ReactNode;
+  defaultValue?: string;
+}) {
   return (
-    <PopoverContext.Provider
-      value={{
-        open,
-        handleOpen,
-        handleClose,
-        animate,
-        triggerPosition,
-        setTriggerPosition,
-      }}
-    >
+    <Popper menuType="popover" defaultValue={defaultValue}>
       {children}
-    </PopoverContext.Provider>
+    </Popper>
   );
 }
 
-const PopoverTrigger = forwardRef<HTMLElement, MenuTriggerProps>(
-  ({ children, prefix, suffix, className, asChild }, forwardRef) => {
-    const { open, handleOpen, setTriggerPosition } = usePopoverContext();
-    const [isHovering, setIsHovering] = useState(false);
-
-    const ref = useRef<HTMLButtonElement | null>(null);
-    useImperativeHandle(forwardRef, () => ref.current as HTMLElement);
-
-    const handleClick: MouseEventHandler<HTMLButtonElement> = (event) => {
-      event.preventDefault();
-      handleOpen(event.currentTarget);
-    };
-
-    useResize(open, () => {
-      if (!ref.current) return;
-      setTriggerPosition(ref.current.getBoundingClientRect());
-    });
-
-    const commonAttributes = {
-      ref,
-      role: "combobox",
-      type: "button",
-      "aria-expanded": open,
-      "data-state": open ? "open" : "close",
-      onClick: handleClick,
-    };
-
-    return asChild && isValidElement(children) ? (
-      cloneElement(children, commonAttributes)
-    ) : (
-      <button
-        ref={ref}
-        type="button"
-        aria-expanded={open}
-        data-state={open ? "open" : "close"}
-        className={cn(
-          "h-7 px-3 rounded-md border text-foreground flex items-center justify-between gap-1.5 text-xs transition",
-          {
-            "bg-ui-item-background-hover": isHovering,
-          },
-          className,
-        )}
-        onMouseEnter={() => {
-          setIsHovering(true);
-        }}
-        onMouseLeave={() => {
-          setIsHovering(false);
-        }}
-        onClick={handleClick}
-      >
-        {prefix && <span className="opacity-60">{prefix}</span>}
-        {children}
-        {suffix ? (
-          suffix
-        ) : (
-          <span className="opacity-60 size-3">
-            <PiCaretUpDownBold />
-          </span>
-        )}
-      </button>
-    );
-  },
-);
+const PopoverTrigger = ({
+  children,
+  prefix,
+  suffix,
+  className,
+  asChild,
+}: MenuTriggerProps) => {
+  return (
+    <PopperTrigger
+      suffix={suffix}
+      prefix={prefix}
+      className={cn(className)}
+      asChild={asChild}
+    >
+      {children}
+    </PopperTrigger>
+  );
+};
 
 const PopoverContent = ({ children }: { children: ReactNode }) => {
-  const { open, animate, handleClose, triggerPosition } = usePopoverContext();
-
-  const handleKeyDown: KeyboardEventHandler<HTMLDivElement> = (event) => {};
-
   return (
-    <PopperWrapper
-      animate={animate}
-      open={open}
-      onClose={handleClose}
-      triggerPosition={triggerPosition}
-      align="left"
-    >
+    <PopperWrapper align="center" width="fit">
       {children}
     </PopperWrapper>
   );
 };
 
+const PopoverItem = ({
+  children,
+  disabled = false,
+  className,
+  asChild = false,
+  suffix,
+  prefix,
+  value,
+  onSelect,
+}: {
+  value: string;
+  onSelect: (currentValue: string) => void;
+} & MenuItemProps) => {
+  return (
+    <PopperItem
+      disabled={disabled}
+      prefix={prefix}
+      suffix={suffix}
+      asChild={asChild}
+      className={className}
+      value={value}
+      onSelect={onSelect}
+    >
+      {children}
+    </PopperItem>
+  );
+};
+
+Popover.Group = Primitive.Group;
+Popover.Label = Primitive.Label;
+Popover.Separator = Primitive.Separator;
 Popover.Trigger = PopoverTrigger;
+Popover.Item = PopoverItem;
 Popover.Content = PopoverContent;

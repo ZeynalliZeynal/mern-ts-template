@@ -12,6 +12,7 @@ import CheckboxDemo from "@/components/checkbox-demo.tsx";
 import AvatarsDemo from "@/components/avatars-demo.tsx";
 import DropdownDemo from "@/components/dropdown-demo.tsx";
 import PopoverDemo from "@/components/popover-demo.tsx";
+import CommandDemo from "@/components/command-demo.tsx";
 
 export default function HomePage() {
   return (
@@ -42,6 +43,7 @@ export default function HomePage() {
       <ContextDemo />
       <DropdownDemo />
       <PopoverDemo />
+      <CommandDemo />
       <ChoiceboxDemo />
     </article>
   );

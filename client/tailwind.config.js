@@ -147,7 +147,7 @@ export default {
         border: "0 0 0 1px hsla(var(--ds-gray-alpha-400))",
       },
       borderRadius: {
-        "ui-content": ".375rem",
+        "ui-content": ".5rem",
         "ui-item": ".25rem",
       },
       padding: {
