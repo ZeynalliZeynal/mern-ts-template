@@ -11,8 +11,7 @@ export default function CommandDemo() {
       <Command className="min-w-96">
         <Command.Input placeholder="Type a command or search..." />
         <Command.Content>
-          <Command.Group>
-            <Command.Label>Suggestions</Command.Label>
+          <Command.Group heading="Suggestions">
             <Command.Item prefix={<IoCalendarOutline />}>Calendar</Command.Item>
             <Command.Item prefix={<BsEmojiLaughing />}>
               Search Emoji
@@ -22,8 +21,7 @@ export default function CommandDemo() {
             </Command.Item>
           </Command.Group>
           <Command.Separator />
-          <Command.Group>
-            <Command.Label>Settings</Command.Label>
+          <Command.Group heading="Settings">
             <Command.Item prefix={<LuUser2 />}>Profile</Command.Item>
             <Command.Item prefix={<LuMail />}>Mail</Command.Item>
             <Command.Item prefix={<LuSettings2 />}>Settings</Command.Item>

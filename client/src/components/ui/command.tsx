@@ -1,11 +1,27 @@
-import { createContext, ReactNode, useContext } from "react";
+import {
+  createContext,
+  Dispatch,
+  KeyboardEventHandler,
+  ReactNode,
+  SetStateAction,
+  useContext,
+  useRef,
+  useState,
+} from "react";
 import { cn } from "@/lib/utils.ts";
 import { IoIosSearch } from "react-icons/io";
 import Primitive, {
   PrimitiveItemProps,
+  usePrimitiveContext,
 } from "@/components/ui/primitives/primitive.tsx";
+import { useOutsideClick } from "@/hooks/useOutsideClick.ts";
 
-type CommandContextType = {};
+type CommandContextType = {
+  inputValue: string;
+  setInputValue: Dispatch<SetStateAction<string>>;
+  isSearching: boolean;
+  setIsSearching: Dispatch<SetStateAction<boolean>>;
+};
 
 const CommandContext = createContext<CommandContextType | null>(null);
 
@@ -22,10 +38,27 @@ export default function Command({
   children: ReactNode;
   className?: string;
 }) {
+  const [inputValue, setInputValue] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+
+  const ref = useRef<HTMLDivElement | null>(null);
+
+  useOutsideClick(ref, () => {
+    setIsSearching(false);
+  });
+
   return (
     <Primitive>
-      <CommandContext.Provider value={{}}>
+      <CommandContext.Provider
+        value={{
+          inputValue,
+          setInputValue,
+          isSearching,
+          setIsSearching,
+        }}
+      >
         <div
+          ref={ref}
           command-root=""
           className={cn("border rounded-ui-content", className)}
         >
@@ -43,9 +76,31 @@ const CommandInput = ({
   className?: string;
   placeholder: string;
 }) => {
+  const { highlightItem } = usePrimitiveContext();
+  const { inputValue, setInputValue, setIsSearching } = useCommandContext();
+
+  const handleKeyDown: KeyboardEventHandler<HTMLInputElement> = (event) => {
+    const root = event.currentTarget.closest("[command-root]");
+    if (!root) return;
+    if (event.code === "ArrowDown" || event.code === "ArrowUp") {
+      event.preventDefault();
+      const isUp = event.code === "ArrowUp";
+      const collectionItems = Array.from(
+        root.querySelectorAll(
+          "[primitive-collection-item]:not([data-disabled])",
+        ),
+      ) as HTMLElement[];
+      if (isUp) {
+        highlightItem(collectionItems.at(-1) as HTMLElement);
+      } else {
+        highlightItem(collectionItems.at(0) as HTMLElement);
+      }
+    }
+  };
+
   return (
     <div
-      command-input-=""
+      command-input-wrapper=""
       className={cn(
         "px-3 w-full flex items-center gap-2 h-10 border-b",
         className,
@@ -60,6 +115,12 @@ const CommandInput = ({
           type="text"
           className="placeholder:font-medium placeholder:text-gray-900 text-sm"
           placeholder={placeholder}
+          value={inputValue}
+          onChange={({ target }) => {
+            setInputValue(target.value);
+            setIsSearching(true);
+          }}
+          onKeyDown={handleKeyDown}
         />
       </span>
     </div>
@@ -74,7 +135,10 @@ const CommandContent = ({
   className?: string;
 }) => {
   return (
-    <Primitive.Wrapper className={cn("p-1", className)}>
+    <Primitive.Wrapper
+      command-content-wrapper=""
+      className={cn("p-1", className)}
+    >
       {children}
     </Primitive.Wrapper>
   );
@@ -83,12 +147,17 @@ const CommandContent = ({
 const CommandGroup = ({
   children,
   className,
+  heading,
 }: {
   children: ReactNode;
+  heading: string;
   className?: string;
 }) => {
+  const ref = useRef<HTMLDivElement | null>(null);
+
   return (
-    <Primitive.Group className={cn("p-ui-content", className)}>
+    <Primitive.Group ref={ref} command-group="" className={cn(className)}>
+      <Command.Label>{heading}</Command.Label>
       {children}
     </Primitive.Group>
   );
@@ -106,8 +175,20 @@ const CommandItem = ({
   shortcut,
   href,
 }: PrimitiveItemProps) => {
+  const { inputValue, isSearching } = useCommandContext();
+  const ref = useRef<HTMLDivElement | null>(null);
+
+  if (typeof children === "string") {
+    const isFound = children
+      .toLowerCase()
+      .startsWith(inputValue.toLowerCase().trim());
+    if (!isFound && isSearching) return null;
+  }
+
   return (
     <Primitive.Item
+      ref={ref}
+      command-item=""
       className={className}
       asChild={asChild}
       onClick={onClick}
@@ -131,7 +212,10 @@ const CommandLabel = ({
   className?: string;
 }) => {
   return (
-    <Primitive.Label className={cn("text-xs text-gray-700", className)}>
+    <Primitive.Label
+      command-label=""
+      className={cn("text-xs text-gray-700", className)}
+    >
       {children}
     </Primitive.Label>
   );

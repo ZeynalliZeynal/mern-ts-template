@@ -39,6 +39,7 @@ export type PrimitiveItemProps = {
   inset?: boolean;
   href?: string;
   shortcut?: ReactNode;
+  onKeyDown?: KeyboardEventHandler<HTMLDivElement>;
 };
 
 const PrimitiveContext = createContext<PrimitiveContextProps | null>(null);
@@ -258,20 +259,22 @@ const PrimitiveWrapper = ({
   );
 };
 
-const PrimitiveGroup = ({
-  children,
-  className,
-  ...props
-}: {
-  children: ReactNode;
-  className?: string;
-}) => {
+const PrimitiveGroup = forwardRef<
+  HTMLDivElement,
+  {
+    children: ReactNode;
+    className?: string;
+  }
+>(({ children, className, ...props }, forwardRef) => {
+  const ref = useRef<HTMLDivElement | null>(null);
+  useImperativeHandle(forwardRef, () => ref.current as HTMLDivElement);
+
   return (
-    <div role="group" className={cn(className)} {...props}>
+    <div ref={ref} role="group" className={cn(className)} {...props}>
       {children}
     </div>
   );
-};
+});
 
 const PrimitiveSeparator = ({ className }: { className?: string }) => {
   return (
@@ -282,39 +285,46 @@ const PrimitiveSeparator = ({ className }: { className?: string }) => {
   );
 };
 
-const PrimitiveLabel = ({
-  children,
-  className,
-  inset = false,
-  suffix,
-  prefix,
-}: {
-  children: ReactNode;
-  className?: string;
-  inset?: boolean;
-  prefix?: ReactNode;
-  suffix?: ReactNode;
-}) => {
-  return (
-    <div
-      tabIndex={-1}
-      className={cn(
-        "text-foreground font-semibold flex items-center w-full",
-        {
-          "justify-between": suffix,
-          "gap-2": prefix,
-          "p-ui-item-inset": inset,
-          "p-ui-item": !inset,
-        },
-        className,
-      )}
-    >
-      {prefix && <span className="size-4">{prefix}</span>}
-      {children}
-      {suffix && <span className="size-4">{suffix}</span>}
-    </div>
-  );
-};
+const PrimitiveLabel = forwardRef<
+  HTMLDivElement,
+  {
+    children: ReactNode;
+    className?: string;
+    inset?: boolean;
+    prefix?: ReactNode;
+    suffix?: ReactNode;
+  }
+>(
+  (
+    { children, className, inset = false, suffix, prefix, ...props },
+    forwardRef,
+  ) => {
+    const ref = useRef<HTMLDivElement | null>(null);
+    useImperativeHandle(forwardRef, () => ref.current as HTMLDivElement);
+
+    return (
+      <div
+        ref={ref}
+        tabIndex={-1}
+        {...props}
+        className={cn(
+          "text-foreground font-semibold flex items-center w-full",
+          {
+            "justify-between": suffix,
+            "gap-2": prefix,
+            "p-ui-item-inset": inset,
+            "p-ui-item": !inset,
+          },
+          className,
+        )}
+      >
+        {prefix && <span className="size-4">{prefix}</span>}
+        {children}
+        {suffix && <span className="size-4">{suffix}</span>}
+      </div>
+    );
+  },
+);
 
 Primitive.Label = PrimitiveLabel;
 Primitive.Group = PrimitiveGroup;
