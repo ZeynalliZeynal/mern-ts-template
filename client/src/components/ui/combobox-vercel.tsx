@@ -201,7 +201,7 @@ const ComboboxInput = () => {
   } = useCombobox();
 
   return (
-    <div className="w-full relative place-items-center text-gray-900 pointer-events-auto">
+    <div className="w-full relative place-items-center text-gray-900">
       <span
         aria-hidden="true"
         className="inline-flex absolute top-1/2 left-0 -translate-y-1/2 items-center justify-center size-10 p-[11px]"

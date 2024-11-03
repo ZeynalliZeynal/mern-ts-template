@@ -207,11 +207,8 @@ const CommandContent = ({
   children: ReactNode;
   className?: string;
 }) => {
-  const ref = useRef<HTMLDivElement | null>(null);
-
   return (
     <Primitive.Wrapper
-      ref={ref}
       command-content-wrapper=""
       className={cn("p-1 transition-[height]", className)}
     >

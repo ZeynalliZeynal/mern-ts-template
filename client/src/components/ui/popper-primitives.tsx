@@ -36,6 +36,7 @@ interface PopperWrapperProps {
   align?: "center" | "left" | "right";
   width?: "fit" | "default";
   className?: string;
+  asChild?: boolean;
 }
 
 export type PopperItemProps = {
@@ -59,7 +60,7 @@ type PopperContextProps = {
 
 const PopperContext = createContext<PopperContextProps | null>(null);
 
-const usePopperContext = () => {
+export const usePopperContext = () => {
   const context = useContext(PopperContext);
   if (!context) throw new Error("Component is outside of the provider");
   return context;
@@ -135,7 +136,8 @@ const PopperWrapper = ({
   align = "center",
   width = "default",
   className,
-  ...props
+  asChild,
+  ...etc
 }: PopperWrapperProps) => {
   const { open, animate, triggerPosition, closePopper, menuType } =
     usePopperContext();
@@ -153,7 +155,8 @@ const PopperWrapper = ({
   };
 
   const updateMenuPosition = () => {
-    if (!ref.current || !open || !triggerPosition) return;
+    if (!ref.current || !open || !triggerPosition || menuType === "dialog")
+      return;
 
     const spaceLeftBottom = window.innerHeight - triggerPosition.bottom;
 
@@ -210,36 +213,31 @@ const PopperWrapper = ({
 
   return createPortal(
     <Primitive.Wrapper
-      className="fixed z-50"
-      style={style}
+      popper-content-menu=""
+      primitive-collection=""
+      tabIndex={-1}
+      role="menu"
+      ref={ref}
+      data-state={!animate ? "open" : "closed"}
+      className={cn(
+        "fixed z-50 pointer-events-auto rounded-ui-content focus:ring-0 border flex-col p-ui-content bg-ui-background",
+        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:zoom-in data-[state=closed]:zoom-out data-[state=open]:fade-in data-[state=closed]:fade-out",
+        {
+          "min-w-56": width === "default" && menuType !== "dialog",
+          "left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2":
+            menuType === "dialog",
+        },
+
+        className,
+      )}
+      style={{
+        ...style,
+        width: width === "fit" ? triggerPosition.width : undefined,
+      }}
       onKeyDown={handleKeyDown}
+      {...etc}
     >
-      <div
-        popper-content-menu=""
-        primitive-collection=""
-        tabIndex={-1}
-        role="menu"
-        ref={ref}
-        data-state={!animate}
-        className={cn(
-          "pointer-events-auto rounded-ui-content focus:ring-0 border flex-col p-ui-content bg-ui-background",
-          "data-[state='true']:animate-in data-[state='false']:animate-out data-[state='true']:zoom-in data-[state='false']:zoom-out data-[state='true']:fade-in data-[state='false']:fade-out",
-          {
-            "min-w-56": width === "default",
-          },
-          className,
-        )}
-        style={
-          width === "fit"
-            ? {
-                width: triggerPosition.width,
-              }
-            : undefined
-        }
-        {...props}
-      >
-        {children}
-      </div>
+      {children}
     </Primitive.Wrapper>,
     document.body,
   );
@@ -306,16 +304,9 @@ const PopperTrigger = forwardRef<HTMLElement, MenuTriggerProps>(
     ) : (
       <Button
         {...(commonAttributes as HTMLAttributes<HTMLButtonElement>)}
+        primary
         prefix={prefix}
-        suffix={
-          suffix ? (
-            suffix
-          ) : (
-            <span className="opacity-60 size-3">
-              <PiCaretUpDownBold />
-            </span>
-          )
-        }
+        suffix={suffix}
         size="sm"
         className={cn(className)}
       >
