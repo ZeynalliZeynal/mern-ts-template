@@ -1,5 +1,6 @@
-import React, {
+import {
   forwardRef,
+  MouseEventHandler,
   MutableRefObject,
   ReactNode,
   useImperativeHandle,
@@ -7,6 +8,7 @@ import React, {
   useState,
 } from "react";
 import { Link } from "react-router-dom";
+import { cn } from "@/lib/utils.ts";
 
 interface ButtonProps {
   children: ReactNode;
@@ -17,9 +19,10 @@ interface ButtonProps {
   prefix?: ReactNode;
   suffix?: ReactNode;
   primary?: true;
-  onClick?: (event: React.MouseEvent<HTMLElement>) => void;
+  onClick?: MouseEventHandler<HTMLButtonElement>;
   disabled?: boolean;
   type?: "button" | "submit" | "reset";
+  className?: string;
 }
 
 const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps>(
@@ -36,6 +39,7 @@ const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps>(
       disabled,
       rounded = "md",
       type = "button",
+      className,
       ...props
     },
     forwardRef,
@@ -46,12 +50,21 @@ const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps>(
       forwardRef,
       () => ref.current as HTMLButtonElement | HTMLAnchorElement,
     );
-
-    const className = `flex items-center justify-center transition font-medium border select-none ${
-      primary
-        ? "text-gray-900 border-gray-alpha-400 bg-background-100 data-[highlighted]:text-foreground data-[highlighted]:bg-gray-alpha-200 disabled:bg-gray-100 disabled:text-gray-700 disabled:border-gray-400"
-        : "text-gray-500 border-gray-200 bg-gray-1000 data-[highlighted]:text-background-100 data-[highlighted]:bg-button-invert-hover disabled:bg-button-invert-disabled disabled:text-gray-700 disabled:border-gray-400"
-    } ${size === "md" ? "px-2.5 h-10 text-sm" : size === "lg" ? "px-3.5 h-12" : "text-sm h-8 px-1.5"} ${full ? "w-full" : "w-fit"} rounded-${rounded}`;
+    const cl = cn(
+      `flex items-center justify-center transition font-medium border select-none rounded-${rounded}`,
+      {
+        "text-gray-900 border-gray-alpha-400 bg-background-100 data-[highlighted]:text-foreground data-[highlighted]:bg-gray-alpha-200 disabled:bg-gray-100 disabled:text-gray-700 disabled:border-gray-400":
+          primary,
+        "text-gray-500 border-gray-200 bg-gray-1000 data-[highlighted]:text-background-100 data-[highlighted]:bg-button-invert-hover disabled:bg-button-invert-disabled disabled:text-gray-700 disabled:border-gray-400":
+          !primary,
+        "px-2.5 h-10 text-sm": size === "md",
+        "px-3.5 h-12": size === "lg",
+        "text-sm h-8 px-1.5": size === "sm",
+        "w-full": full,
+        "w-fit": !full,
+      },
+      className,
+    );
 
     if (href)
       return (
@@ -59,7 +72,7 @@ const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps>(
           ref={ref as MutableRefObject<HTMLAnchorElement>}
           data-highlighted={hovering ? true : null}
           to={href}
-          className={className}
+          className={cl}
           onMouseEnter={() => setHovering(true)}
           onMouseLeave={() => setHovering(false)}
           {...props}
@@ -73,7 +86,7 @@ const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps>(
           ref={ref as MutableRefObject<HTMLButtonElement>}
           data-highlighted={hovering ? true : null}
           type={type}
-          className={className}
+          className={cl}
           onClick={onClick}
           disabled={disabled}
           onMouseEnter={() => setHovering(true)}

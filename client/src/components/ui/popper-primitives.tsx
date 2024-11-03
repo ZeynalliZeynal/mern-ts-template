@@ -28,7 +28,8 @@ import Primitive, {
   MenuTypes,
   PrimitiveItemProps,
   usePrimitiveContext,
-} from "@/components/ui/primitives/primitive.tsx";
+} from "@/components/ui/primitives.tsx";
+import Button from "@/components/ui/button.tsx";
 
 interface PopperWrapperProps {
   children: ReactNode;
@@ -129,7 +130,7 @@ export default function Popper({
   );
 }
 
-export const PopperWrapper = ({
+const PopperWrapper = ({
   children,
   align = "center",
   width = "default",
@@ -244,9 +245,10 @@ export const PopperWrapper = ({
   );
 };
 
-export const PopperTrigger = forwardRef<HTMLElement, MenuTriggerProps>(
+const PopperTrigger = forwardRef<HTMLElement, MenuTriggerProps>(
   ({ children, prefix, suffix, className, asChild }, forwardRef) => {
-    const { open, openPopper, setTriggerPosition } = usePopperContext();
+    const { open, openPopper, setTriggerPosition, menuType } =
+      usePopperContext();
     const [isHovering, setIsHovering] = useState(false);
 
     const ref = useRef<HTMLButtonElement | null>(null);
@@ -274,7 +276,7 @@ export const PopperTrigger = forwardRef<HTMLElement, MenuTriggerProps>(
 
     return asChild && isValidElement(children) ? (
       cloneElement(children, commonAttributes)
-    ) : (
+    ) : menuType === "popover" ? (
       <button
         {...(commonAttributes as HTMLAttributes<HTMLButtonElement>)}
         className={cn(
@@ -301,11 +303,29 @@ export const PopperTrigger = forwardRef<HTMLElement, MenuTriggerProps>(
           </span>
         )}
       </button>
+    ) : (
+      <Button
+        {...(commonAttributes as HTMLAttributes<HTMLButtonElement>)}
+        prefix={prefix}
+        suffix={
+          suffix ? (
+            suffix
+          ) : (
+            <span className="opacity-60 size-3">
+              <PiCaretUpDownBold />
+            </span>
+          )
+        }
+        size="sm"
+        className={cn(className)}
+      >
+        {children}
+      </Button>
     );
   },
 );
 
-export const PopperItem = forwardRef<HTMLDivElement, PopperItemProps>(
+const PopperItem = forwardRef<HTMLDivElement, PopperItemProps>(
   (
     {
       children,
@@ -378,3 +398,6 @@ export const PopperItem = forwardRef<HTMLDivElement, PopperItemProps>(
 Popper.Label = Primitive.Label;
 Popper.Group = Primitive.Group;
 Popper.Separator = Primitive.Separator;
+Popper.Item = PopperItem;
+Popper.Trigger = PopperTrigger;
+Popper.Wrapper = PopperWrapper;

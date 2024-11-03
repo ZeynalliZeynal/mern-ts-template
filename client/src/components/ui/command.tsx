@@ -5,6 +5,7 @@ import {
   ReactNode,
   SetStateAction,
   useContext,
+  useEffect,
   useRef,
   useState,
 } from "react";
@@ -13,7 +14,7 @@ import { IoIosSearch } from "react-icons/io";
 import Primitive, {
   PrimitiveItemProps,
   usePrimitiveContext,
-} from "@/components/ui/primitives/primitive.tsx";
+} from "@/components/ui/primitives.tsx";
 import { useOutsideClick } from "@/hooks/useOutsideClick.ts";
 
 type CommandContextType = {
@@ -21,7 +22,14 @@ type CommandContextType = {
   setInputValue: Dispatch<SetStateAction<string>>;
   isSearching: boolean;
   setIsSearching: Dispatch<SetStateAction<boolean>>;
+  noResult: boolean;
 };
+
+const GROUP_SELECTOR = "[command-group]";
+const ITEM_SELECTOR = "[command-item]";
+const SEPARATOR_SELECTOR = "[command-separator]";
+// const LABEL_SELECTOR = '[command-label]'
+const INPUT_SELECTOR = "[command-input]";
 
 const CommandContext = createContext<CommandContextType | null>(null);
 
@@ -40,12 +48,52 @@ export default function Command({
 }) {
   const [inputValue, setInputValue] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+  const [noResult, setNoResult] = useState(false);
 
   const ref = useRef<HTMLDivElement | null>(null);
 
   useOutsideClick(ref, () => {
     setIsSearching(false);
+    setInputValue("");
   });
+
+  useEffect(() => {
+    if (!ref.current) return;
+    const groups = [
+      ...document.querySelectorAll(GROUP_SELECTOR),
+    ] as HTMLElement[];
+
+    const separators = [
+      ...document.querySelectorAll(SEPARATOR_SELECTOR),
+    ] as HTMLElement[];
+
+    groups.forEach((group) => {
+      if (!group.querySelector("[command-item]")) {
+        group.style.display = "none";
+      } else {
+        group.style.display = "block";
+      }
+    });
+
+    separators.forEach((separator) => {
+      if (
+        (separator.nextElementSibling &&
+          !separator.nextElementSibling.querySelector("[command-item]")) ||
+        (separator.previousElementSibling &&
+          !separator.previousElementSibling.querySelector("[command-item]"))
+      ) {
+        separator.style.display = "none";
+      } else {
+        separator.style.display = "block";
+      }
+    });
+
+    if (!ref.current.querySelector(ITEM_SELECTOR)) {
+      setNoResult(true);
+    } else {
+      setNoResult(false);
+    }
+  }, [inputValue]);
 
   return (
     <Primitive>
@@ -55,6 +103,7 @@ export default function Command({
           setInputValue,
           isSearching,
           setIsSearching,
+          noResult,
         }}
       >
         <div
@@ -79,6 +128,8 @@ const CommandInput = ({
   const { highlightItem } = usePrimitiveContext();
   const { inputValue, setInputValue, setIsSearching } = useCommandContext();
 
+  const ref = useRef<HTMLInputElement | null>(null);
+
   const handleKeyDown: KeyboardEventHandler<HTMLInputElement> = (event) => {
     const root = event.currentTarget.closest("[command-root]");
     if (!root) return;
@@ -98,19 +149,35 @@ const CommandInput = ({
     }
   };
 
+  useEffect(() => {
+    function focusOnKeyDown(event: KeyboardEvent) {
+      if (!ref.current) return;
+      if (event.ctrlKey && (event.code === "KeyK" || event.code === "Keyk")) {
+        event.preventDefault();
+        (document.querySelector(INPUT_SELECTOR) as HTMLInputElement).focus();
+      }
+    }
+
+    document.addEventListener("keydown", focusOnKeyDown);
+    return () => {
+      document.removeEventListener("keydown", focusOnKeyDown);
+    };
+  }, []);
+
   return (
     <div
       command-input-wrapper=""
       className={cn(
-        "px-3 w-full flex items-center gap-2 h-10 border-b",
+        "relative px-3 w-full flex items-center gap-2 h-10 border-b group",
         className,
       )}
     >
-      <span className="size-4 text-gray-alpha-600">
+      <span className="size-4 text-gray-alpha-600" aria-hidden="true">
         <IoIosSearch />
       </span>
-      <span>
+      <span className="flex-grow relative z-[1]">
         <input
+          ref={ref}
           command-input=""
           type="text"
           className="placeholder:font-medium placeholder:text-gray-900 text-sm"
@@ -123,6 +190,12 @@ const CommandInput = ({
           onKeyDown={handleKeyDown}
         />
       </span>
+      <span
+        aria-hidden="true"
+        className="absolute group-focus-within:opacity-0 opacity-100 transition right-3 top-1/2 -translate-y-1/2 text-xs rounded px-2 py-1 bg-gray-200 text-gray-900 select-none"
+      >
+        ⌘+K
+      </span>
     </div>
   );
 };
@@ -134,10 +207,13 @@ const CommandContent = ({
   children: ReactNode;
   className?: string;
 }) => {
+  const ref = useRef<HTMLDivElement | null>(null);
+
   return (
     <Primitive.Wrapper
+      ref={ref}
       command-content-wrapper=""
-      className={cn("p-1", className)}
+      className={cn("p-1 transition-[height]", className)}
     >
       {children}
     </Primitive.Wrapper>
@@ -153,10 +229,12 @@ const CommandGroup = ({
   heading: string;
   className?: string;
 }) => {
-  const ref = useRef<HTMLDivElement | null>(null);
-
   return (
-    <Primitive.Group ref={ref} command-group="" className={cn(className)}>
+    <Primitive.Group
+      command-group=""
+      data-value={heading}
+      className={cn(className)}
+    >
       <Command.Label>{heading}</Command.Label>
       {children}
     </Primitive.Group>
@@ -221,9 +299,33 @@ const CommandLabel = ({
   );
 };
 
+const CommandSeparator = ({ className }: { className?: string }) => {
+  return <Primitive.Separator command-separator="" className={className} />;
+};
+
+const CommandEmpty = ({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) => {
+  const { noResult } = useCommandContext();
+  if (noResult)
+    return (
+      <div
+        command-empty=""
+        className={cn("py-6 text-center w-full", className)}
+      >
+        {children}
+      </div>
+    );
+};
+
 Command.Group = CommandGroup;
 Command.Label = CommandLabel;
-Command.Separator = Primitive.Separator;
+Command.Separator = CommandSeparator;
+Command.Empty = CommandEmpty;
 
 Command.Input = CommandInput;
 Command.Content = CommandContent;

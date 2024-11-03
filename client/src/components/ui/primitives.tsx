@@ -17,6 +17,7 @@ import React, {
   useState,
 } from "react";
 import { cn } from "@/lib/utils.ts";
+import { useNavigate } from "react-router-dom";
 
 export type MenuTypes = "popover" | "dropdown" | "context";
 
@@ -120,6 +121,9 @@ const PrimitiveItem = forwardRef<HTMLDivElement, PrimitiveItemProps>(
     forwardRef,
   ) => {
     const { highlightItem, isHighlighted, menuType } = usePrimitiveContext();
+
+    const navigate = useNavigate();
+
     const ref = useRef<HTMLDivElement | null>(null);
     useImperativeHandle(forwardRef, () => ref.current as HTMLDivElement);
 
@@ -141,7 +145,11 @@ const PrimitiveItem = forwardRef<HTMLDivElement, PrimitiveItemProps>(
     const handleKeyDown: KeyboardEventHandler<HTMLDivElement> = (event) => {
       if (event.code === "Space" || event.code === "Enter") {
         event.preventDefault();
-        handleClick(event);
+        if (href) {
+          navigate(href);
+        } else {
+          handleClick(event);
+        }
       }
     };
 
@@ -199,21 +207,19 @@ const PrimitiveItem = forwardRef<HTMLDivElement, PrimitiveItemProps>(
   },
 );
 
-const PrimitiveWrapper = ({
-  children,
-  style,
-  className,
-  onKeyDown,
-  ...props
-}: {
-  children: ReactNode;
-  style?: CSSProperties;
-  className?: string;
-  onKeyDown?: KeyboardEventHandler<HTMLDivElement>;
-}) => {
+const PrimitiveWrapper = forwardRef<
+  HTMLDivElement,
+  {
+    children: ReactNode;
+    style?: CSSProperties;
+    className?: string;
+    onKeyDown?: KeyboardEventHandler<HTMLDivElement>;
+  }
+>(({ children, style, className, onKeyDown, ...props }, forwardRef) => {
   const { highlightItem, currentMenuItem } = usePrimitiveContext();
 
   const ref = useRef<HTMLDivElement | null>(null);
+  useImperativeHandle(forwardRef, () => ref.current as HTMLDivElement);
 
   const handleKeyDown: KeyboardEventHandler<HTMLDivElement> = (event) => {
     onKeyDown?.(event);
@@ -257,33 +263,37 @@ const PrimitiveWrapper = ({
       {children}
     </div>
   );
-};
+});
 
-const PrimitiveGroup = forwardRef<
-  HTMLDivElement,
-  {
-    children: ReactNode;
-    className?: string;
-  }
->(({ children, className, ...props }, forwardRef) => {
-  const ref = useRef<HTMLDivElement | null>(null);
-  useImperativeHandle(forwardRef, () => ref.current as HTMLDivElement);
-
+const PrimitiveGroup = ({
+  children,
+  className,
+  ...props
+}: {
+  children: ReactNode;
+  className?: string;
+}) => {
   return (
-    <div ref={ref} role="group" className={cn(className)} {...props}>
+    <div role="group" className={cn(className)} {...props}>
       {children}
     </div>
   );
-});
-
-const PrimitiveSeparator = ({ className }: { className?: string }) => {
-  return (
-    <div
-      role="separator"
-      className={cn("h-px -mx-ui-content my-ui-content bg-border", className)}
-    />
-  );
 };
+
+const PrimitiveSeparator = forwardRef<HTMLDivElement, { className?: string }>(
+  ({ className, ...props }, forwardRef) => {
+    const ref = useRef<HTMLDivElement | null>(null);
+    useImperativeHandle(forwardRef, () => ref.current as HTMLDivElement);
+    return (
+      <div
+        ref={ref}
+        role="separator"
+        {...props}
+        className={cn("h-px -mx-ui-content my-ui-content bg-border", className)}
+      />
+    );
+  },
+);
 
 const PrimitiveLabel = forwardRef<
   HTMLDivElement,

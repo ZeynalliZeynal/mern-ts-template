@@ -30,7 +30,7 @@ import {
 import { useRestrictBody } from "@/hooks/useRestrictBody.ts";
 import { ANIMATION_TIMEOUT } from "@/components/ui/parameters.ts";
 import { useResize } from "@/hooks/useResize.ts";
-import Primitive from "@/components/ui/primitives/primitive.tsx";
+import Primitive from "@/components/ui/primitives.tsx";
 
 const DropdownMenuContext = createContext<
   | ({
@@ -396,6 +396,22 @@ const DropdownMenuItem = forwardRef<
     );
   },
 );
+
+// export default function DropdownMenu({ children }: { children: ReactNode }) {
+//   return <Popper menuType="dropdown">{children}</Popper>;
+// }
+//
+// function DropdownMenuTrigger(props: MenuTriggerProps) {
+//   return <Popper.Trigger {...props}>{props.children}</Popper.Trigger>;
+// }
+//
+// function DropdownMenuContent({ children }: { children: ReactNode }) {
+//   return <Popper.Wrapper align="center">{children}</Popper.Wrapper>;
+// }
+//
+// function DropdownMenuItem(props: MenuItemProps) {
+//   return <Popper.Item {...props}>{props.children}</Popper.Item>;
+// }
 
 DropdownMenu.Trigger = DropdownMenuTrigger;
 DropdownMenu.Item = DropdownMenuItem;

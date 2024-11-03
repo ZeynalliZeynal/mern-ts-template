@@ -1,12 +1,8 @@
 import { ReactNode } from "react";
 import { MenuItemProps, MenuTriggerProps } from "@/components/ui/types.ts";
-import Popper, {
-  PopperItem,
-  PopperTrigger,
-  PopperWrapper,
-} from "@/components/ui/popper-primitives.tsx";
+import Popper from "@/components/ui/popper-primitives.tsx";
 import { cn } from "@/lib/utils.ts";
-import Primitive from "@/components/ui/primitives/primitive.tsx";
+import Primitive from "@/components/ui/primitives.tsx";
 
 export default function Popover({
   children,
@@ -22,34 +18,36 @@ export default function Popover({
   );
 }
 
-const PopoverTrigger = ({
+function PopoverTrigger({
   children,
   prefix,
   suffix,
   className,
+  disabled,
   asChild,
-}: MenuTriggerProps) => {
+}: MenuTriggerProps) {
   return (
-    <PopperTrigger
+    <Popper.Trigger
       suffix={suffix}
       prefix={prefix}
       className={cn(className)}
       asChild={asChild}
+      disabled={disabled}
     >
       {children}
-    </PopperTrigger>
+    </Popper.Trigger>
   );
-};
+}
 
-const PopoverContent = ({ children }: { children: ReactNode }) => {
+function PopoverContent({ children }: { children: ReactNode }) {
   return (
-    <PopperWrapper align="center" width="fit">
+    <Popper.Wrapper align="center" width="fit">
       {children}
-    </PopperWrapper>
+    </Popper.Wrapper>
   );
-};
+}
 
-const PopoverItem = ({
+function PopoverItem({
   children,
   disabled = false,
   className,
@@ -61,9 +59,9 @@ const PopoverItem = ({
 }: {
   value: string;
   onSelect: (currentValue: string) => void;
-} & MenuItemProps) => {
+} & MenuItemProps) {
   return (
-    <PopperItem
+    <Popper.Item
       disabled={disabled}
       prefix={prefix}
       suffix={suffix}
@@ -73,9 +71,9 @@ const PopoverItem = ({
       onSelect={onSelect}
     >
       {children}
-    </PopperItem>
+    </Popper.Item>
   );
-};
+}
 
 Popover.Group = Primitive.Group;
 Popover.Label = Primitive.Label;
