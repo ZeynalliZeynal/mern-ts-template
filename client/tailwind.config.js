@@ -158,10 +158,6 @@ export default {
       margin: ({ theme }) => theme("padding"),
       animation: {
         spinner: "spinner 1.1s linear infinite",
-        in: "in 300ms forwards",
-        out: "out 300ms forwards",
-        fadeIn: "fadeIn 150ms forwards",
-        fadeOut: "fadeOut 150ms forwards",
       },
       keyframes: {
         spinner: {
@@ -170,38 +166,6 @@ export default {
           },
           "100%": {
             opacity: "0.15",
-          },
-        },
-        in: {
-          from: {
-            opacity: "0",
-          },
-          to: {
-            opacity: "1",
-          },
-        },
-        out: {
-          from: {
-            opacity: "1",
-          },
-          to: {
-            opacity: "0",
-          },
-        },
-        fadeIn: {
-          from: {
-            opacity: "0",
-          },
-          to: {
-            opacity: "1",
-          },
-        },
-        fadeOut: {
-          from: {
-            opacity: "1",
-          },
-          to: {
-            opacity: "0",
           },
         },
       },

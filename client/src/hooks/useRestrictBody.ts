@@ -1,8 +1,11 @@
 import { useEffect } from "react";
 
-export const useRestrictBody = (condition: boolean) => {
+export const useRestrictBody = (
+  condition: boolean,
+  preventTab: boolean = true,
+) => {
   const restrictKey = (event: KeyboardEvent) => {
-    if (event.code === "Tab") {
+    if (event.code === "Tab" && preventTab) {
       event.preventDefault();
     }
   };

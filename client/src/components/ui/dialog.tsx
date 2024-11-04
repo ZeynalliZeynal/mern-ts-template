@@ -1,5 +1,7 @@
-import React from "react";
-import Popper from "@/components/ui/popper-primitives.tsx";
+import React, { cloneElement, isValidElement, MouseEventHandler } from "react";
+import Popper, {
+  usePopperContext,
+} from "@/components/ui/popper-primitives.tsx";
 import { MenuTriggerProps } from "@/components/ui/types.ts";
 import { cn } from "@/lib/utils.ts";
 
@@ -16,35 +18,52 @@ export default function Dialog({ children }: { children: React.ReactNode }) {
   );
 }
 
-function DialogTrigger(props: MenuTriggerProps) {
+const DialogTrigger = (props: MenuTriggerProps) => {
   return (
     <Popper.Trigger dialog-trigger="" {...props}>
       {props.children}
     </Popper.Trigger>
   );
-}
+};
 
-function DialogHeader({
+const DialogHeader = ({
   children,
   className,
 }: {
   children: React.ReactNode;
   className?: string;
-}) {
+}) => {
   return (
     <div dialog-header="" className={cn("space-y-3", className)}>
       {children}
     </div>
   );
-}
+};
 
-function DialogTitle({
+const DialogFooter = ({
   children,
   className,
 }: {
   children: React.ReactNode;
   className?: string;
-}) {
+}) => {
+  return (
+    <div
+      dialog-footer=""
+      className={cn("w-full flex justify-end items-center", className)}
+    >
+      {children}
+    </div>
+  );
+};
+
+const DialogTitle = ({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) => {
   return (
     <h2
       dialog-title=""
@@ -56,15 +75,15 @@ function DialogTitle({
       {children}
     </h2>
   );
-}
+};
 
-function DialogDescription({
+const DialogDescription = ({
   children,
   className,
 }: {
   children: React.ReactNode;
   className?: string;
-}) {
+}) => {
   return (
     <p
       dialog-description=""
@@ -73,15 +92,15 @@ function DialogDescription({
       {children}
     </p>
   );
-}
+};
 
-function DialogContent({
+const DialogContent = ({
   children,
   className,
 }: {
   children: React.ReactNode;
   className?: string;
-}) {
+}) => {
   return (
     <>
       <Popper.Overlay />
@@ -98,10 +117,44 @@ function DialogContent({
       </Popper.Dialog>
     </>
   );
-}
+};
+
+const DialogClose = ({
+  children,
+  className,
+  asChild,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  asChild?: boolean;
+}) => {
+  const { closePopper } = usePopperContext();
+
+  const handleClick: MouseEventHandler<HTMLButtonElement | HTMLElement> = (
+    event,
+  ) => {
+    event.preventDefault();
+    closePopper();
+  };
+
+  const commonAttributes = {
+    onClick: handleClick,
+    className: cn(className),
+  };
+
+  return asChild && isValidElement(children) ? (
+    cloneElement(children, commonAttributes)
+  ) : (
+    <button dialog-close="" type="button" {...commonAttributes}>
+      {children}
+    </button>
+  );
+};
 
 Dialog.Content = DialogContent;
 Dialog.Trigger = DialogTrigger;
 Dialog.Title = DialogTitle;
 Dialog.Description = DialogDescription;
 Dialog.Header = DialogHeader;
+Dialog.Footer = DialogFooter;
+Dialog.Close = DialogClose;

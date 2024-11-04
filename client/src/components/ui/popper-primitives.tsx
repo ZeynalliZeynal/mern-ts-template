@@ -21,7 +21,6 @@ import { useOutsideClick } from "@/hooks/useOutsideClick.ts";
 import { useResize } from "@/hooks/useResize.ts";
 import { MenuTriggerProps } from "@/components/ui/types.ts";
 import { PiCaretUpDownBold } from "react-icons/pi";
-import { ANIMATION_TIMEOUT } from "@/components/ui/parameters.ts";
 import { useRestrictBody } from "@/hooks/useRestrictBody.ts";
 import Primitive, {
   MenuTypes,
@@ -30,6 +29,7 @@ import Primitive, {
   usePrimitiveContext,
 } from "@/components/ui/primitives.tsx";
 import Button from "@/components/ui/button.tsx";
+import { ANIMATION_TIMEOUT } from "@/components/ui/parameters.ts";
 
 interface PopperWrapperProps {
   children: ReactNode;
@@ -104,11 +104,11 @@ export default function Popper({
       ) as HTMLElement[];
       const findActive = triggers.indexOf(activeTrigger as HTMLElement);
       triggers[findActive].focus();
-    }, ANIMATION_TIMEOUT);
+    }, ANIMATION_TIMEOUT - 50);
     setActiveTrigger(null);
   }
 
-  useRestrictBody(open);
+  useRestrictBody(open, menuType !== "dialog");
 
   return (
     <Primitive menuType="popover">
@@ -193,9 +193,10 @@ function PopperWrapper({
       const firstItem = ref.current.querySelector(
         "[primitive-collection-item]",
       );
+      console.log(ref.current);
       highlightItem(firstItem as HTMLElement);
     }
-  }, []);
+  }, [open]);
 
   if (!triggerPosition) return null;
 
@@ -254,11 +255,14 @@ const PopupWrapper = forwardRef<HTMLDivElement, PrimitiveWrapperProps>(
         role={role}
         data-state={!animate ? "open" : "closed"}
         className={cn(
-          "fixed z-50 pointer-events-auto focus:ring-0 duration-200",
+          "fixed z-50 pointer-events-auto focus:ring-0",
           "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
           className,
         )}
-        style={style}
+        style={{
+          ...style,
+          animationDuration: ANIMATION_TIMEOUT + "ms",
+        }}
         onKeyDown={handleKeyDown}
         {...etc}
       >
@@ -277,10 +281,13 @@ const PopupOverlay = ({ className }: { className?: string }) => {
     <div
       data-state={!animate ? "open" : "closed"}
       className={cn(
-        "fixed inset-0 z-50 bg-black/60 backdrop-blur-sm duration-200",
-        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+        "fixed inset-0 z-50 bg-black/60 backdrop-blur-sm",
+        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
         className,
       )}
+      style={{
+        animationDuration: ANIMATION_TIMEOUT + "ms",
+      }}
     />,
     document.body,
   );
