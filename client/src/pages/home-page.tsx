@@ -6,7 +6,6 @@ import { ArrowDown, ThumbsUpIcon } from "lucide-react";
 import Stack from "@/components/ui/stack.tsx";
 import ContextDemo from "@/components/context-demo.tsx";
 import ChoiceboxDemo from "@/components/choicebox-demo.tsx";
-import ComboboxDemo from "@/components/combobox-demo.tsx";
 import CollapseDemo from "@/components/collapse-demo.tsx";
 import CheckboxDemo from "@/components/checkbox-demo.tsx";
 import AvatarsDemo from "@/components/avatars-demo.tsx";
@@ -40,7 +39,7 @@ export default function HomePage() {
       <AvatarsDemo />
       <CheckboxDemo />
       <CollapseDemo />
-      <ComboboxDemo />
+      {/*<ComboboxDemo />*/}
       <ContextDemo />
       <DropdownDemo />
       <PopoverDemo />

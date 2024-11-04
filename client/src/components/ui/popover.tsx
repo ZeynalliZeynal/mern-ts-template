@@ -1,6 +1,8 @@
 import { ReactNode } from "react";
 import { MenuItemProps, MenuTriggerProps } from "@/components/ui/types.ts";
-import Popper from "@/components/ui/popper-primitives.tsx";
+import Popper, {
+  AlignWrapperProps,
+} from "@/components/ui/popper-primitives.tsx";
 import { cn } from "@/lib/utils.ts";
 import Primitive from "@/components/ui/primitives.tsx";
 
@@ -39,9 +41,17 @@ function PopoverTrigger({
   );
 }
 
-function PopoverContent({ children }: { children: ReactNode }) {
+function PopoverContent({
+  children,
+  className,
+  align = "center",
+}: {
+  children: ReactNode;
+  className?: string;
+  align?: AlignWrapperProps;
+}) {
   return (
-    <Popper.Wrapper align="center" width="fit">
+    <Popper.Wrapper align={align} className={cn("min-w-52", className)}>
       {children}
     </Popper.Wrapper>
   );
@@ -56,12 +66,15 @@ function PopoverItem({
   prefix,
   value,
   onSelect,
+  removable,
 }: {
   value: string;
   onSelect: (currentValue: string) => void;
+  removable?: boolean;
 } & MenuItemProps) {
   return (
     <Popper.Item
+      valueRemovable={removable}
       disabled={disabled}
       prefix={prefix}
       suffix={suffix}

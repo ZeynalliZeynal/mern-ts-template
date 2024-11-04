@@ -1,27 +1,85 @@
 import Dialog from "@/components/ui/dialog.tsx";
-import { IoClose } from "react-icons/io5";
+import { IoCheckmarkOutline } from "react-icons/io5";
 import Button from "@/components/ui/button.tsx";
+import Popover from "@/components/ui/popover.tsx";
+import { useState } from "react";
+import { FaCookieBite } from "react-icons/fa6";
+import { PiCaretUpDownBold } from "react-icons/pi";
+
+const values = [
+  {
+    value: "all",
+    label: "All",
+  },
+  {
+    value: "only_necessary",
+    label: "Only Necessary",
+  },
+];
 
 export default function DialogDemo() {
+  const [value, setValue] = useState(values[0].value);
+
+  const initialValue = values.find((val) => val.value === value);
+
   return (
     <Dialog>
-      <Dialog.Trigger>Open a dialog</Dialog.Trigger>
-      <Dialog.Content>
-        <Dialog.Close className="absolute p-1 top-4 right-4 text-foreground rounded-md">
-          <IoClose aria-hidden="true" size={16} />
-        </Dialog.Close>
+      <Dialog.Overlay />
+      <Dialog.Trigger suffix={<FaCookieBite />}>Cookies</Dialog.Trigger>
+      <Dialog.Content className="max-w-xl">
+        {/*<Dialog.Close className="absolute p-1 top-4 right-4 text-foreground rounded-md">*/}
+        {/*  <IoClose aria-hidden="true" size={16} />*/}
+        {/*</Dialog.Close>*/}
         <Dialog.Header>
           <Dialog.Title className="flex items-center justify-between">
-            Edit Profile
+            We value your privacy
           </Dialog.Title>
           <Dialog.Description>
-            Make changes to your profile here. Click save when you're done.
+            We use cookies to enhance your browsing experience, serve
+            personalized ads or content, and analyze our traffic. By selecting
+            "Accept All", you consent to our use of cookies
           </Dialog.Description>
         </Dialog.Header>
-        <Dialog.Footer>
-          <Dialog.Close asChild>
-            <Button size="sm">Ok</Button>
-          </Dialog.Close>
+        <Dialog.Footer className="justify-between bg-background-200">
+          <Popover defaultValue={values[0].value}>
+            <Popover.Trigger asChild>
+              {/*<button className="rounded-md flex items-center justify-between gap-2 text-xs h-8 px-3 min-w-20 border hover:bg-gray-alpha-200 text-gray-900 hover:text-foreground transition">*/}
+              {/*  <span className="size-3">*/}
+              {/*    <PiCaretUpDownBold className="opacity-60" />*/}
+              {/*  </span>*/}
+              {/*</button>*/}
+              <Button
+                suffix={<PiCaretUpDownBold className="opacity-60" />}
+                primary
+              >
+                {initialValue?.label}
+              </Button>
+            </Popover.Trigger>
+            <Popover.Content className="min-w-40" align="left">
+              <Popover.Group>
+                {values.map((val) => (
+                  <Popover.Item
+                    value={val.value}
+                    onSelect={(currentValue) => setValue(currentValue)}
+                    suffix={val.value === value ? <IoCheckmarkOutline /> : null}
+                  >
+                    {val.label}
+                  </Popover.Item>
+                ))}
+              </Popover.Group>
+            </Popover.Content>{" "}
+          </Popover>
+          <div className="flex-grow h-px bg-gray-alpha-400 mx-3" />
+          <div className="flex items-center gap-2">
+            <Dialog.Close asChild>
+              <Button size="md" primary>
+                Customize
+              </Button>
+            </Dialog.Close>
+            <Dialog.Close asChild>
+              <Button size="md">Accept {initialValue?.label}</Button>
+            </Dialog.Close>
+          </div>
         </Dialog.Footer>
       </Dialog.Content>
     </Dialog>

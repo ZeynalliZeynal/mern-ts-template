@@ -21,23 +21,26 @@ import { useOutsideClick } from "@/hooks/useOutsideClick.ts";
 import { useResize } from "@/hooks/useResize.ts";
 import { MenuTriggerProps } from "@/components/ui/types.ts";
 import { PiCaretUpDownBold } from "react-icons/pi";
-import { useRestrictBody } from "@/hooks/useRestrictBody.ts";
 import Primitive, {
   MenuTypes,
   PrimitiveItemProps,
-  PrimitiveWrapperProps,
   usePrimitiveContext,
 } from "@/components/ui/primitives.tsx";
 import Button from "@/components/ui/button.tsx";
-import { ANIMATION_TIMEOUT } from "@/components/ui/parameters.ts";
+import {
+  ANIMATION_DURATION,
+  ANIMATION_TIMEOUT,
+} from "@/components/ui/parameters.ts";
+import { useRestrictBody } from "@/hooks/useRestrictBody.ts";
 
-interface PopperWrapperProps {
+export type AlignWrapperProps = "center" | "left" | "right";
+
+type PopperWrapperProps = {
   children: ReactNode;
-  align?: "center" | "left" | "right";
-  width?: "fit" | "default";
+  align?: AlignWrapperProps;
   className?: string;
   asChild?: boolean;
-}
+};
 
 export type PopperItemProps = {
   value?: string;
@@ -46,10 +49,10 @@ export type PopperItemProps = {
   valueRemovable?: boolean;
 } & PrimitiveItemProps;
 
-type PopperContextProps = {
-  openPopper: (element: HTMLElement) => void;
+export type PopperContextProps = {
   triggerPosition: DOMRect | null;
   setTriggerPosition: Dispatch<SetStateAction<DOMRect | null>>;
+  openPopper: (element: HTMLElement) => void;
   open: boolean;
   closePopper: () => void;
   animate: boolean;
@@ -76,11 +79,11 @@ export default function Popper({
   defaultValue?: string;
 }) {
   const [open, setOpen] = useState(false);
-  const [triggerPosition, setTriggerPosition] = useState<DOMRect | null>(null);
   const [selectedValue, setSelectedValue] = useState(defaultValue || "");
   const [activeTrigger, setActiveTrigger] = useState<HTMLElement | null>(null);
-
   const [animate, setAnimate] = useState(false);
+
+  const [triggerPosition, setTriggerPosition] = useState<DOMRect | null>(null);
 
   function selectValue(value: string) {
     setSelectedValue(value);
@@ -94,6 +97,7 @@ export default function Popper({
   }
 
   function closePopper() {
+    console.log(true);
     setAnimate(true);
     setTimeout(() => {
       setOpen(false);
@@ -104,11 +108,11 @@ export default function Popper({
       ) as HTMLElement[];
       const findActive = triggers.indexOf(activeTrigger as HTMLElement);
       triggers[findActive].focus();
-    }, ANIMATION_TIMEOUT - 50);
+    }, ANIMATION_TIMEOUT);
     setActiveTrigger(null);
   }
 
-  useRestrictBody(open, menuType !== "dialog");
+  useRestrictBody(open);
 
   return (
     <Primitive menuType="popover">
@@ -134,12 +138,12 @@ export default function Popper({
 function PopperWrapper({
   children,
   align = "center",
-  width = "default",
   className,
   asChild,
   ...etc
 }: PopperWrapperProps) {
-  const { open, triggerPosition, menuType } = usePopperContext();
+  const { open, triggerPosition, menuType, animate, closePopper } =
+    usePopperContext();
   const { highlightItem } = usePrimitiveContext();
   const [style, setStyle] = useState<CSSProperties>({});
 
@@ -158,20 +162,14 @@ function PopperWrapper({
     // const centerY = triggerPosition.top + triggerPosition.height / 2;
 
     let left = undefined;
-    if (width === "fit") {
-      left = triggerPosition.left;
+    if (align === "center") {
+      left = Math.max(0, centerX - ref.current.clientWidth / 2);
+    } else if (align === "right") {
+      console.log(align);
+      left = triggerPosition.right - ref.current.offsetWidth;
     } else {
-      switch (align) {
-        case "center":
-          left = Math.max(0, centerX - ref.current.clientWidth / 2);
-          break;
-        case "left":
-          left = triggerPosition.left;
-          break;
-        case "right":
-          left = triggerPosition.right - ref.current.offsetWidth;
-          break;
-      }
+      console.log(align);
+      left = triggerPosition.left;
     }
 
     setStyle({
@@ -185,6 +183,23 @@ function PopperWrapper({
     });
   }
 
+  function handleKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
+    if (!ref.current) return;
+    if (event.code === "Tab") {
+      event.preventDefault();
+    } else if (event.code === "Escape") {
+      event.preventDefault();
+      closePopper();
+    }
+  }
+
+  useOutsideClick(ref, closePopper);
+
+  useEffect(() => {
+    if (!open || !ref.current) return;
+    ref.current.focus();
+  }, [open]);
+
   useResize(open, updateMenuPosition, triggerPosition);
 
   useEffect(() => {
@@ -193,105 +208,37 @@ function PopperWrapper({
       const firstItem = ref.current.querySelector(
         "[primitive-collection-item]",
       );
-      console.log(ref.current);
       highlightItem(firstItem as HTMLElement);
     }
   }, [open]);
 
-  if (!triggerPosition) return null;
+  if (!open || !triggerPosition) return null;
 
-  return (
-    <PopupWrapper
-      ref={ref}
-      popper-content-menu=""
-      primitive-collection=""
-      role="menu"
+  return createPortal(
+    <Primitive.Wrapper
+      data-portal=""
+      tabIndex={-1}
+      data-state={!animate ? "open" : "closed"}
       className={cn(
-        "rounded-ui-content focus:ring-0 border flex-col p-ui-content bg-ui-background",
+        "fixed z-50 pointer-events-auto focus:ring-0 rounded-ui-content border flex-col p-ui-content bg-ui-background",
+        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
         className,
       )}
+      ref={ref}
+      popper-content-menu=""
+      role="menu"
       style={{
         ...style,
-        width: width === "fit" ? triggerPosition.width : undefined,
+        animationDuration: ANIMATION_DURATION + "ms",
       }}
+      onKeyDown={handleKeyDown}
       {...etc}
     >
       {children}
-    </PopupWrapper>
-  );
-}
-
-const PopupWrapper = forwardRef<HTMLDivElement, PrimitiveWrapperProps>(
-  (
-    { children, className, style, role, tabIndex, onKeyDown, ...etc },
-    forwardRef,
-  ) => {
-    const { open, animate, closePopper } = usePopperContext();
-
-    const ref = useRef<HTMLDivElement | null>(null);
-    useImperativeHandle(forwardRef, () => ref.current as HTMLDivElement);
-
-    function handleKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
-      if (!ref.current) return;
-      if (event.code === "Escape") {
-        event.preventDefault();
-        closePopper();
-      }
-    }
-
-    useOutsideClick(ref, closePopper);
-
-    useEffect(() => {
-      if (!open || !ref.current) return;
-      ref.current.focus();
-    }, [open]);
-
-    if (!open) return null;
-
-    return createPortal(
-      <Primitive.Wrapper
-        tabIndex={-1}
-        ref={ref}
-        role={role}
-        data-state={!animate ? "open" : "closed"}
-        className={cn(
-          "fixed z-50 pointer-events-auto focus:ring-0",
-          "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
-          className,
-        )}
-        style={{
-          ...style,
-          animationDuration: ANIMATION_TIMEOUT + "ms",
-        }}
-        onKeyDown={handleKeyDown}
-        {...etc}
-      >
-        {children}
-      </Primitive.Wrapper>,
-      document.body,
-    );
-  },
-);
-
-const PopupOverlay = ({ className }: { className?: string }) => {
-  const { open, animate } = usePopperContext();
-
-  if (!open) return null;
-  return createPortal(
-    <div
-      data-state={!animate ? "open" : "closed"}
-      className={cn(
-        "fixed inset-0 z-50 bg-black/60 backdrop-blur-sm",
-        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
-        className,
-      )}
-      style={{
-        animationDuration: ANIMATION_TIMEOUT + "ms",
-      }}
-    />,
+    </Primitive.Wrapper>,
     document.body,
   );
-};
+}
 
 const PopperTrigger = forwardRef<HTMLElement, MenuTriggerProps>(
   ({ children, prefix, suffix, className, asChild }, forwardRef) => {
@@ -436,8 +383,6 @@ const PopperItem = forwardRef<HTMLDivElement, PopperItemProps>(
   },
 );
 
-Popper.Dialog = PopupWrapper;
-Popper.Overlay = PopupOverlay;
 Popper.Label = Primitive.Label;
 Popper.Group = Primitive.Group;
 Popper.Separator = Primitive.Separator;

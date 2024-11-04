@@ -237,7 +237,7 @@
     }
 
     img, svg {
-        @apply select-none size-full;
+        @apply select-none;
     }
 
     span {

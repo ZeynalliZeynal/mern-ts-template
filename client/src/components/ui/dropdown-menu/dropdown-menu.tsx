@@ -107,8 +107,7 @@ export default function DropdownMenu({ children }: { children: ReactNode }) {
   const isHighlighted = (currentElement: HTMLElement) =>
     highlighted === findMenuItem(currentElement);
 
-  useRestrictBody(open);
-
+  useRestrictBody(open, true);
   useEffect(() => {
     if (open) {
       (document.querySelector('[role="menu"]') as HTMLElement).focus();
@@ -166,16 +165,7 @@ const DropdownMenuTrigger = forwardRef<HTMLElement, MenuTriggerProps>(
       "data-highlighted": hovering ? true : undefined,
       "data-disabled": disabled ? true : undefined,
       "aria-disabled": disabled ? true : undefined,
-      className: cn(
-        "text-gray-900 border rounded-md px-2.5 h-10 text-sm border-gray-alpha-400 bg-background-100",
-        "disabled:bg-gray-100 disabled:text-gray-700 disabled:border-gray-400",
-        {
-          "text-foreground bg-gray-alpha-200": hovering,
-          "justify-between": suffix,
-          "gap-2": prefix,
-        },
-        className,
-      ),
+      className: cn(className),
       onClick: handleClick,
       onMouseEnter: () => setHovering(true),
       onMouseLeave: () => setHovering(false),

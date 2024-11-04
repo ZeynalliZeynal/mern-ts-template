@@ -93,8 +93,6 @@ export default function Combobox({
     handleClose();
   });
 
-  useRestrictBody(open);
-
   useEffect(() => {
     if (open) inputRef.current?.focus();
     else {
@@ -139,6 +137,8 @@ export default function Combobox({
   useEffect(() => {
     if (value) setValues((prevState) => [...prevState, value]);
   }, []);
+
+  useRestrictBody(open);
 
   return (
     <ComboboxContext.Provider
