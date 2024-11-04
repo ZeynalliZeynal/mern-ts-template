@@ -1,10 +1,7 @@
 import React from "react";
-import Popper, {
-  usePopperContext,
-} from "@/components/ui/popper-primitives.tsx";
+import Popper from "@/components/ui/popper-primitives.tsx";
 import { MenuTriggerProps } from "@/components/ui/types.ts";
 import { cn } from "@/lib/utils.ts";
-import { createPortal } from "react-dom";
 
 type DialogContextProps = {} | undefined;
 
@@ -24,23 +21,6 @@ function DialogTrigger(props: MenuTriggerProps) {
     <Popper.Trigger dialog-trigger="" {...props}>
       {props.children}
     </Popper.Trigger>
-  );
-}
-
-function DialogOverlay({ className }: { className?: string }) {
-  const { open, animate } = usePopperContext();
-
-  if (!open) return null;
-  return createPortal(
-    <div
-      data-state={!animate ? "open" : "closed"}
-      className={cn(
-        "fixed inset-0 z-50 bg-black/60 backdrop-blur-sm",
-        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
-        className,
-      )}
-    />,
-    document.body,
   );
 }
 
@@ -104,16 +84,18 @@ function DialogContent({
 }) {
   return (
     <>
-      <DialogOverlay />
-      <Popper.Wrapper
-        asChild
+      <Popper.Overlay />
+      <Popper.Dialog
+        dialog-content=""
+        role="dialog"
         className={cn(
-          "fixed flex flex-col gap-4 max-w-md w-full p-6",
+          "left-[50%] top-[50%] z-50 translate-x-[-50%] translate-y-[-50%] flex flex-col gap-4 max-w-md w-full p-6 bg-background-100 border rounded-ui-content",
+          "data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-1/2 data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-1/2",
           className,
         )}
       >
         {children}
-      </Popper.Wrapper>
+      </Popper.Dialog>
     </>
   );
 }

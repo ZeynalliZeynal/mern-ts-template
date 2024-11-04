@@ -1,4 +1,4 @@
-import {
+import React, {
   cloneElement,
   createContext,
   CSSProperties,
@@ -6,7 +6,6 @@ import {
   forwardRef,
   HTMLAttributes,
   isValidElement,
-  KeyboardEventHandler,
   MouseEventHandler,
   ReactNode,
   SetStateAction,
@@ -27,6 +26,7 @@ import { useRestrictBody } from "@/hooks/useRestrictBody.ts";
 import Primitive, {
   MenuTypes,
   PrimitiveItemProps,
+  PrimitiveWrapperProps,
   usePrimitiveContext,
 } from "@/components/ui/primitives.tsx";
 import Button from "@/components/ui/button.tsx";
@@ -82,18 +82,18 @@ export default function Popper({
 
   const [animate, setAnimate] = useState(false);
 
-  const selectValue = (value: string) => {
+  function selectValue(value: string) {
     setSelectedValue(value);
-  };
+  }
 
-  const openPopper = (element: HTMLElement) => {
+  function openPopper(element: HTMLElement) {
     setAnimate(false);
     setOpen(true);
     setTriggerPosition(element.getBoundingClientRect());
     setActiveTrigger(element as HTMLElement);
-  };
+  }
 
-  const closePopper = () => {
+  function closePopper() {
     setAnimate(true);
     setTimeout(() => {
       setOpen(false);
@@ -106,7 +106,7 @@ export default function Popper({
       triggers[findActive].focus();
     }, ANIMATION_TIMEOUT);
     setActiveTrigger(null);
-  };
+  }
 
   useRestrictBody(open);
 
@@ -131,30 +131,21 @@ export default function Popper({
   );
 }
 
-const PopperWrapper = ({
+function PopperWrapper({
   children,
   align = "center",
   width = "default",
   className,
   asChild,
   ...etc
-}: PopperWrapperProps) => {
-  const { open, animate, triggerPosition, closePopper, menuType } =
-    usePopperContext();
+}: PopperWrapperProps) {
+  const { open, triggerPosition, menuType } = usePopperContext();
   const { highlightItem } = usePrimitiveContext();
   const [style, setStyle] = useState<CSSProperties>({});
 
   const ref = useRef<HTMLDivElement | null>(null);
 
-  const handleKeyDown: KeyboardEventHandler<HTMLDivElement> = (event) => {
-    if (!ref.current) return false;
-    if (event.code === "Escape") {
-      event.preventDefault();
-      closePopper();
-    }
-  };
-
-  const updateMenuPosition = () => {
+  function updateMenuPosition() {
     if (!ref.current || !open || !triggerPosition || menuType === "dialog")
       return;
 
@@ -192,53 +183,105 @@ const PopperWrapper = ({
         : undefined,
       left,
     });
-  };
-
-  useOutsideClick(ref, closePopper);
+  }
 
   useResize(open, updateMenuPosition, triggerPosition);
 
   useEffect(() => {
-    if (!open || !ref.current) return;
-    ref.current.focus();
+    if (!ref.current) return;
     if (menuType === "popover") {
       const firstItem = ref.current.querySelector(
         "[primitive-collection-item]",
       );
       highlightItem(firstItem as HTMLElement);
     }
-  }, [open]);
+  }, []);
 
-  if (!open || !triggerPosition) return null;
+  if (!triggerPosition) return null;
 
-  return createPortal(
-    <Primitive.Wrapper
+  return (
+    <PopupWrapper
+      ref={ref}
       popper-content-menu=""
       primitive-collection=""
-      tabIndex={-1}
       role="menu"
-      ref={ref}
-      data-state={!animate ? "open" : "closed"}
       className={cn(
-        "fixed z-50 pointer-events-auto rounded-ui-content focus:ring-0 border flex-col p-ui-content bg-ui-background",
-        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:zoom-in data-[state=closed]:zoom-out data-[state=open]:fade-in data-[state=closed]:fade-out",
-        {
-          "min-w-56": width === "default" && menuType !== "dialog",
-          "left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2":
-            menuType === "dialog",
-        },
-
+        "rounded-ui-content focus:ring-0 border flex-col p-ui-content bg-ui-background",
         className,
       )}
       style={{
         ...style,
         width: width === "fit" ? triggerPosition.width : undefined,
       }}
-      onKeyDown={handleKeyDown}
       {...etc}
     >
       {children}
-    </Primitive.Wrapper>,
+    </PopupWrapper>
+  );
+}
+
+const PopupWrapper = forwardRef<HTMLDivElement, PrimitiveWrapperProps>(
+  (
+    { children, className, style, role, tabIndex, onKeyDown, ...etc },
+    forwardRef,
+  ) => {
+    const { open, animate, closePopper } = usePopperContext();
+
+    const ref = useRef<HTMLDivElement | null>(null);
+    useImperativeHandle(forwardRef, () => ref.current as HTMLDivElement);
+
+    function handleKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
+      if (!ref.current) return;
+      if (event.code === "Escape") {
+        event.preventDefault();
+        closePopper();
+      }
+    }
+
+    useOutsideClick(ref, closePopper);
+
+    useEffect(() => {
+      if (!open || !ref.current) return;
+      ref.current.focus();
+    }, [open]);
+
+    if (!open) return null;
+
+    return createPortal(
+      <Primitive.Wrapper
+        tabIndex={-1}
+        ref={ref}
+        role={role}
+        data-state={!animate ? "open" : "closed"}
+        className={cn(
+          "fixed z-50 pointer-events-auto focus:ring-0 duration-200",
+          "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+          className,
+        )}
+        style={style}
+        onKeyDown={handleKeyDown}
+        {...etc}
+      >
+        {children}
+      </Primitive.Wrapper>,
+      document.body,
+    );
+  },
+);
+
+const PopupOverlay = ({ className }: { className?: string }) => {
+  const { open, animate } = usePopperContext();
+
+  if (!open) return null;
+  return createPortal(
+    <div
+      data-state={!animate ? "open" : "closed"}
+      className={cn(
+        "fixed inset-0 z-50 bg-black/60 backdrop-blur-sm duration-200",
+        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+        className,
+      )}
+    />,
     document.body,
   );
 };
@@ -386,6 +429,8 @@ const PopperItem = forwardRef<HTMLDivElement, PopperItemProps>(
   },
 );
 
+Popper.Dialog = PopupWrapper;
+Popper.Overlay = PopupOverlay;
 Popper.Label = Primitive.Label;
 Popper.Group = Primitive.Group;
 Popper.Separator = Primitive.Separator;

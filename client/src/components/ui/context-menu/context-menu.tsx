@@ -23,7 +23,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { navigateItems } from "@/utils/navigateItems.ts";
 import { MenuContextProps, MenuItemProps } from "@/components/ui/types.ts";
 import { useRestrictBody } from "@/hooks/useRestrictBody.ts";
-import { ANIMATION_TIMEOUT } from "@/components/ui/parameters.ts";
 
 const ContextMenuContext = createContext<
   | ({
@@ -75,7 +74,7 @@ export default function ContextMenu({ children }: { children: ReactNode }) {
       ) as HTMLElement[];
       const findActive = triggers.indexOf(activeTrigger as HTMLElement);
       triggers[findActive].focus();
-    }, ANIMATION_TIMEOUT);
+    }, 50);
     setCurrentMenuItem(undefined);
   };
 
@@ -146,7 +145,7 @@ const ContextMenuTrigger = ({ children }: { children: ReactNode }) => {
     if (open) {
       setTimeout(() => {
         handleOpen(event);
-      }, ANIMATION_TIMEOUT);
+      }, 50);
     } else {
       handleOpen(event);
     }

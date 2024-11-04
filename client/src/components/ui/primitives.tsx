@@ -1,4 +1,5 @@
 import React, {
+  AriaRole,
   cloneElement,
   createContext,
   CSSProperties,
@@ -20,6 +21,15 @@ import { cn } from "@/lib/utils.ts";
 import { useNavigate } from "react-router-dom";
 
 export type MenuTypes = "popover" | "dropdown" | "context" | "dialog";
+
+export type PrimitiveWrapperProps = {
+  children: ReactNode;
+  style?: CSSProperties;
+  className?: string;
+  onKeyDown?: KeyboardEventHandler<HTMLDivElement>;
+  tabIndex?: number;
+  role?: AriaRole;
+};
 
 type PrimitiveContextProps = {
   highlightItem: (value: HTMLElement | number) => void;
@@ -207,20 +217,9 @@ const PrimitiveItem = forwardRef<HTMLDivElement, PrimitiveItemProps>(
   },
 );
 
-const PrimitiveWrapper = forwardRef<
-  HTMLDivElement,
-  {
-    children: ReactNode;
-    style?: CSSProperties;
-    className?: string;
-    onKeyDown?: KeyboardEventHandler<HTMLDivElement>;
-    asChild?: boolean;
-    tabIndex?: number;
-    role?: string;
-  }
->(
+const PrimitiveWrapper = forwardRef<HTMLDivElement, PrimitiveWrapperProps>(
   (
-    { children, style, className, onKeyDown, asChild, tabIndex, role, ...etc },
+    { children, style, className, onKeyDown, tabIndex, role, ...etc },
     forwardRef,
   ) => {
     const { highlightItem, currentMenuItem } = usePrimitiveContext();
@@ -230,13 +229,14 @@ const PrimitiveWrapper = forwardRef<
 
     const handleKeyDown: KeyboardEventHandler<HTMLDivElement> = (event) => {
       onKeyDown?.(event);
+      if (!ref.current) return false;
 
       if (event.code === "ArrowUp" || event.code === "ArrowDown") {
         event.preventDefault();
         const direction = event.code === "ArrowUp" ? "previous" : "next";
 
         const menuItems = Array.from(
-          event.currentTarget.querySelectorAll(
+          ref.current.querySelectorAll(
             "[primitive-collection-item]:not([data-disabled])",
           ),
         );
@@ -257,19 +257,19 @@ const PrimitiveWrapper = forwardRef<
       }
     };
 
-    const attributes = {
-      ref,
-      "primitive-collection-wrapper": "",
-      className,
-      style,
-      onKeyDown: handleKeyDown,
-      ...etc,
-    };
-
-    return asChild && isValidElement(children) ? (
-      cloneElement(children, attributes)
-    ) : (
-      <div {...attributes}>{children}</div>
+    return (
+      <div
+        ref={ref}
+        tabIndex={tabIndex}
+        role={role}
+        primitive-collection-wrapper=""
+        className={cn(className)}
+        style={style}
+        onKeyDown={handleKeyDown}
+        {...etc}
+      >
+        {children}
+      </div>
     );
   },
 );
