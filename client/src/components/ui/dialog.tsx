@@ -19,6 +19,7 @@ import Button from "@/components/ui/button.tsx";
 import { createPortal } from "react-dom";
 import { useOutsideClick } from "@/hooks/useOutsideClick.ts";
 import { useRestrictBody } from "@/hooks/useRestrictBody.ts";
+import { loopThroughFocusableElements } from "@/components/ui/utils.ts";
 
 type DialogContextProps = {
   openDialog: (element: HTMLElement) => void;
@@ -58,7 +59,7 @@ export default function Dialog({ children }: { children: React.ReactNode }) {
         document.querySelectorAll("[dialog-trigger]"),
       ) as HTMLElement[];
       const findActive = triggers.indexOf(activeTrigger as HTMLElement);
-      triggers[findActive].focus();
+      if (findActive >= 0) triggers[findActive].focus();
     }, ANIMATION_TIMEOUT);
     setActiveTrigger(null);
   };
@@ -198,13 +199,18 @@ const DialogContent = ({
       event.preventDefault();
       closeDialog();
     }
+    loopThroughFocusableElements(event);
   };
 
   useOutsideClick(ref, closeDialog);
 
   useEffect(() => {
     if (!open || !ref.current) return;
-    ref.current.focus();
+    const focusableElements = ref.current.querySelectorAll(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+    );
+    const firstElement = focusableElements[0] as HTMLElement;
+    firstElement.focus();
   }, [open]);
 
   if (!open) return;

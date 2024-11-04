@@ -97,7 +97,6 @@ export default function Popper({
   }
 
   function closePopper() {
-    console.log(true);
     setAnimate(true);
     setTimeout(() => {
       setOpen(false);
@@ -165,10 +164,8 @@ function PopperWrapper({
     if (align === "center") {
       left = Math.max(0, centerX - ref.current.clientWidth / 2);
     } else if (align === "right") {
-      console.log(align);
       left = triggerPosition.right - ref.current.offsetWidth;
     } else {
-      console.log(align);
       left = triggerPosition.left;
     }
 
