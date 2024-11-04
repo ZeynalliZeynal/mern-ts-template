@@ -28,7 +28,7 @@ export default function DialogDemo() {
 
   return (
     <>
-      <Dialog>
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <Dialog.Overlay />
         <Dialog.Trigger suffix={<FaCookieBite />}>Cookies</Dialog.Trigger>
         <Dialog.Content className="max-w-xl">
@@ -46,7 +46,7 @@ export default function DialogDemo() {
             </Dialog.Description>
           </Dialog.Header>
           <Dialog.Footer className="justify-between">
-            <Popover defaultValue={values[0].value}>
+            <Popover>
               <Popover.Trigger asChild>
                 {/*<button className="rounded-md flex items-center justify-between gap-2 text-xs h-8 px-3 min-w-20 border hover:bg-gray-alpha-200 text-gray-900 hover:text-foreground transition">*/}
                 {/*  <span className="size-3">*/}
@@ -79,16 +79,26 @@ export default function DialogDemo() {
             </Popover>
             <div className="flex-grow h-px bg-gray-alpha-400 mx-3" />
             <div className="flex items-center gap-2">
-              <Dialog.Close
-                asChild
+              <Button
+                size="md"
+                primary
                 onClick={() => {
                   toast.info("Just for demonstration");
+                  setDialogOpen(false);
                 }}
               >
-                <Button size="md" primary>
-                  Customize
-                </Button>
-              </Dialog.Close>
+                Customize
+              </Button>
+              {/*<Dialog.Close*/}
+              {/*  asChild*/}
+              {/*  onClick={() => {*/}
+              {/*    toast.info("Just for demonstration");*/}
+              {/*  }}*/}
+              {/*>*/}
+              {/*  <Button size="md" primary>*/}
+              {/*    Customize*/}
+              {/*  </Button>*/}
+              {/*</Dialog.Close>*/}
               <Dialog.Close
                 asChild
                 onClick={async () => {
@@ -99,35 +109,10 @@ export default function DialogDemo() {
                 }}
               >
                 <Button size="md" suffix={isPending && <Spinner />}>
-                  Accept {initialValue?.label}
+                  {isPending ? "Accepting" : "Accept"} {initialValue?.label}
                 </Button>
               </Dialog.Close>
             </div>
-          </Dialog.Footer>
-        </Dialog.Content>
-      </Dialog>
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <Dialog.Overlay />
-        <Dialog.Trigger>Async action</Dialog.Trigger>
-        <Dialog.Content>
-          <Dialog.Header>
-            <Dialog.Title>Async action</Dialog.Title>
-          </Dialog.Header>
-          <Dialog.Footer>
-            <Button
-              primary
-              full
-              onClick={async () => {
-                setIsPending(true);
-                await new Promise((resolve) => setTimeout(resolve, 2000));
-                setDialogOpen(false);
-                setIsPending(false);
-                toast.success("Saved!");
-              }}
-              prefix={isPending && <Spinner size="sm" />}
-            >
-              Save
-            </Button>
           </Dialog.Footer>
         </Dialog.Content>
       </Dialog>

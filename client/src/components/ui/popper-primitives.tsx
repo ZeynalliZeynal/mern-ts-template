@@ -72,14 +72,12 @@ export const usePopperContext = () => {
 export default function Popper({
   children,
   menuType,
-  defaultValue,
 }: {
   children: ReactNode;
   menuType: MenuTypes;
-  defaultValue?: string;
 }) {
   const [open, setOpen] = useState(false);
-  const [selectedValue, setSelectedValue] = useState(defaultValue || "");
+  const [selectedValue, setSelectedValue] = useState("");
   const [activeTrigger, setActiveTrigger] = useState<HTMLElement | null>(null);
   const [animate, setAnimate] = useState(false);
 

@@ -54,17 +54,22 @@ export default function Dialog({
   );
   const [animate, setAnimate] = React.useState(false);
 
+  const setControlledOpen = (isOpen: boolean) => {
+    setOpen(isOpen);
+    onOpenChange?.(isOpen);
+  };
+
   const openDialog = (element: HTMLElement) => {
     setAnimate(false);
     setActiveTrigger(element as HTMLElement);
-    onOpenChange ? onOpenChange(true) : setOpen(true);
+    setControlledOpen(true);
   };
 
   const closeDialog = () => {
     if (document.body.querySelector("[role=menu]")) return;
     setAnimate(true);
     setTimeout(() => {
-      onOpenChange ? onOpenChange(false) : setOpen(false);
+      setControlledOpen(false);
       setAnimate(false);
 
       // console.log(activeTrigger);
@@ -77,19 +82,14 @@ export default function Dialog({
     setActiveTrigger(null);
   };
 
-  useRestrictBody(customOpen || open);
+  useRestrictBody(open);
 
   useEffect(() => {
-    const triggerElement = document.body.querySelector(
-      "[dialog-trigger]:has([data-state=open])",
-    );
-    if (triggerElement) setActiveTrigger(triggerElement as HTMLElement);
-  }, []);
+    if (customOpen !== open) setOpen(customOpen);
+  }, [customOpen]);
 
   return (
-    <DialogContext.Provider
-      value={{ open: customOpen || open, openDialog, animate, closeDialog }}
-    >
+    <DialogContext.Provider value={{ open, openDialog, animate, closeDialog }}>
       {children}
     </DialogContext.Provider>
   );
