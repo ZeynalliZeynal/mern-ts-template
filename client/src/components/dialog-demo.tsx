@@ -105,10 +105,19 @@ export default function DialogDemo() {
                   setIsPending(true);
                   await new Promise((resolve) => setTimeout(resolve, 2000));
                   setIsPending(false);
-                  toast.success("Cookies updated!", { icon: <FaCookieBite /> });
+                  toast.success(
+                    "Cookies updated! (Recommended way of closing)",
+                    {
+                      icon: <FaCookieBite />,
+                    },
+                  );
                 }}
               >
-                <Button size="md" suffix={isPending && <Spinner />}>
+                <Button
+                  size="md"
+                  disabled={isPending}
+                  suffix={isPending && <Spinner />}
+                >
                   {isPending ? "Accepting" : "Accept"} {initialValue?.label}
                 </Button>
               </Dialog.Close>

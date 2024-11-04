@@ -102,7 +102,7 @@ export default function ContextMenu({ children }: { children: ReactNode }) {
   const isHighlighted = (currentElement: HTMLElement) =>
     highlighted === findMenuItem(currentElement);
 
-  useRestrictBody(open, true);
+  useRestrictBody(open);
   useEffect(() => {
     if (open) {
       (document.querySelector('[role="menu"]') as HTMLElement).focus();

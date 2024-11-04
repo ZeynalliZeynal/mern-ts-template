@@ -210,7 +210,7 @@ const ChoiceboxGroupItem = ({
                     },
                   )}
                 >
-                  <FaCheck />
+                  <FaCheck className="size-full" />
                 </span>
               )}
             </>

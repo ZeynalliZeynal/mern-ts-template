@@ -40,7 +40,7 @@ const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps>(
       rounded = "md",
       type = "button",
       className,
-      ...props
+      ...etc
     },
     forwardRef,
   ) => {
@@ -51,31 +51,40 @@ const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps>(
       () => ref.current as HTMLButtonElement | HTMLAnchorElement,
     );
     const cl = cn(
-      `flex items-center justify-center transition font-medium border select-none rounded-${rounded}`,
+      `flex items-center justify-center transition duration-200 font-medium border select-none rounded-${rounded}`,
       {
-        "text-gray-900 border-gray-alpha-400 bg-background-100 data-[highlighted]:text-foreground data-[highlighted]:bg-gray-alpha-200 disabled:bg-gray-100 disabled:text-gray-700 disabled:border-gray-400":
-          primary,
-        "text-gray-500 border-gray-200 bg-gray-1000 data-[highlighted]:text-background-100 data-[highlighted]:bg-button-invert-hover disabled:bg-button-invert-disabled disabled:text-gray-700 disabled:border-gray-400":
-          !primary,
+        "text-gray-900 border bg-background-100": primary,
+        "text-gray-500 border-gray-200 bg-gray-1000": !primary,
         "px-2.5 h-10 text-sm": size === "md",
         "px-3.5 h-12": size === "lg",
         "text-sm h-8 px-1.5": size === "sm",
         "w-full": full,
         "w-fit": !full,
+        "data-[highlighted]:text-foreground data-[highlighted]:bg-gray-alpha-200":
+          primary && hovering,
+        "disabled:text-gray-700 disabled:bg-gray-100 disabled:border-gray-400":
+          primary && disabled,
+        "data-[highlighted]:text-background-100 data-[highlighted]:bg-button-invert-hover":
+          !primary && hovering,
+        "disabled:bg-button-invert-disabled disabled:text-gray-700 disabled:border-gray-400":
+          !primary && disabled,
       },
       className,
     );
+    const commonAttributed = {
+      "data-highlighted": !disabled && hovering ? true : null,
+      className: cl,
+      onMouseEnter: () => !disabled && setHovering(true),
+      onMouseLeave: () => !disabled && setHovering(false),
+    };
 
     if (href)
       return (
         <Link
           ref={ref as MutableRefObject<HTMLAnchorElement>}
-          data-highlighted={hovering ? true : null}
           to={href}
-          className={cl}
-          onMouseEnter={() => setHovering(true)}
-          onMouseLeave={() => setHovering(false)}
-          {...props}
+          {...commonAttributed}
+          {...etc}
         >
           {prefix} <span className="px-1.5">{children}</span> {suffix}
         </Link>
@@ -84,14 +93,11 @@ const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps>(
       return (
         <button
           ref={ref as MutableRefObject<HTMLButtonElement>}
-          data-highlighted={hovering ? true : null}
           type={type}
-          className={cl}
           onClick={onClick}
           disabled={disabled}
-          onMouseEnter={() => setHovering(true)}
-          onMouseLeave={() => setHovering(false)}
-          {...props}
+          {...commonAttributed}
+          {...etc}
         >
           {prefix} <span className="px-1.5">{children}</span> {suffix}
         </button>

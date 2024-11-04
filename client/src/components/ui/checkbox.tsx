@@ -35,12 +35,14 @@ export default function Checkbox({
       <span
         aria-checked={checked}
         aria-disabled={disabled}
-        className="size-4 rounded border aria-checked:bg-foreground aria-checked:text-background-100 text-background-200 transition p-0.5 group aria-disabled:bg-gray-600 aria-disabled:cursor-not-allowed"
+        data-checked={checked}
+        data-disabled={disabled}
+        className="size-4 rounded border data-[checked=true]:bg-foreground text-background-200 transition p-0.5 group data-[disabled=true]:bg-gray-200 data-[disabled=true]:cursor-not-allowed"
         role="checkbox"
         tabIndex={0}
         onKeyDown={handleCheck}
       >
-        {checked && <FaCheck aria-hidden="true" />}
+        {checked && <FaCheck aria-hidden="true" className="size-full" />}
         <input
           tabIndex={-1}
           type="checkbox"

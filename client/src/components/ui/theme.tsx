@@ -1,59 +1,82 @@
 import { useThemeSwitcher } from "@/context/theme-context";
 import { cn } from "@/lib/utils";
 import { DeviceAlternate, Moon, Sun } from "@/components/icons/geist.tsx";
+import { KeyboardEventHandler, useRef, useState } from "react";
+
+type Theme = "device" | "light" | "dark";
 
 export default function ThemeSwitcher({ size = 32 }: { size?: number }) {
   const { theme, changeTheme } = useThemeSwitcher();
+  const themes: Theme[] = ["device", "light", "dark"];
+  const [index, setIndex] = useState(themes.indexOf(theme));
+  const ref = useRef<HTMLDivElement | null>(null);
+
+  const handleKeyDown: KeyboardEventHandler<HTMLDivElement> = (event) => {
+    const themeItems = Array.from(
+      event.currentTarget.querySelectorAll("[theme-item]"),
+    ) as HTMLButtonElement[];
+
+    if (event.code === "ArrowLeft" || event.code === "ArrowRight") {
+      event.preventDefault();
+      const direction = event.code === "ArrowRight" ? 1 : -1;
+      const newIndex =
+        (index + direction + themeItems.length) % themeItems.length;
+      setIndex(newIndex);
+      changeTheme(themes[newIndex]);
+      themeItems[newIndex].focus();
+    }
+  };
+
+  const handleItemClick = (newTheme: Theme, newIndex: number) => {
+    changeTheme(newTheme);
+    setIndex(newIndex);
+  };
 
   return (
     <div
-      className="inline-flex items-center rounded-full border bg-background-100 w-fit"
+      tabIndex={0}
+      ref={ref}
+      role="radiogroup"
+      theme-container=""
+      className="relative flex items-center rounded-full border text-gray-900 bg-background-100 w-fit"
       style={{
         height: size,
       }}
+      aria-label="Theme Switcher"
+      onKeyDown={handleKeyDown}
     >
-      <button
-        className={cn("rounded-full hover:text-foreground transition-none", {
-          "text-foreground border": theme === "device",
-        })}
+      <div
+        className="absolute border rounded-full transition bg-background-100 z-0"
         style={{
           width: size,
           height: size,
+          transform: `translateX(${index * 100}%)`,
         }}
-        onClick={() => {
-          changeTheme("device");
-        }}
-      >
-        <DeviceAlternate size={size / 2} />
-      </button>
-      <button
-        className={cn("rounded-full hover:text-foreground transition-none", {
-          "text-foreground border": theme === "light",
-        })}
-        style={{
-          width: size,
-          height: size,
-        }}
-        onClick={() => {
-          changeTheme("light");
-        }}
-      >
-        <Sun size={size / 2} />
-      </button>
-      <button
-        className={cn("rounded-full hover:text-foreground transition-none", {
-          "text-foreground border": theme === "dark",
-        })}
-        style={{
-          width: size,
-          height: size,
-        }}
-        onClick={() => {
-          changeTheme("dark");
-        }}
-      >
-        <Moon size={size / 2} />
-      </button>
+      />
+      {themes.map((themeOption, idx) => (
+        <button
+          key={themeOption}
+          tabIndex={-1}
+          theme-item=""
+          role="radio"
+          aria-checked={theme === themeOption}
+          className={cn(
+            "inline-flex items-center justify-center hover:text-foreground transition relative z-[1] rounded-full focus:ring-0",
+            {
+              "text-foreground": theme === themeOption,
+            },
+          )}
+          style={{
+            width: size,
+            height: size,
+          }}
+          onClick={() => handleItemClick(themeOption, idx)}
+        >
+          {themeOption === "device" && <DeviceAlternate size={size / 2} />}
+          {themeOption === "light" && <Sun size={size / 2} />}
+          {themeOption === "dark" && <Moon size={size / 2} />}
+        </button>
+      ))}
     </div>
   );
 }
