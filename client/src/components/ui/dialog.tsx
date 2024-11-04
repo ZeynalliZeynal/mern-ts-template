@@ -1,13 +1,14 @@
 import React, {
   cloneElement,
+  Dispatch,
   forwardRef,
   HTMLAttributes,
   isValidElement,
   MouseEventHandler,
+  SetStateAction,
   useEffect,
   useImperativeHandle,
   useRef,
-  useState,
 } from "react";
 import { MenuTriggerProps } from "@/components/ui/types.ts";
 import { cn } from "@/lib/utils.ts";
@@ -31,30 +32,42 @@ type DialogContextProps = {
 const DialogContext = React.createContext<DialogContextProps | undefined>(
   undefined,
 );
+
 const useDialog = () => {
   const context = React.useContext(DialogContext);
   if (!context) throw new Error("Dialog component is outside of the provider");
   return context;
 };
 
-export default function Dialog({ children }: { children: React.ReactNode }) {
-  const [open, setOpen] = useState(false);
-  const [activeTrigger, setActiveTrigger] = useState<HTMLElement | null>(null);
-  const [animate, setAnimate] = useState(false);
+export default function Dialog({
+  children,
+  open: customOpen = false,
+  onOpenChange,
+}: {
+  children: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: Dispatch<SetStateAction<boolean>>;
+}) {
+  const [open, setOpen] = React.useState(customOpen);
+  const [activeTrigger, setActiveTrigger] = React.useState<HTMLElement | null>(
+    null,
+  );
+  const [animate, setAnimate] = React.useState(false);
 
   const openDialog = (element: HTMLElement) => {
     setAnimate(false);
-    setOpen(true);
     setActiveTrigger(element as HTMLElement);
+    onOpenChange ? onOpenChange(true) : setOpen(true);
   };
 
   const closeDialog = () => {
     if (document.body.querySelector("[role=menu]")) return;
     setAnimate(true);
     setTimeout(() => {
-      setOpen(false);
+      onOpenChange ? onOpenChange(false) : setOpen(false);
       setAnimate(false);
 
+      // console.log(activeTrigger);
       const triggers = Array.from(
         document.querySelectorAll("[dialog-trigger]"),
       ) as HTMLElement[];
@@ -64,10 +77,19 @@ export default function Dialog({ children }: { children: React.ReactNode }) {
     setActiveTrigger(null);
   };
 
-  useRestrictBody(open);
+  useRestrictBody(customOpen || open);
+
+  useEffect(() => {
+    const triggerElement = document.body.querySelector(
+      "[dialog-trigger]:has([data-state=open])",
+    );
+    if (triggerElement) setActiveTrigger(triggerElement as HTMLElement);
+  }, []);
 
   return (
-    <DialogContext.Provider value={{ open, openDialog, animate, closeDialog }}>
+    <DialogContext.Provider
+      value={{ open: customOpen || open, openDialog, animate, closeDialog }}
+    >
       {children}
     </DialogContext.Provider>
   );
@@ -119,7 +141,7 @@ const DialogHeader = ({
   className?: string;
 }) => {
   return (
-    <div dialog-header="" className={cn("space-y-3 px-6 pt-6", className)}>
+    <div dialog-header="" className={cn("space-y-3 px-6 pt-6 pb-3", className)}>
       {children}
     </div>
   );
@@ -136,7 +158,7 @@ const DialogFooter = ({
     <div
       dialog-footer=""
       className={cn(
-        "w-full flex justify-end items-center p-6 rounded-ui-content rounded-t-none",
+        "w-full flex justify-end items-center p-6 rounded-ui-content rounded-t-none bg-background-200",
         className,
       )}
     >
@@ -210,7 +232,8 @@ const DialogContent = ({
       'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
     );
     const firstElement = focusableElements[0] as HTMLElement;
-    firstElement.focus();
+    if (firstElement) firstElement.focus();
+    else ref.current.focus();
   }, [open]);
 
   if (!open) return;
@@ -243,10 +266,12 @@ const DialogClose = ({
   children,
   className,
   asChild,
+  onClick,
 }: {
   children: React.ReactNode;
   className?: string;
   asChild?: boolean;
+  onClick?: (event: React.MouseEvent<HTMLElement>) => void | Promise<void>;
 }) => {
   const { closeDialog } = useDialog();
 
@@ -254,7 +279,23 @@ const DialogClose = ({
     event,
   ) => {
     event.preventDefault();
-    closeDialog();
+    if (onClick) {
+      const result = onClick(event);
+      if (result instanceof Promise) {
+        result
+          .then(() => {
+            closeDialog();
+          })
+          .catch((error) => {
+            console.error("Error in onClick handler:", error);
+            closeDialog();
+          });
+      } else {
+        closeDialog();
+      }
+    } else {
+      closeDialog();
+    }
   };
 
   const commonAttributes = {
