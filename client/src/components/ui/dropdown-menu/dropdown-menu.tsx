@@ -1,411 +1,78 @@
-import React, {
-  cloneElement,
-  createContext,
-  CSSProperties,
-  Dispatch,
-  forwardRef,
-  isValidElement,
-  KeyboardEvent,
-  MouseEvent,
-  MouseEventHandler,
-  ReactNode,
-  SetStateAction,
-  useContext,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-  useState,
-} from "react";
-import { createPortal } from "react-dom";
-import { useOutsideClick } from "@/hooks/useOutsideClick.ts";
+import { ReactNode } from "react";
+import { MenuItemProps, MenuTriggerProps } from "@/components/ui/types.ts";
+import Popper, {
+  AlignWrapperProps,
+} from "@/components/ui/primitves/popper-primitives.tsx";
 import { cn } from "@/lib/utils.ts";
-import { Link, useNavigate } from "react-router-dom";
-import { navigateItems } from "@/utils/navigateItems.ts";
-import Button from "@/components/ui/button.tsx";
-import {
-  MenuContextProps,
-  MenuItemProps,
-  MenuTriggerProps,
-} from "@/components/ui/types.ts";
-import { useRestrictBody } from "@/hooks/useRestrictBody.ts";
-import { ANIMATION_TIMEOUT } from "@/components/ui/parameters.ts";
-import { useResize } from "@/hooks/useResize.ts";
-import Primitive from "@/components/ui/primitives.tsx";
-
-const DropdownMenuContext = createContext<
-  | ({
-      handleOpen: (element: HTMLElement) => void;
-      clientPosition: DOMRect | null;
-      setClientPosition: Dispatch<SetStateAction<DOMRect | null>>;
-    } & MenuContextProps)
-  | null
->(null);
-
-export const useDropdownMenu = () => {
-  const context = useContext(DropdownMenuContext);
-  if (!context) throw new Error("Dropdown is outside of the provider");
-  return context;
-};
+import Primitive from "@/components/ui/primitves/primitives.tsx";
 
 export default function DropdownMenu({ children }: { children: ReactNode }) {
-  const [open, setOpen] = useState(false);
-  const [highlighted, setHighlighted] = useState<number | undefined>(-1);
-  const [currentMenuItem, setCurrentMenuItem] = useState<number | undefined>(
-    undefined,
-  );
-  const [activeTrigger, setActiveTrigger] = useState<HTMLElement | null>(null);
+  return <Popper menuType="dropdown">{children}</Popper>;
+}
 
-  const [clientPosition, setClientPosition] = useState<DOMRect | null>(null);
-
-  const [animate, setAnimate] = useState(false);
-
-  const handleOpen = (element: HTMLElement) => {
-    const rect = element.getBoundingClientRect();
-    setActiveTrigger(element as HTMLElement);
-    setClientPosition(rect);
-    setAnimate(false);
-    setOpen(true);
-  };
-
-  const handleClose = () => {
-    setAnimate(true);
-    setTimeout(() => {
-      setOpen(false);
-      setAnimate(false);
-
-      const triggers = Array.from(
-        document.querySelectorAll('[data-dropdown="trigger"]'),
-      ) as HTMLElement[];
-      const findActive = triggers.indexOf(activeTrigger as HTMLElement);
-      triggers[findActive].focus();
-    }, ANIMATION_TIMEOUT);
-    setActiveTrigger(null);
-    setCurrentMenuItem(undefined);
-  };
-
-  const findMenuItem = (currentElement: HTMLElement) => {
-    const root = currentElement.closest("[role='menu']");
-    if (!root) return;
-
-    const menuItems = Array.from(
-      root.querySelectorAll("[role='menuitem']:not([data-disabled])"),
-    );
-
-    return menuItems.indexOf(currentElement);
-  };
-
-  const handleHighlight = (value: HTMLElement | number) => {
-    if (typeof value === "number") setHighlighted(value);
-    else {
-      const currentIndex = findMenuItem(value);
-      setCurrentMenuItem(currentIndex);
-      setHighlighted(currentIndex);
-      value.focus();
-    }
-  };
-
-  const isHighlighted = (currentElement: HTMLElement) =>
-    highlighted === findMenuItem(currentElement);
-
-  useRestrictBody(open, true);
-  useEffect(() => {
-    if (open) {
-      (document.querySelector('[role="menu"]') as HTMLElement).focus();
-    }
-  }, [open]);
-
+function DropdownMenuTrigger({
+  children,
+  prefix,
+  suffix,
+  className,
+  disabled,
+  asChild,
+}: MenuTriggerProps) {
   return (
-    <DropdownMenuContext.Provider
-      value={{
-        open,
-        handleOpen,
-        handleClose,
-        clientPosition,
-        setClientPosition,
-        animate,
-        isHighlighted,
-        handleHighlight,
-        currentMenuItem,
-        setCurrentMenuItem,
-      }}
+    <Popper.Trigger
+      suffix={suffix}
+      prefix={prefix}
+      className={cn(className)}
+      asChild={asChild}
+      disabled={disabled}
     >
       {children}
-    </DropdownMenuContext.Provider>
+    </Popper.Trigger>
   );
 }
 
-const DropdownMenuTrigger = forwardRef<HTMLElement, MenuTriggerProps>(
-  (
-    {
-      children,
-      disabled = false,
-      className,
-      asChild = false,
-      suffix,
-      prefix,
-    }: MenuTriggerProps,
-    forwardRef,
-  ) => {
-    const [hovering, setHovering] = useState(false);
-    const { handleOpen, open } = useDropdownMenu();
-    const ref = useRef<HTMLElement | null>(null);
-    useImperativeHandle(forwardRef, () => ref.current as HTMLElement);
-
-    const handleClick: MouseEventHandler<HTMLElement> = (event) => {
-      event.preventDefault();
-
-      if (!open) {
-        handleOpen(event.currentTarget as HTMLElement);
-      }
-    };
-
-    const commonProps = {
-      ref,
-      "data-dropdown": "trigger",
-      "data-highlighted": hovering ? true : undefined,
-      "data-disabled": disabled ? true : undefined,
-      "aria-disabled": disabled ? true : undefined,
-      className: cn(className),
-      onClick: handleClick,
-      onMouseEnter: () => setHovering(true),
-      onMouseLeave: () => setHovering(false),
-    };
-
-    return asChild && isValidElement(children) ? (
-      cloneElement(children, commonProps)
-    ) : (
-      <Button
-        data-dropdown="trigger"
-        prefix={prefix}
-        suffix={suffix}
-        primary
-        onClick={handleClick}
-      >
-        {children}
-      </Button>
-    );
-  },
-);
-
-const DropdownMenuContent = ({ children }: { children: ReactNode }) => {
-  const {
-    open,
-    clientPosition,
-    handleClose,
-    animate,
-    handleHighlight,
-    currentMenuItem,
-    setCurrentMenuItem,
-  } = useDropdownMenu();
-  const [menuStyle, setMenuStyle] = useState<CSSProperties | undefined>(
-    undefined,
+function DropdownMenuContent({
+  children,
+  className,
+  align = "center",
+}: {
+  children: ReactNode;
+  className?: string;
+  align?: AlignWrapperProps;
+}) {
+  return (
+    <Popper.Wrapper align={align} className={cn("min-w-52", className)}>
+      {children}
+    </Popper.Wrapper>
   );
+}
 
-  const ref = useRef<HTMLDivElement | null>(null);
-
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
-    if (document.querySelector("[data-dropdownsub='popup']")) return false;
-    navigateItems({
-      event,
-      itemSelector:
-        '[role="menuitem"]:not([data-disabled]):not([data-dropdownsub="item"])',
-      currentMenuItem,
-      setCurrentMenuItem,
-      handleClose,
-      handleHighlight,
-      root: (event.target as HTMLElement).closest('[role="menu"]'),
-    });
-  };
-
-  useOutsideClick(ref, handleClose);
-
-  const updateMenuPosition = () => {
-    if (!ref.current || !open || !clientPosition) return;
-
-    const spaceLeftBottom = window.innerHeight - clientPosition.bottom;
-    // const spaceLeftRight = window.innerWidth - clientPosition.right;
-
-    // const canFitRight = spaceLeftRight > ref.current.clientWidth;
-    const canFitBottom = spaceLeftBottom > ref.current.clientHeight;
-
-    const placeCenter = (window.innerWidth - ref.current.clientWidth) / 2;
-
-    setMenuStyle({
-      top: canFitBottom
-        ? clientPosition.top + clientPosition.height + 8
-        : undefined,
-      bottom: !canFitBottom
-        ? spaceLeftBottom + clientPosition.height + 8
-        : undefined,
-      left: placeCenter,
-    });
-  };
-
-  useResize(open, updateMenuPosition, clientPosition);
-
-  if (!open) return null;
-
-  return createPortal(
-    <div
-      tabIndex={-1}
-      role="menu"
-      ref={ref}
-      data-dropdown="popup"
-      data-state={!animate}
-      className={cn(
-        "pointer-events-auto rounded-ui-content focus:ring-0 border flex-col p-ui-content min-w-56 fixed z-50 bg-ui-background",
-        "data-[state='true']:animate-in data-[state='false']:animate-out data-[state='true']:zoom-in data-[state='false']:zoom-out data-[state='true']:fade-in data-[state='false']:fade-out",
-      )}
-      style={menuStyle}
-      onKeyDown={handleKeyDown}
+function DropdownMenuItem({
+  children,
+  disabled = false,
+  className,
+  asChild = false,
+  suffix,
+  prefix,
+  onClick,
+}: MenuItemProps) {
+  return (
+    <Popper.Item
+      disabled={disabled}
+      prefix={prefix}
+      suffix={suffix}
+      asChild={asChild}
+      className={className}
+      onClick={onClick}
     >
       {children}
-    </div>,
-    document.body,
+    </Popper.Item>
   );
-};
+}
 
-const DropdownMenuItem = forwardRef<
-  HTMLDivElement | HTMLAnchorElement,
-  MenuItemProps
->(
-  (
-    {
-      children,
-      onClick,
-      inset = false,
-      href,
-      disabled = false,
-      className,
-      asChild = false,
-      suffix,
-      prefix,
-      shortcut,
-    }: MenuItemProps,
-    forwardRef,
-  ) => {
-    const { handleClose, handleHighlight, isHighlighted } = useDropdownMenu();
-
-    const navigate = useNavigate();
-
-    const ref = useRef<HTMLDivElement | HTMLAnchorElement | null>(null);
-    useImperativeHandle(
-      forwardRef,
-      () => ref.current as HTMLDivElement | HTMLAnchorElement,
-    );
-
-    const handleClick = (event: MouseEvent | KeyboardEvent) => {
-      if (disabled) return;
-      onClick?.(event as React.MouseEvent<HTMLElement>);
-      handleClose();
-    };
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.code === "Enter" || event.code === "Space") {
-        event.preventDefault();
-        if (href) {
-          navigate(href);
-        } else {
-          handleClick(event);
-        }
-      }
-    };
-
-    const commonProps = {
-      tabIndex: -1,
-      ref,
-      role: "menuitem",
-      "data-highlighted":
-        ref.current && isHighlighted(ref.current) && !disabled ? true : null,
-      "data-disabled": disabled ? true : undefined,
-      "aria-disabled": disabled ? true : undefined,
-      "data-dropdownsub":
-        ref.current &&
-        ref.current.closest("[data-dropdownsub='popup']") &&
-        "item",
-      className: cn(
-        "text-foreground flex items-center justify-start rounded-ui-item w-full focus:ring-0 cursor-default transition-colors",
-        "data-[highlighted]:bg-ui-item-background-hover data-[disabled]:text-ui-disabled-foreground data-[disabled]:pointer-events-none data-[disabled]:select-none",
-        {
-          "cursor-pointer": href,
-          "gap-2": prefix,
-          "p-ui-item-inset": inset,
-          "p-ui-item": !inset,
-        },
-        className,
-      ),
-      onClick: handleClick,
-      onMouseEnter: (
-        event: React.MouseEvent<HTMLDivElement | HTMLAnchorElement>,
-      ) => !disabled && handleHighlight(event.currentTarget),
-      onMouseLeave: () => !disabled && handleHighlight(-1),
-      onFocus: (event: React.FocusEvent<HTMLDivElement | HTMLAnchorElement>) =>
-        !disabled && handleHighlight(event.currentTarget),
-      onBlur: () => !disabled && handleHighlight(-1),
-      onKeyDown: handleKeyDown,
-    };
-
-    return asChild && isValidElement(children) ? (
-      cloneElement(children, commonProps)
-    ) : href ? (
-      <Link
-        to={href}
-        {...(commonProps as React.AnchorHTMLAttributes<HTMLAnchorElement>)}
-      >
-        {prefix && <span className="size-4">{prefix}</span>}
-        {children}
-        {(shortcut || suffix) && (
-          <div className="ml-auto flex items-center gap-1">
-            {suffix && <span className="size-4">{suffix}</span>}
-            {shortcut && (
-              <span className="text-xs opacity-60 tracking-widest">
-                {shortcut}
-              </span>
-            )}
-          </div>
-        )}
-      </Link>
-    ) : (
-      <div
-        {...(commonProps as React.HTMLAttributes<HTMLDivElement>)}
-        onClick={handleClick}
-      >
-        {prefix && <span className="size-4">{prefix}</span>}
-        {children}
-        {(shortcut || suffix) && (
-          <div className="ml-auto flex items-center gap-1">
-            {suffix && <span className="size-4">{suffix}</span>}
-            {shortcut && (
-              <span className="text-xs opacity-60 tracking-widest">
-                {shortcut}
-              </span>
-            )}
-          </div>
-        )}
-      </div>
-    );
-  },
-);
-
-// export default function DropdownMenu({ children }: { children: ReactNode }) {
-//   return <Popper menuType="dropdown">{children}</Popper>;
-// }
-//
-// function DropdownMenuTrigger(props: MenuTriggerProps) {
-//   return <Popper.Trigger {...props}>{props.children}</Popper.Trigger>;
-// }
-//
-// function DropdownMenuContent({ children }: { children: ReactNode }) {
-//   return <Popper.Wrapper align="center">{children}</Popper.Wrapper>;
-// }
-//
-// function DropdownMenuItem(props: MenuItemProps) {
-//   return <Popper.Item {...props}>{props.children}</Popper.Item>;
-// }
-
-DropdownMenu.Trigger = DropdownMenuTrigger;
-DropdownMenu.Item = DropdownMenuItem;
-DropdownMenu.Separator = Primitive.Separator;
 DropdownMenu.Group = Primitive.Group;
 DropdownMenu.Label = Primitive.Label;
+DropdownMenu.Separator = Primitive.Separator;
+DropdownMenu.Trigger = DropdownMenuTrigger;
+DropdownMenu.Item = DropdownMenuItem;
 DropdownMenu.Content = DropdownMenuContent;

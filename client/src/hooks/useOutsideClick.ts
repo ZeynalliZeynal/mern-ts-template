@@ -7,11 +7,7 @@ export const useOutsideClick = (
 ) => {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        ref.current &&
-        !ref.current.contains(event.target as Node) &&
-        !(event.target as HTMLElement).closest(`[data-combobox="popup"]`)
-      ) {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
         cb(event);
       }
     };
@@ -20,5 +16,5 @@ export const useOutsideClick = (
     return () => {
       document.removeEventListener("mousedown", handleClickOutside, phase);
     };
-  }, [ref, cb]);
+  }, [cb, phase, ref]);
 };

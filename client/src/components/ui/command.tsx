@@ -14,7 +14,7 @@ import { IoIosSearch } from "react-icons/io";
 import Primitive, {
   PrimitiveItemProps,
   usePrimitiveContext,
-} from "@/components/ui/primitives.tsx";
+} from "@/components/ui/primitves/primitives.tsx";
 import { useOutsideClick } from "@/hooks/useOutsideClick.ts";
 
 type CommandContextType = {

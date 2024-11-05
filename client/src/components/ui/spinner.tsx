@@ -1,13 +1,6 @@
-import { clsx } from "clsx";
-
-const Spinner = ({ size = "sm" }: { size?: "sm" | "md" }) => {
+const Spinner = ({ size = 16 }: { size?: number }) => {
   return (
-    <div
-      className={clsx("relative", {
-        "size-5": size === "sm",
-        "size-8": size === "md",
-      })}
-    >
+    <div className="relative" style={{ width: size, height: size }}>
       <div className="size-full absolute top-1/2 left-1/2">
         <div
           className="h-[8%] w-[24%] absolute -left-[10%] -top-[3.9%] rounded-md bg-gray-700 animate-spinner"

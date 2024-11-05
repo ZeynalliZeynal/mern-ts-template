@@ -2,22 +2,12 @@ import { ReactNode } from "react";
 import { MenuItemProps, MenuTriggerProps } from "@/components/ui/types.ts";
 import Popper, {
   AlignWrapperProps,
-} from "@/components/ui/popper-primitives.tsx";
+} from "@/components/ui/primitves/popper-primitives.tsx";
 import { cn } from "@/lib/utils.ts";
-import Primitive from "@/components/ui/primitives.tsx";
+import Primitive from "@/components/ui/primitves/primitives.tsx";
 
-export default function Popover({
-  children,
-  defaultValue,
-}: {
-  children: ReactNode;
-  defaultValue?: string;
-}) {
-  return (
-    <Popper menuType="popover" defaultValue={defaultValue}>
-      {children}
-    </Popper>
-  );
+export default function Popover({ children }: { children: ReactNode }) {
+  return <Popper menuType="popover">{children}</Popper>;
 }
 
 function PopoverTrigger({

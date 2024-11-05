@@ -1,23 +1,19 @@
 import Stack from "@/components/ui/stack.tsx";
-import ContextMenu from "@/components/ui/context-menu/context-menu.tsx";
-import { ArrowUpRight } from "lucide-react";
-import ContextMenuSub from "@/components/ui/context-menu/context-menu-sub.tsx";
-import { MdOutlineAccountCircle } from "react-icons/md";
-import {
-  IoBookmarksOutline,
-  IoReload,
-  IoReturnDownBackOutline,
-  IoReturnDownForwardOutline,
-  IoSettingsOutline,
-} from "react-icons/io5";
-import { AiOutlineProduct } from "react-icons/ai";
-import { SiBurgerking } from "react-icons/si";
-import { toast } from "sonner";
+import ContextMenu from "@/components/ui/context-menu/context-menu-v2.tsx";
 
 export default function ContextDemo() {
   return (
     <>
       <Stack>
+        <ContextMenu>
+          <ContextMenu.Trigger>
+            <div className="min-w-72 min-h-32 flex items-center justify-center text-gray-800 rounded-ui-content border border-dashed">
+              Right click here
+            </div>
+          </ContextMenu.Trigger>
+          <ContextMenu.Content>test</ContextMenu.Content>
+        </ContextMenu>
+        {/*
         <ContextMenu>
           <ContextMenu.Trigger>
             <div
@@ -174,6 +170,7 @@ export default function ContextDemo() {
             <ContextMenu.Item>Test</ContextMenu.Item>
           </ContextMenu.Content>
         </ContextMenu>
+        */}
       </Stack>
     </>
   );

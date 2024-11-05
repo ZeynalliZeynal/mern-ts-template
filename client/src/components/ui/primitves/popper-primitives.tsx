@@ -9,6 +9,7 @@ import React, {
   MouseEventHandler,
   ReactNode,
   SetStateAction,
+  useCallback,
   useContext,
   useEffect,
   useImperativeHandle,
@@ -25,7 +26,7 @@ import Primitive, {
   MenuTypes,
   PrimitiveItemProps,
   usePrimitiveContext,
-} from "@/components/ui/primitives.tsx";
+} from "@/components/ui/primitves/primitives.tsx";
 import Button from "@/components/ui/button.tsx";
 import {
   ANIMATION_DURATION,
@@ -136,7 +137,6 @@ function PopperWrapper({
   children,
   align = "center",
   className,
-  asChild,
   ...etc
 }: PopperWrapperProps) {
   const { open, triggerPosition, menuType, animate, closePopper } =
@@ -146,7 +146,7 @@ function PopperWrapper({
 
   const ref = useRef<HTMLDivElement | null>(null);
 
-  function updateMenuPosition() {
+  const updateMenuPosition = React.useCallback(() => {
     if (!ref.current || !open || !triggerPosition || menuType === "dialog")
       return;
 
@@ -176,7 +176,7 @@ function PopperWrapper({
         : undefined,
       left,
     });
-  }
+  }, [align, menuType, open, triggerPosition]);
 
   function handleKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
     if (!ref.current) return;
@@ -190,21 +190,12 @@ function PopperWrapper({
 
   useOutsideClick(ref, closePopper);
 
-  useEffect(() => {
-    if (!open || !ref.current) return;
-    ref.current.focus();
-  }, [open]);
-
   useResize(open, updateMenuPosition, triggerPosition);
 
   useEffect(() => {
     if (!ref.current) return;
-    if (menuType === "popover") {
-      const firstItem = ref.current.querySelector(
-        "[primitive-collection-item]",
-      );
-      highlightItem(firstItem as HTMLElement);
-    }
+    const firstItem = ref.current.querySelector("[primitive-collection-item]");
+    highlightItem(firstItem as HTMLElement);
   }, [open]);
 
   if (!open || !triggerPosition) return null;
@@ -249,10 +240,13 @@ const PopperTrigger = forwardRef<HTMLElement, MenuTriggerProps>(
       openPopper(event.currentTarget);
     };
 
-    useResize(open, () => {
-      if (!ref.current) return;
-      setTriggerPosition(ref.current.getBoundingClientRect());
-    });
+    useResize(
+      open,
+      useCallback(() => {
+        if (!ref.current) return;
+        setTriggerPosition(ref.current.getBoundingClientRect());
+      }, [setTriggerPosition]),
+    );
 
     const commonAttributes = {
       ref,
@@ -332,10 +326,25 @@ const PopperItem = forwardRef<HTMLDivElement, PopperItemProps>(
     const ref = useRef<HTMLDivElement | null>(null);
     useImperativeHandle(forwardRef, () => ref.current as HTMLDivElement);
 
-    const clickAction = () => {
+    const handleClick: MouseEventHandler<HTMLDivElement> = (event) => {
       if (disabled) return false;
-
-      if (onSelect && value) {
+      event.preventDefault();
+      if (onClick) {
+        const result = onClick(event);
+        if (result instanceof Promise) {
+          console.log(true);
+          result
+            .then(() => {
+              closePopper();
+            })
+            .catch((error) => {
+              console.error("Error in onClick handler:", error);
+            });
+        } else {
+          closePopper();
+        }
+      } else closePopper();
+      if (onSelect && value && !onClick) {
         if (selectedValue !== value) {
           onSelect(value);
           selectValue(value);
@@ -343,14 +352,7 @@ const PopperItem = forwardRef<HTMLDivElement, PopperItemProps>(
           onSelect("");
           selectValue("");
         }
-        closePopper();
       }
-    };
-
-    const handleClick: MouseEventHandler<HTMLDivElement> = (event) => {
-      event.preventDefault();
-      clickAction();
-      onClick?.(event);
     };
 
     const popoverAttributes = {
@@ -369,7 +371,7 @@ const PopperItem = forwardRef<HTMLDivElement, PopperItemProps>(
         asChild={asChild}
         inset={inset}
         shortcut={shortcut}
-        onClick={handleClick}
+        onClick={handleClick as MouseEventHandler}
         {...(menuType === "popover" && popoverAttributes)}
       >
         {children}

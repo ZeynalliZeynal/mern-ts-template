@@ -30,7 +30,9 @@ export default function DialogDemo() {
     <>
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <Dialog.Overlay />
-        <Dialog.Trigger suffix={<FaCookieBite />}>Cookies</Dialog.Trigger>
+        <Dialog.Trigger suffix={<FaCookieBite size={12} />}>
+          Cookies
+        </Dialog.Trigger>
         <Dialog.Content className="max-w-xl">
           <Dialog.Close className="absolute p-1 top-4 right-4 text-foreground rounded-md">
             <IoClose aria-hidden="true" size={16} />
@@ -54,7 +56,7 @@ export default function DialogDemo() {
                 {/*  </span>*/}
                 {/*</button>*/}
                 <Button
-                  suffix={<PiCaretUpDownBold className="opacity-60" />}
+                  suffix={<PiCaretUpDownBold className="opacity-60 size-3" />}
                   primary
                 >
                   {initialValue?.label}

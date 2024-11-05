@@ -41,7 +41,7 @@ type PrimitiveContextProps = {
 
 export type PrimitiveItemProps = {
   children: ReactNode | ReactElement;
-  onClick?: MouseEventHandler<HTMLDivElement>;
+  onClick?: (event: React.MouseEvent<HTMLElement>) => void | Promise<void>;
   asChild?: boolean;
   disabled?: boolean;
   className?: string;
@@ -200,11 +200,11 @@ const PrimitiveItem = forwardRef<HTMLDivElement, PrimitiveItemProps>(
           className,
         )}
       >
-        {prefix && <span className="size-4">{prefix}</span>}
+        {prefix}
         {children}
         {(shortcut || suffix) && (
           <div className="ml-auto flex items-center gap-1">
-            {suffix && <span className="size-4">{suffix}</span>}
+            {suffix}
             {shortcut && (
               <span className="text-xs opacity-60 tracking-widest">
                 {shortcut}

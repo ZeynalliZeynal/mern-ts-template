@@ -61,7 +61,7 @@ export default function ThemeSwitcher({ size = 32 }: { size?: number }) {
           role="radio"
           aria-checked={theme === themeOption}
           className={cn(
-            "inline-flex items-center justify-center hover:text-foreground transition relative z-[1] rounded-full focus:ring-0",
+            "inline-flex items-center justify-center hover:text-foreground transition relative z-[1] rounded-full",
             {
               "text-foreground": theme === themeOption,
             },

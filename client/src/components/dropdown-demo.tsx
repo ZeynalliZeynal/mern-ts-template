@@ -6,20 +6,18 @@ import {
   LuGithub,
   LuKeyboard,
   LuLogOut,
-  LuMail,
-  LuMessageSquare,
   LuPlus,
-  LuPlusCircle,
   LuSettings,
   LuUser,
-  LuUserPlus,
   LuUsers,
 } from "react-icons/lu";
-import DropdownMenuSub from "@/components/ui/dropdown-menu/dropdown-menu-sub.tsx";
 import { HiOutlineSupport } from "react-icons/hi";
 import { QuestionMarkCircledIcon } from "@radix-ui/react-icons";
+import { useState } from "react";
+import Spinner from "@/components/ui/spinner.tsx";
 
 export default function DropdownDemo() {
+  const [isPending, setIsPending] = useState(false);
   return (
     <Stack>
       <DropdownMenu>
@@ -46,27 +44,6 @@ export default function DropdownDemo() {
             <DropdownMenu.Item prefix={<LuUsers />} shortcut="⇧⌘P">
               Team
             </DropdownMenu.Item>
-            <DropdownMenuSub>
-              <DropdownMenuSub.Trigger prefix={<LuUserPlus />}>
-                Invite users
-              </DropdownMenuSub.Trigger>
-              <DropdownMenuSub.Content>
-                <DropdownMenu.Group>
-                  <DropdownMenu.Item prefix={<LuMail />}>
-                    Email
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Item prefix={<LuMessageSquare />}>
-                    Message
-                  </DropdownMenu.Item>
-                </DropdownMenu.Group>
-                <DropdownMenu.Separator />
-                <DropdownMenu.Group>
-                  <DropdownMenu.Item prefix={<LuPlusCircle />}>
-                    More...
-                  </DropdownMenu.Item>
-                </DropdownMenu.Group>
-              </DropdownMenuSub.Content>
-            </DropdownMenuSub>
             <DropdownMenu.Item prefix={<LuPlus />} shortcut="⌘T">
               New team
             </DropdownMenu.Item>
@@ -83,7 +60,17 @@ export default function DropdownDemo() {
           </DropdownMenu.Group>
           <DropdownMenu.Separator />
           <DropdownMenu.Group>
-            <DropdownMenu.Item prefix={<LuLogOut />}>Log out</DropdownMenu.Item>
+            <DropdownMenu.Item
+              prefix={<LuLogOut />}
+              suffix={isPending ? <Spinner /> : null}
+              onClick={async () => {
+                setIsPending(true);
+                await new Promise((resolve) => setTimeout(resolve, 1000));
+                setIsPending(false);
+              }}
+            >
+              Log out
+            </DropdownMenu.Item>
           </DropdownMenu.Group>
         </DropdownMenu.Content>
       </DropdownMenu>

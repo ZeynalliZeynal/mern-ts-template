@@ -16,5 +16,5 @@ export const useResize = (
       window.removeEventListener("resize", callback);
       window.removeEventListener("scroll", callback);
     };
-  }, [condition, position]);
+  }, [callback, condition, position]);
 };
