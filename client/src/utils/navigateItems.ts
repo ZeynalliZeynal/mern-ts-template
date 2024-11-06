@@ -14,7 +14,7 @@ export const navigateItems = ({
   root: HTMLElement | null;
   close: () => void;
   currentItemIndex?: number;
-  highlightItem: (value: HTMLElement | number) => void;
+  highlightItem: (value: HTMLElement | undefined) => void;
   itemSelector: string;
   setCurrentItemIndex: (value: number | undefined) => void;
   loop?: boolean;
@@ -64,6 +64,6 @@ export const navigateItems = ({
     }
 
     setCurrentItemIndex(nextIndex);
-    highlightItem(menuItems[nextIndex] as HTMLElement);
+    highlightItem((menuItems[nextIndex] as HTMLElement) || undefined);
   }
 };

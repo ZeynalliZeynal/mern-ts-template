@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { POPPER_SUB_CONTENT_SELECTOR } from "@/components/ui/context-menu/context-menu-sub-v2.tsx";
 
 export const useOutsideClick = ({
   onTrigger,
@@ -11,7 +12,11 @@ export const useOutsideClick = ({
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (ref.current && !ref.current.contains(event.target as Node)) {
+      if (
+        ref.current &&
+        !ref.current.contains(event.target as Node) &&
+        !(event.target as HTMLElement).closest(POPPER_SUB_CONTENT_SELECTOR)
+      ) {
         onTrigger();
       }
     };

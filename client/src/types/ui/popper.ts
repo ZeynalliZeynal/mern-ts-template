@@ -20,7 +20,7 @@ type PopperContextProps = {
   triggerPosition?: DOMRect;
   setTriggerPosition: Dispatch<SetStateAction<DOMRect | undefined>>;
   animate: boolean;
-  highlightItem: (value: HTMLElement | number) => void;
+  highlightItem: (value: HTMLElement | undefined) => void;
   isHighlighted: (currentElement: HTMLElement) => boolean;
   currentItemIndex: number | undefined;
   setCurrentItemIndex: Dispatch<SetStateAction<number | undefined>>;
@@ -42,6 +42,9 @@ type PopperItemProps = {
   inset?: boolean;
   href?: string;
   shortcut?: ReactNode;
+  onMouseEnter?: React.MouseEventHandler<HTMLElement>;
+  onMouseLeave?: React.MouseEventHandler<HTMLElement>;
+  onKeyDown?: React.KeyboardEventHandler<HTMLElement>;
 };
 
 export type {

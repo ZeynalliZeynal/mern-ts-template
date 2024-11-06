@@ -12,12 +12,14 @@ import {
   PopperContextProps,
   PopperItemProps,
 } from "@/types/ui/popper.ts";
-import { POPPER_SUB_CONTENT_MENU_SELECTOR } from "@/components/ui/context-menu/context-menu-sub-v2.tsx";
+import {
+  POPPER_SUB_CONTENT_SELECTOR,
+  POPPER_SUB_ITEM_SELECTOR,
+} from "@/components/ui/context-menu/context-menu-sub-v2.tsx";
 
 const POPPER_TRIGGER_SELECTOR = "[popper-trigger]";
-const POPPER_CONTENT_SELECTOR = "[popper-content]";
 
-const POPPER_CONTENT_MENU_SELECTOR = "[popper-content-menu]";
+const POPPER_CONTENT_SELECTOR = "[popper-content-menu]";
 const POPPER_ITEM_SELECTOR = "[popper-content-item]:not([data-disabled])";
 
 const PopperContext = React.createContext<PopperContextProps | null>(null);
@@ -42,9 +44,9 @@ const ContextMenu = ({ children }: { children: React.ReactNode }) => {
   >(undefined);
   const [currentItemIndex, setCurrentItemIndex] = React.useState<
     number | undefined
-  >(undefined);
-  const [highlightedIndex, setHighlightedIndex] = React.useState<
-    number | undefined
+  >(0);
+  const [highlightedItem, setHighlightedItem] = React.useState<
+    HTMLElement | undefined
   >(undefined);
 
   const openPopper = (event: React.MouseEvent<HTMLElement>) => {
@@ -70,35 +72,29 @@ const ContextMenu = ({ children }: { children: React.ReactNode }) => {
       ) as HTMLElement[];
       const triggered = triggers.indexOf(activeTrigger as HTMLElement);
       triggers[triggered].focus();
-      setHighlightedIndex(undefined);
+      setHighlightedItem(undefined);
+      setPosition(undefined);
     }, 50);
     setActiveTrigger(undefined);
   };
 
-  const findMenuItem = React.useCallback((currentElement: HTMLElement) => {
-    const root = currentElement.closest(POPPER_CONTENT_MENU_SELECTOR);
+  const highlightItem = React.useCallback((value: HTMLElement | undefined) => {
+    if (!value) return;
+    setHighlightedItem(value);
+    const root =
+      value.closest(POPPER_CONTENT_SELECTOR) ||
+      value.closest(POPPER_SUB_CONTENT_SELECTOR);
     if (!root) return;
-
-    const menuItems = Array.from(root.querySelectorAll(POPPER_ITEM_SELECTOR));
-
-    return menuItems.indexOf(currentElement);
+    const menuItems = Array.from(
+      root.querySelectorAll(POPPER_ITEM_SELECTOR) ||
+        root.querySelectorAll(POPPER_SUB_ITEM_SELECTOR),
+    );
+    setCurrentItemIndex(menuItems.indexOf(value));
+    value?.focus();
   }, []);
 
-  const highlightItem = React.useCallback(
-    (value: HTMLElement | number) => {
-      if (typeof value === "number") setHighlightedIndex(value);
-      else {
-        const currentIndex = findMenuItem(value);
-        setCurrentItemIndex(currentIndex);
-        setHighlightedIndex(currentIndex);
-        value?.focus();
-      }
-    },
-    [findMenuItem],
-  );
-
   const isHighlighted = (currentElement: HTMLElement) =>
-    highlightedIndex === findMenuItem(currentElement);
+    highlightedItem === currentElement;
 
   useRestrictBody(open);
 
@@ -194,6 +190,7 @@ const ContextMenuContent = ({ children, className }: PopperContentProps) => {
   const ref = useOutsideClick({ onTrigger: closePopper });
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
+    if (document.querySelector(POPPER_SUB_CONTENT_SELECTOR)) return;
     navigateItems({
       event,
       close: closePopper,
@@ -220,9 +217,9 @@ const ContextMenuContent = ({ children, className }: PopperContentProps) => {
       highlightItem(
         ref.current.querySelector(POPPER_ITEM_SELECTOR) as HTMLElement,
       );
-      console.log(ref.current.querySelectorAll(POPPER_ITEM_SELECTOR));
+      setCurrentItemIndex(0);
     }
-  }, [highlightItem, open, ref]);
+  }, [highlightItem, open, ref, setCurrentItemIndex]);
 
   useResize(open, handleResize);
 
@@ -238,7 +235,7 @@ const ContextMenuContent = ({ children, className }: PopperContentProps) => {
         data-state={!animate ? "open" : "closed"}
         className={cn(
           "bg-ui-background rounded-ui-content min-w-52 p-ui-content border fixed z-50 pointer-events-auto focus:ring-0",
-          "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+          "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in data-[state=closed]:fade-out data-[state=closed]:zoom-out data-[state=open]:zoom-in",
           className,
         )}
         style={{ ...style, animationDuration: ANIMATION_DURATION + "ms" }}
@@ -262,6 +259,10 @@ const ContextMenuItem = React.forwardRef<HTMLElement, PopperItemProps>(
       href,
       disabled,
       shortcut,
+      onMouseEnter,
+      onMouseLeave,
+      onKeyDown,
+      ...etc
     },
     forwardRef,
   ) => {
@@ -272,11 +273,17 @@ const ContextMenuItem = React.forwardRef<HTMLElement, PopperItemProps>(
     const handleMouseEnter = (event: React.MouseEvent<HTMLElement>) => {
       event.preventDefault();
       highlightItem(event.currentTarget);
+      onMouseEnter?.(event);
     };
 
     const handleMouseLeave = (event: React.MouseEvent<HTMLElement>) => {
       event.preventDefault();
       // highlightItem(event.currentTarget);
+      onMouseLeave?.(event);
+    };
+
+    const handleKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
+      onKeyDown?.(event);
     };
 
     const attributes = {
@@ -285,7 +292,7 @@ const ContextMenuItem = React.forwardRef<HTMLElement, PopperItemProps>(
       role: "menuitem",
       "popper-content-item": "",
       "popper-content-sub-item":
-        ref.current && ref.current.closest(POPPER_SUB_CONTENT_MENU_SELECTOR)
+        ref.current && ref.current.closest(POPPER_SUB_CONTENT_SELECTOR)
           ? ""
           : undefined,
       "aria-disabled": disabled,
@@ -294,6 +301,8 @@ const ContextMenuItem = React.forwardRef<HTMLElement, PopperItemProps>(
         ref.current && isHighlighted(ref.current) ? "" : undefined,
       onMouseEnter: handleMouseEnter,
       onMouseLeave: handleMouseLeave,
+      onKeyDown: handleKeyDown,
+      ...etc,
     };
 
     return asChild && React.isValidElement(children) ? (

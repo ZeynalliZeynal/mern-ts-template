@@ -22,6 +22,13 @@ export default function ContextDemo() {
                 <ContextMenu.Item inset>Remove friend</ContextMenu.Item>
               </ContextMenuSub.Content>
             </ContextMenuSub>
+            <ContextMenuSub>
+              <ContextMenuSub.Trigger inset>More tools</ContextMenuSub.Trigger>
+              <ContextMenuSub.Content>
+                <ContextMenu.Item inset>Add friend</ContextMenu.Item>
+                <ContextMenu.Item inset>Remove friend</ContextMenu.Item>
+              </ContextMenuSub.Content>
+            </ContextMenuSub>
             <ContextMenu.Item inset shortcut="⌘]">
               Reload
             </ContextMenu.Item>
