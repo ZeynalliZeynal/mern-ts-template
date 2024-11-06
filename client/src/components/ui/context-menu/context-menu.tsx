@@ -1,359 +1,323 @@
-import React, {
-  cloneElement,
-  createContext,
-  CSSProperties,
-  Dispatch,
-  forwardRef,
-  isValidElement,
-  KeyboardEvent,
-  MouseEvent,
-  MouseEventHandler,
-  ReactNode,
-  SetStateAction,
-  useContext,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-  useState,
-} from "react";
+import React from "react";
+import { cn } from "@/lib/utils.ts";
 import { createPortal } from "react-dom";
 import { useOutsideClick } from "@/hooks/useOutsideClick.ts";
-import { cn } from "@/lib/utils.ts";
-import { Link, useNavigate } from "react-router-dom";
-import { navigateItems } from "@/utils/navigateItems.ts";
-import { MenuContextProps, MenuItemProps } from "@/components/ui/types.ts";
+import { useResize } from "@/hooks/useResize.ts";
 import { useRestrictBody } from "@/hooks/useRestrictBody.ts";
+import { ANIMATION_DURATION } from "@/components/ui/parameters.ts";
+import { navigateItems } from "@/utils/navigateItems.ts";
+import {
+  ClientPosition,
+  PopperContentProps,
+  PopperContextProps,
+  PopperItemProps,
+} from "@/types/ui/popper.ts";
+import { POPPER_SUB_CONTENT_MENU_SELECTOR } from "@/components/ui/context-menu/context-menu-sub-v2.tsx";
 
-const ContextMenuContext = createContext<
-  | ({
-      handleOpen: (event: MouseEvent) => void;
-      clientPosition: { clientX: number; clientY: number } | null;
-      setClientPosition: Dispatch<
-        SetStateAction<{ clientX: number; clientY: number } | null>
-      >;
-    } & MenuContextProps)
-  | null
->(null);
+const POPPER_TRIGGER_SELECTOR = "[popper-trigger]";
+const POPPER_CONTENT_SELECTOR = "[popper-content]";
 
-export const useContextMenu = () => {
-  const context = useContext(ContextMenuContext);
-  if (!context) throw new Error("Context is outside of the provider");
+const POPPER_CONTENT_MENU_SELECTOR = "[popper-content-menu]";
+const POPPER_ITEM_SELECTOR = "[popper-content-item]:not([data-disabled])";
+
+const PopperContext = React.createContext<PopperContextProps | null>(null);
+
+export const usePopper = () => {
+  const context = React.useContext(PopperContext);
+  if (!context) {
+    throw new Error("usePopper must be used within a PopperContext.Provider");
+  }
   return context;
 };
 
-export default function ContextMenu({ children }: { children: ReactNode }) {
-  const [open, setOpen] = useState(false);
-  const [highlighted, setHighlighted] = useState<number | undefined>(-1);
-  const [currentMenuItem, setCurrentMenuItem] = useState<number | undefined>(
-    undefined,
-  );
-  const [activeTrigger, setActiveTrigger] = useState<HTMLElement | null>(null);
-  const [clientPosition, setClientPosition] = useState<{
-    clientX: number;
-    clientY: number;
-  } | null>(null);
+const ContextMenu = ({ children }: { children: React.ReactNode }) => {
+  const [open, setOpen] = React.useState<boolean>(false);
+  const [triggerPosition, setTriggerPosition] = React.useState<
+    DOMRect | undefined
+  >(undefined);
+  const [animate, setAnimate] = React.useState<boolean>(false);
+  const [position, setPosition] = React.useState<ClientPosition>(undefined);
+  const [activeTrigger, setActiveTrigger] = React.useState<
+    HTMLElement | undefined
+  >(undefined);
+  const [currentItemIndex, setCurrentItemIndex] = React.useState<
+    number | undefined
+  >(undefined);
+  const [highlightedIndex, setHighlightedIndex] = React.useState<
+    number | undefined
+  >(undefined);
 
-  const [animate, setAnimate] = useState(false);
-
-  const handleOpen = (event: MouseEvent) => {
+  const openPopper = (event: React.MouseEvent<HTMLElement>) => {
     const { clientX, clientY } = event;
-    setClientPosition({ clientX, clientY });
-    setActiveTrigger(event.currentTarget as HTMLElement);
+    const rect = event.currentTarget.getBoundingClientRect();
+    if (!rect) return;
+    const left = Math.abs(clientX - rect.left);
+    const top = Math.abs(clientY - rect.top);
     setAnimate(false);
     setOpen(true);
+    setPosition({ left, top });
+    setActiveTrigger(event.currentTarget);
   };
 
-  const handleClose = () => {
+  const closePopper = () => {
     setAnimate(true);
     setTimeout(() => {
       setOpen(false);
       setAnimate(false);
 
       const triggers = Array.from(
-        document.querySelectorAll('[data-context="trigger"]'),
+        document.querySelectorAll(POPPER_TRIGGER_SELECTOR),
       ) as HTMLElement[];
-      const findActive = triggers.indexOf(activeTrigger as HTMLElement);
-      triggers[findActive].focus();
+      const triggered = triggers.indexOf(activeTrigger as HTMLElement);
+      triggers[triggered].focus();
+      setHighlightedIndex(undefined);
     }, 50);
-    setCurrentMenuItem(undefined);
+    setActiveTrigger(undefined);
   };
 
-  const findMenuItem = (currentElement: HTMLElement) => {
-    const root = currentElement.closest("[role='menu']");
+  const findMenuItem = React.useCallback((currentElement: HTMLElement) => {
+    const root = currentElement.closest(POPPER_CONTENT_MENU_SELECTOR);
     if (!root) return;
 
-    const menuItems = Array.from(
-      root.querySelectorAll("[role='menuitem']:not([data-disabled])"),
-    );
+    const menuItems = Array.from(root.querySelectorAll(POPPER_ITEM_SELECTOR));
 
     return menuItems.indexOf(currentElement);
-  };
-
-  const handleHighlight = (value: HTMLElement | number) => {
-    if (typeof value === "number") setHighlighted(value);
-    else {
-      const currentIndex = findMenuItem(value);
-      setCurrentMenuItem(currentIndex);
-      setHighlighted(currentIndex);
-      value.focus();
-    }
-  };
-
-  const isHighlighted = (currentElement: HTMLElement) =>
-    highlighted === findMenuItem(currentElement);
-
-  useRestrictBody(open);
-  useEffect(() => {
-    if (open) {
-      (document.querySelector('[role="menu"]') as HTMLElement).focus();
-    }
-  }, [open]);
-
-  useEffect(() => {
-    const closeOnResize = () => setOpen(false);
-
-    window.addEventListener("resize", closeOnResize);
-    return () => window.removeEventListener("resize", closeOnResize);
   }, []);
 
+  const highlightItem = React.useCallback(
+    (value: HTMLElement | number) => {
+      if (typeof value === "number") setHighlightedIndex(value);
+      else {
+        const currentIndex = findMenuItem(value);
+        setCurrentItemIndex(currentIndex);
+        setHighlightedIndex(currentIndex);
+        value?.focus();
+      }
+    },
+    [findMenuItem],
+  );
+
+  const isHighlighted = (currentElement: HTMLElement) =>
+    highlightedIndex === findMenuItem(currentElement);
+
+  useRestrictBody(open);
+
   return (
-    <ContextMenuContext.Provider
+    <PopperContext.Provider
       value={{
         open,
-        handleOpen,
-        handleClose,
-        clientPosition,
-        setClientPosition,
+        openPopper,
+        closePopper,
+        position,
+        triggerPosition,
+        setTriggerPosition,
         animate,
+        highlightItem,
         isHighlighted,
-        handleHighlight,
-        currentMenuItem,
-        setCurrentMenuItem,
+        currentItemIndex,
+        setCurrentItemIndex,
       }}
     >
       {children}
-    </ContextMenuContext.Provider>
+    </PopperContext.Provider>
   );
-}
+};
 
-const ContextMenuTrigger = ({ children }: { children: ReactNode }) => {
-  const { handleOpen, open } = useContextMenu();
+const ContextMenuTrigger = React.forwardRef<
+  HTMLElement,
+  { children: React.ReactNode; className?: string; asChild?: boolean }
+>(({ children, className = undefined, asChild }, forwardRef) => {
+  const { open, openPopper, setTriggerPosition } = usePopper();
 
-  const handleContextMenu: MouseEventHandler<HTMLDivElement> = (event) => {
-    event.preventDefault();
-    if (open) {
-      setTimeout(() => {
-        handleOpen(event);
-      }, 50);
-    } else {
-      handleOpen(event);
+  const ref = React.useRef<HTMLElement | null>(null);
+  React.useImperativeHandle(forwardRef, () => ref.current as HTMLElement);
+
+  const updatePosition = React.useCallback(() => {
+    if (ref.current) {
+      setTriggerPosition(ref.current.getBoundingClientRect());
     }
+  }, [setTriggerPosition]);
+
+  useResize(open, updatePosition);
+
+  const handleContextMenu: React.MouseEventHandler<HTMLDivElement> =
+    React.useCallback(
+      (event) => {
+        event.preventDefault();
+        if (open) {
+          setTimeout(() => {
+            openPopper(event);
+          }, 50);
+        } else openPopper(event);
+      },
+      [open, openPopper],
+    );
+
+  const attributes = {
+    tabIndex: 0,
+    ref,
+    "popper-trigger": "",
+    "aria-expanded": open,
+    "data-state": open ? "open" : "closed",
+    className: cn("select-none pointer-events-auto", className),
+    onContextMenu: handleContextMenu,
   };
 
-  return (
+  return asChild && React.isValidElement(children) ? (
+    React.cloneElement(children, attributes)
+  ) : (
     <div
-      tabIndex={0}
-      data-context="trigger"
-      onContextMenu={handleContextMenu}
-      className="select-none pointer-events-auto"
+      {...(attributes as React.HTMLAttributes<HTMLDivElement>)}
+      className={cn(
+        "select-none pointer-events-auto min-w-72 min-h-32 flex items-center justify-center text-gray-800 rounded-ui-content border border-dashed",
+        className,
+      )}
     >
       {children}
     </div>
   );
-};
+});
 
-const ContextMenuContent = ({ children }: { children: ReactNode }) => {
+const ContextMenuContent = ({ children, className }: PopperContentProps) => {
   const {
     open,
-    clientPosition,
-    handleClose,
+    position,
+    closePopper,
+    triggerPosition,
     animate,
-    handleOpen,
-    handleHighlight,
-    currentMenuItem,
-    setCurrentMenuItem,
-  } = useContextMenu();
-  const [menuStyle, setMenuStyle] = useState<CSSProperties | undefined>(
-    undefined,
-  );
+    highlightItem,
+    currentItemIndex,
+    setCurrentItemIndex,
+  } = usePopper();
+  const [style, setStyle] = React.useState<React.CSSProperties>({});
 
-  const ref = useRef<HTMLDivElement | null>(null);
+  const ref = useOutsideClick({ onTrigger: closePopper });
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
-    if (document.querySelector("[data-contextsub='popup']")) return false;
     navigateItems({
       event,
-      itemSelector:
-        '[role="menuitem"]:not([data-disabled]):not([data-contextsub="item"])',
-      currentMenuItem,
-      setCurrentMenuItem,
-      handleClose,
-      handleHighlight,
-      root: (event.target as HTMLElement).closest('[role="menu"]'),
+      close: closePopper,
+      highlightItem,
+      currentItemIndex,
+      setCurrentItemIndex,
+      root: event.currentTarget,
+      itemSelector: `${POPPER_ITEM_SELECTOR}`,
     });
   };
 
-  useOutsideClick(ref, handleClose);
+  const handleResize = React.useCallback(() => {
+    if (position && triggerPosition) {
+      const { left, top } = position;
+      setStyle({
+        left: Math.max(triggerPosition.left + left, 0),
+        top: triggerPosition.top + top,
+      });
+    }
+  }, [position, triggerPosition]);
 
-  useEffect(() => {
-    if (!ref.current || !open || !clientPosition) return;
+  React.useEffect(() => {
+    if (open && ref.current) {
+      highlightItem(
+        ref.current.querySelector(POPPER_ITEM_SELECTOR) as HTMLElement,
+      );
+      console.log(ref.current.querySelectorAll(POPPER_ITEM_SELECTOR));
+    }
+  }, [highlightItem, open, ref]);
 
-    const newMenuStyle = { ...menuStyle };
+  useResize(open, handleResize);
 
-    const isEnoughSpaceBelow =
-      window.innerHeight - clientPosition.clientY > ref.current.clientHeight;
-    const isEnoughSpaceRight =
-      window.innerWidth - clientPosition.clientX > ref.current.clientWidth;
-
-    newMenuStyle.top = isEnoughSpaceBelow ? clientPosition.clientY : undefined;
-    newMenuStyle.bottom = !isEnoughSpaceBelow
-      ? // ? window.innerHeight - clientPosition.clientY
-        16
-      : undefined;
-
-    newMenuStyle.left = isEnoughSpaceRight ? clientPosition.clientX : undefined;
-    newMenuStyle.right = !isEnoughSpaceRight
-      ? // ? window.innerWidth - clientPosition.clientX
-        16
-      : undefined;
-
-    setMenuStyle(newMenuStyle);
-  }, [clientPosition, handleOpen, menuStyle, open]);
-
-  if (!open || !clientPosition) return null;
-
-  return createPortal(
-    <div
-      tabIndex={-1}
-      role="menu"
-      ref={ref}
-      data-context="popup"
-      data-state={!animate}
-      className={cn(
-        "pointer-events-auto rounded-ui-content focus:ring-0 border flex-col p-ui-content min-w-56 fixed z-50 bg-ui-background",
-        "data-[state='true']:animate-in data-[state='false']:animate-out data-[state='true']:zoom-in data-[state='false']:zoom-out data-[state='true']:fade-in data-[state='false']:fade-out",
-      )}
-      style={menuStyle}
-      onKeyDown={handleKeyDown}
-      // onContextMenu={(event) => event.preventDefault()}
-    >
-      {children}
-    </div>,
-    document.body,
-  );
+  if (open && position)
+    return createPortal(
+      <div
+        ref={ref}
+        data-portal=""
+        role="menu"
+        popper-content=""
+        popper-content-menu=""
+        aria-expanded={open}
+        data-state={!animate ? "open" : "closed"}
+        className={cn(
+          "bg-ui-background rounded-ui-content min-w-52 p-ui-content border fixed z-50 pointer-events-auto focus:ring-0",
+          "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+          className,
+        )}
+        style={{ ...style, animationDuration: ANIMATION_DURATION + "ms" }}
+        onKeyDown={handleKeyDown}
+      >
+        {children}
+      </div>,
+      document.body,
+    );
 };
 
-const ContextMenuItem = forwardRef<
-  HTMLDivElement | HTMLAnchorElement,
-  MenuItemProps
->(
+const ContextMenuItem = React.forwardRef<HTMLElement, PopperItemProps>(
   (
     {
       children,
-      onClick,
       className,
-      asChild = false,
-      disabled = false,
-      href,
-      inset = false,
       suffix,
       prefix,
+      asChild,
+      inset,
+      href,
+      disabled,
       shortcut,
-    }: MenuItemProps,
+    },
     forwardRef,
   ) => {
-    const { handleClose, handleHighlight, isHighlighted } = useContextMenu();
+    const { highlightItem, isHighlighted } = usePopper();
+    const ref = React.useRef<HTMLElement | null>(null);
+    React.useImperativeHandle(forwardRef, () => ref.current as HTMLElement);
 
-    const navigate = useNavigate();
-
-    const ref = useRef<HTMLDivElement | HTMLAnchorElement | null>(null);
-    useImperativeHandle(
-      forwardRef,
-      () => ref.current as HTMLDivElement | HTMLAnchorElement,
-    );
-
-    const handleClick = (event: MouseEvent | KeyboardEvent) => {
-      if (disabled) return;
-      onClick?.(event as React.MouseEvent<HTMLElement>);
-      // if (!event.currentTarget.closest('[data-contextsub="popup"]'))
-      handleClose();
+    const handleMouseEnter = (event: React.MouseEvent<HTMLElement>) => {
+      event.preventDefault();
+      highlightItem(event.currentTarget);
     };
 
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.code === "Enter" || event.code === "Space") {
-        event.preventDefault();
-        if (href) {
-          navigate(href);
-        } else {
-          handleClick(event);
-        }
-      }
+    const handleMouseLeave = (event: React.MouseEvent<HTMLElement>) => {
+      event.preventDefault();
+      // highlightItem(event.currentTarget);
     };
 
-    const commonProps = {
-      tabIndex: -1,
+    const attributes = {
       ref,
+      tabIndex: -1,
       role: "menuitem",
+      "popper-content-item": "",
+      "popper-content-sub-item":
+        ref.current && ref.current.closest(POPPER_SUB_CONTENT_MENU_SELECTOR)
+          ? ""
+          : undefined,
+      "aria-disabled": disabled,
+      "data-disabled": disabled,
       "data-highlighted":
-        ref.current && isHighlighted(ref.current) && !disabled ? true : null,
-      "data-disabled": disabled ? true : undefined,
-      "aria-disabled": disabled ? true : undefined,
-      "data-contextsub":
-        ref.current &&
-        ref.current.closest("[data-contextsub='popup']") &&
-        "item",
-      className: cn(
-        "text-foreground flex items-center justify-start rounded-ui-item w-full focus:ring-0 cursor-default",
-        "data-[highlighted]:bg-ui-item-background-hover data-[disabled]:text-ui-disabled-foreground data-[disabled]:pointer-events-none data-[disabled]:select-none",
-        {
-          "cursor-pointer": href,
-          "gap-2": prefix,
-          "p-ui-item-inset": inset,
-          "p-ui-item": !inset,
-        },
-        className,
-      ),
-      onClick: handleClick,
-      onMouseEnter: (
-        event: React.MouseEvent<HTMLDivElement | HTMLAnchorElement>,
-      ) => !disabled && handleHighlight(event.currentTarget),
-      onMouseLeave: () => !disabled && handleHighlight(-1),
-      onFocus: (event: React.FocusEvent<HTMLDivElement | HTMLAnchorElement>) =>
-        !disabled && handleHighlight(event.currentTarget),
-      onBlur: () => !disabled && handleHighlight(-1),
-      onKeyDown: handleKeyDown,
+        ref.current && isHighlighted(ref.current) ? "" : undefined,
+      onMouseEnter: handleMouseEnter,
+      onMouseLeave: handleMouseLeave,
     };
 
-    return asChild && isValidElement(children) ? (
-      cloneElement(children, commonProps)
-    ) : href ? (
-      <Link
-        to={href}
-        {...(commonProps as React.AnchorHTMLAttributes<HTMLAnchorElement>)}
-      >
-        {prefix && <span className="size-4">{prefix}</span>}
-        {children}
-        {(shortcut || suffix) && (
-          <div className="ml-auto flex items-center gap-1">
-            {suffix && <span className="size-4">{suffix}</span>}
-            {shortcut && (
-              <span className="text-xs opacity-60 tracking-widest">
-                {shortcut}
-              </span>
-            )}
-          </div>
-        )}
-      </Link>
+    return asChild && React.isValidElement(children) ? (
+      React.cloneElement(children, attributes)
     ) : (
       <div
-        {...(commonProps as React.HTMLAttributes<HTMLDivElement>)}
-        onClick={handleClick}
+        {...(attributes as React.HTMLAttributes<HTMLDivElement>)}
+        className={cn(
+          "text-foreground flex items-center justify-start rounded-ui-item w-full focus:ring-0 cursor-default transition-colors",
+          "data-[highlighted]:bg-ui-item-background-hover data-[disabled]:text-ui-disabled-foreground data-[disabled]:pointer-events-none data-[disabled]:select-none",
+          {
+            "cursor-pointer": href,
+            "gap-2": prefix,
+            "p-ui-item-inset": inset,
+            "p-ui-item": !inset,
+          },
+          className,
+        )}
       >
-        {prefix && <span className="size-4">{prefix}</span>}
+        {prefix}
         {children}
         {(shortcut || suffix) && (
           <div className="ml-auto flex items-center gap-1">
-            {suffix && <span className="size-4">{suffix}</span>}
+            {suffix}
             {shortcut && (
               <span className="text-xs opacity-60 tracking-widest">
                 {shortcut}
@@ -366,66 +330,7 @@ const ContextMenuItem = forwardRef<
   },
 );
 
-const ContextMenuGroup = ({
-  children,
-  className,
-}: {
-  children: ReactNode;
-  className?: string;
-}) => {
-  return (
-    <div role="group" className={cn(className)}>
-      {children}
-    </div>
-  );
-};
-
-const ContextMenuSeparator = ({ className }: { className?: string }) => {
-  return (
-    <div
-      role="separator"
-      className={cn("h-px -mx-ui-content my-ui-content bg-border", className)}
-    />
-  );
-};
-
-const ContextMenuLabel = ({
-  children,
-  className,
-  inset = false,
-  suffix,
-  prefix,
-}: {
-  children: ReactNode;
-  className?: string;
-  inset?: boolean;
-  prefix?: ReactNode;
-  suffix?: ReactNode;
-}) => {
-  return (
-    <div
-      tabIndex={-1}
-      className={cn(
-        "text-foreground flex items-center w-full select-none",
-        {
-          "justify-between": suffix,
-          "gap-2": prefix,
-          "p-ui-item-inset": inset,
-          "p-ui-item": !inset,
-        },
-        className,
-      )}
-    >
-      {prefix && <span className="size-4">{prefix}</span>}
-      {children}
-      {suffix && <span className="size-4">{suffix}</span>}
-    </div>
-  );
-};
-
 ContextMenu.Trigger = ContextMenuTrigger;
-ContextMenu.Label = ContextMenuLabel;
 ContextMenu.Item = ContextMenuItem;
-ContextMenu.Separator = ContextMenuSeparator;
-ContextMenu.Group = ContextMenuGroup;
 ContextMenu.Content = ContextMenuContent;
+export default ContextMenu;

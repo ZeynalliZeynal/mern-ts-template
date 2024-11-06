@@ -144,7 +144,7 @@ function PopperWrapper({
   const { highlightItem } = usePrimitiveContext();
   const [style, setStyle] = useState<CSSProperties>({});
 
-  const ref = useRef<HTMLDivElement | null>(null);
+  const ref = useOutsideClick({ onTrigger: closePopper });
 
   const updateMenuPosition = React.useCallback(() => {
     if (!ref.current || !open || !triggerPosition || menuType === "dialog")
@@ -188,9 +188,7 @@ function PopperWrapper({
     }
   }
 
-  useOutsideClick(ref, closePopper);
-
-  useResize(open, updateMenuPosition, triggerPosition);
+  useResize(open, updateMenuPosition);
 
   useEffect(() => {
     if (!ref.current) return;
@@ -332,7 +330,6 @@ const PopperItem = forwardRef<HTMLDivElement, PopperItemProps>(
       if (onClick) {
         const result = onClick(event);
         if (result instanceof Promise) {
-          console.log(true);
           result
             .then(() => {
               closePopper();

@@ -1,20 +1,30 @@
-import { MutableRefObject, useEffect } from "react";
+import { useEffect, useRef } from "react";
 
-export const useOutsideClick = (
-  ref: MutableRefObject<HTMLElement | null>,
-  cb: (event: MouseEvent) => void,
-  phase: boolean = false,
-) => {
+export const useOutsideClick = ({
+  onTrigger,
+  capturePhase = false,
+}: {
+  onTrigger: () => void;
+  capturePhase?: boolean;
+}) => {
+  const ref = useRef<HTMLDivElement | null>(null);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (ref.current && !ref.current.contains(event.target as Node)) {
-        cb(event);
+        onTrigger();
       }
     };
 
-    document.addEventListener("mousedown", handleClickOutside, phase);
+    document.addEventListener("mousedown", handleClickOutside, capturePhase);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside, phase);
+      document.removeEventListener(
+        "mousedown",
+        handleClickOutside,
+        capturePhase,
+      );
     };
-  }, [cb, phase, ref]);
+  }, [onTrigger, capturePhase, ref]);
+
+  return ref;
 };

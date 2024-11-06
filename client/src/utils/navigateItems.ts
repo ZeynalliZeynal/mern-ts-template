@@ -2,25 +2,30 @@ import React from "react";
 
 export const navigateItems = ({
   event,
-  handleClose,
-  currentMenuItem,
-  handleHighlight,
+  close,
+  currentItemIndex,
+  highlightItem,
   root,
   itemSelector,
-  setCurrentMenuItem,
+  setCurrentItemIndex,
+  loop = false,
 }: {
   event: React.KeyboardEvent<HTMLElement>;
   root: HTMLElement | null;
-  handleClose: () => void;
-  currentMenuItem?: number;
-  handleHighlight: (value: HTMLElement | number) => void;
+  close: () => void;
+  currentItemIndex?: number;
+  highlightItem: (value: HTMLElement | number) => void;
   itemSelector: string;
-  setCurrentMenuItem: (value: number | undefined) => void;
+  setCurrentItemIndex: (value: number | undefined) => void;
+  loop?: boolean;
 }) => {
   if (!event.currentTarget || !root) return;
   if (event.code === "Escape") {
     event.preventDefault();
-    handleClose();
+    close();
+  }
+  if (event.code === "Tab") {
+    event.preventDefault();
   }
 
   if (event.code === "ArrowUp" || event.code === "ArrowDown") {
@@ -31,19 +36,34 @@ export const navigateItems = ({
     const menuItems = Array.from(root.querySelectorAll(itemSelector));
 
     let nextIndex: number;
-    if (direction === "next") {
-      nextIndex =
-        currentMenuItem === undefined
-          ? 0
-          : (currentMenuItem + 1) % menuItems.length;
+    if (loop) {
+      if (direction === "next") {
+        nextIndex =
+          currentItemIndex === undefined
+            ? 0
+            : (currentItemIndex + 1) % menuItems.length;
+      } else {
+        nextIndex =
+          currentItemIndex === undefined
+            ? 0
+            : (currentItemIndex - 1 + menuItems.length) % menuItems.length;
+      }
     } else {
-      nextIndex =
-        currentMenuItem === undefined
-          ? 0
-          : (currentMenuItem - 1 + menuItems.length) % menuItems.length;
+      if (direction === "next") {
+        nextIndex =
+          currentItemIndex === undefined ||
+          currentItemIndex === menuItems.length - 1
+            ? menuItems.indexOf(menuItems[menuItems.length - 1])
+            : currentItemIndex + 1;
+      } else {
+        nextIndex =
+          currentItemIndex === undefined || currentItemIndex === 0
+            ? 0
+            : currentItemIndex - 1;
+      }
     }
 
-    setCurrentMenuItem(nextIndex);
-    handleHighlight(menuItems[nextIndex] as HTMLElement);
+    setCurrentItemIndex(nextIndex);
+    highlightItem(menuItems[nextIndex] as HTMLElement);
   }
 };

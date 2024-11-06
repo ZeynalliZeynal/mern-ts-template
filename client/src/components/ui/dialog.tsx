@@ -21,6 +21,7 @@ import { createPortal } from "react-dom";
 import { useOutsideClick } from "@/hooks/useOutsideClick.ts";
 import { useRestrictBody } from "@/hooks/useRestrictBody.ts";
 import { loopThroughFocusableElements } from "@/components/ui/utils.ts";
+import { useFocusFirstElement } from "@/hooks/useFocusFirstElement.ts";
 
 type DialogContextProps = {
   openDialog: (element: HTMLElement) => void;
@@ -72,7 +73,6 @@ export default function Dialog({
       setControlledOpen(false);
       setAnimate(false);
 
-      // console.log(activeTrigger);
       const triggers = Array.from(
         document.querySelectorAll("[dialog-trigger]"),
       ) as HTMLElement[];
@@ -213,7 +213,7 @@ const DialogContent = ({
 }) => {
   const { open, animate, closeDialog } = useDialog();
 
-  const ref = useRef<HTMLDivElement | null>(null);
+  const ref = useOutsideClick({ onTrigger: closeDialog });
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
     if (!ref.current) return;
@@ -224,17 +224,7 @@ const DialogContent = ({
     loopThroughFocusableElements(event);
   };
 
-  useOutsideClick(ref, closeDialog);
-
-  useEffect(() => {
-    if (!open || !ref.current) return;
-    const focusableElements = ref.current.querySelectorAll(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-    );
-    const firstElement = focusableElements[0] as HTMLElement;
-    if (firstElement) firstElement.focus();
-    else ref.current.focus();
-  }, [open]);
+  useFocusFirstElement(open, ref);
 
   if (!open) return;
 

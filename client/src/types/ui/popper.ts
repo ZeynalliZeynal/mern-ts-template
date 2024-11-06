@@ -1,16 +1,29 @@
-import React from "react";
+import React, {
+  Dispatch,
+  ReactElement,
+  ReactNode,
+  SetStateAction,
+} from "react";
 
-type ClientPosition = {
-  clientX: number;
-  clientY: number;
-} | null;
+type ClientPosition =
+  | {
+      left: number;
+      top: number;
+    }
+  | undefined;
 
 type PopperContextProps = {
-  openPopper: (position: ClientPosition) => void;
+  openPopper: (event: React.MouseEvent<HTMLElement>) => void;
   closePopper: () => void;
   open: boolean;
   position?: ClientPosition;
   triggerPosition?: DOMRect;
+  setTriggerPosition: Dispatch<SetStateAction<DOMRect | undefined>>;
+  animate: boolean;
+  highlightItem: (value: HTMLElement | number) => void;
+  isHighlighted: (currentElement: HTMLElement) => boolean;
+  currentItemIndex: number | undefined;
+  setCurrentItemIndex: Dispatch<SetStateAction<number | undefined>>;
 };
 
 type PopperContentProps = {
@@ -18,4 +31,22 @@ type PopperContentProps = {
   className?: string;
 };
 
-export type { ClientPosition, PopperContentProps, PopperContextProps };
+type PopperItemProps = {
+  children: ReactNode | ReactElement;
+  onClick?: (event: React.MouseEvent<HTMLElement>) => void | Promise<void>;
+  asChild?: boolean;
+  disabled?: boolean;
+  className?: string;
+  prefix?: ReactNode;
+  suffix?: ReactNode;
+  inset?: boolean;
+  href?: string;
+  shortcut?: ReactNode;
+};
+
+export type {
+  ClientPosition,
+  PopperContentProps,
+  PopperContextProps,
+  PopperItemProps,
+};

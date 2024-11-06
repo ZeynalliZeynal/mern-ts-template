@@ -1,17 +1,31 @@
 import Stack from "@/components/ui/stack.tsx";
-import ContextMenu from "@/components/ui/context-menu/context-menu-v2.tsx";
+import ContextMenu from "@/components/ui/context-menu/context-menu.tsx";
+import ContextMenuSub from "@/components/ui/context-menu/context-menu-sub-v2.tsx";
 
 export default function ContextDemo() {
   return (
     <>
       <Stack>
         <ContextMenu>
-          <ContextMenu.Trigger>
-            <div className="min-w-72 min-h-32 flex items-center justify-center text-gray-800 rounded-ui-content border border-dashed">
-              Right click here
-            </div>
-          </ContextMenu.Trigger>
-          <ContextMenu.Content>test</ContextMenu.Content>
+          <ContextMenu.Trigger>Right click here</ContextMenu.Trigger>
+          <ContextMenu.Content>
+            <ContextMenu.Item inset shortcut="⌘[">
+              Back
+            </ContextMenu.Item>
+            <ContextMenu.Item inset disabled shortcut="⌘]">
+              Forward
+            </ContextMenu.Item>
+            <ContextMenuSub>
+              <ContextMenuSub.Trigger inset>More tools</ContextMenuSub.Trigger>
+              <ContextMenuSub.Content>
+                <ContextMenu.Item inset>Add friend</ContextMenu.Item>
+                <ContextMenu.Item inset>Remove friend</ContextMenu.Item>
+              </ContextMenuSub.Content>
+            </ContextMenuSub>
+            <ContextMenu.Item inset shortcut="⌘]">
+              Reload
+            </ContextMenu.Item>
+          </ContextMenu.Content>
         </ContextMenu>
         {/*
         <ContextMenu>
