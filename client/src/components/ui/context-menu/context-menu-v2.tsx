@@ -1,39 +1,38 @@
-import React, { useRef } from "react";
+import React, {
+  CSSProperties,
+  Dispatch,
+  SetStateAction,
+  useRef,
+  useState,
+} from "react";
 import { cn } from "@/lib/utils.ts";
 import { createPortal } from "react-dom";
-import {
-  ClientPosition,
-  PopperAction,
-  PopperActionKind,
-  PopperContentProps,
-  PopperContextProps,
-  PopperState,
-} from "@/types/ui/popper.ts";
-import { AnimatePresence, motion, useMotionValue } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useOutsideClick } from "@/hooks/useOutsideClick.ts";
+import { useResize } from "@/hooks/useResize.ts";
 
-const initializer: PopperState = {
-  open: false,
-  position: null,
+type ClientPosition =
+  | {
+      left: number;
+      top: number;
+    }
+  | undefined;
+
+type PopperContextProps = {
+  openPopper: (position: ClientPosition) => void;
+  closePopper: () => void;
+  open: boolean;
+  position?: ClientPosition;
+  triggerPosition?: DOMRect;
+  setTriggerPosition: Dispatch<SetStateAction<DOMRect | undefined>>;
+};
+
+type PopperContentProps = {
+  children: React.ReactNode;
+  className?: string;
 };
 
 const PopperContext = React.createContext<PopperContextProps | null>(null);
-
-const reducer = (state: PopperState, action: PopperAction) => {
-  switch (action.type) {
-    case PopperActionKind.open:
-      return {
-        ...state,
-        open: true,
-        animate: false,
-        position: action.payload || null,
-      };
-    case PopperActionKind.close:
-      return { ...state, open: false };
-    default:
-      return state;
-  }
-};
 
 export const usePopper = () => {
   const context = React.useContext(PopperContext);
@@ -44,37 +43,70 @@ export const usePopper = () => {
 };
 
 const ContextMenu = ({ children }: { children: React.ReactNode }) => {
-  const [{ open, position }, dispatch] = React.useReducer(reducer, initializer);
+  const [open, setOpen] = useState<boolean>(false);
+  const [triggerPosition, setTriggerPosition] = useState<DOMRect | undefined>(
+    undefined,
+  );
+  const [position, setPosition] = useState<ClientPosition>(undefined);
 
   const openPopper = (position: ClientPosition) => {
-    dispatch({ type: PopperActionKind.open, payload: position });
+    setOpen(true);
+    setPosition(position);
   };
 
   const closePopper = () => {
-    dispatch({ type: PopperActionKind.close });
+    setOpen(false);
   };
 
   return (
-    <PopperContext.Provider value={{ open, openPopper, closePopper, position }}>
+    <PopperContext.Provider
+      value={{
+        open,
+        openPopper,
+        closePopper,
+        position,
+        triggerPosition,
+        setTriggerPosition,
+      }}
+    >
       {children}
     </PopperContext.Provider>
   );
 };
 
-const ContextMenuTrigger = ({ children }: { children: React.ReactNode }) => {
-  const { open, openPopper } = usePopper();
+const ContextMenuTrigger = React.forwardRef<
+  HTMLElement,
+  { children: React.ReactNode }
+>(({ children }, forwardRef) => {
+  const { open, openPopper, setTriggerPosition } = usePopper();
+
+  const ref = useRef<HTMLElement | null>(null);
+  React.useImperativeHandle(forwardRef, () => ref.current as HTMLElement);
+
+  const updatePosition = () => {
+    if (ref.current) {
+      setTriggerPosition(ref.current.getBoundingClientRect());
+    }
+  };
+
+  useResize(open, updatePosition);
+
   const handleContextMenu: React.MouseEventHandler<HTMLDivElement> = (
     event,
   ) => {
     event.preventDefault();
     const { clientX, clientY } = event;
-    openPopper({ clientX, clientY });
+    const left = Math.abs(
+      clientX - event.currentTarget.getBoundingClientRect().left,
+    );
+    const top = Math.abs(
+      clientY - event.currentTarget.getBoundingClientRect().top,
+    );
+    openPopper({ left, top });
   };
 
-  const attributes: React.HTMLAttributes<HTMLDivElement> & {
-    "context-trigger"?: string;
-    [key: `data-${string}`]: string | undefined;
-  } = {
+  const attributes = {
+    ref,
     "context-trigger": "",
     "aria-expanded": open,
     "data-state": open ? "open" : "closed",
@@ -84,36 +116,24 @@ const ContextMenuTrigger = ({ children }: { children: React.ReactNode }) => {
   return (
     React.isValidElement(children) && React.cloneElement(children, attributes)
   );
-};
+});
 
 const ContextMenuContent = ({ children, className }: PopperContentProps) => {
-  const { open, position, closePopper } = usePopper();
+  const { open, position, closePopper, triggerPosition } = usePopper();
+  const [style, setStyle] = useState<CSSProperties>({});
 
   const ref = useRef<HTMLDivElement | null>(null);
 
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-
-  React.useEffect(() => {
-    if (position) {
-      x.set(position.clientX);
-      y.set(position.clientY);
+  const handleResize = () => {
+    if (position && triggerPosition) {
+      const { left, top } = position;
+      setStyle({
+        left: Math.max(triggerPosition.left + left, 0),
+        top: triggerPosition.top + top,
+      });
     }
-  }, [position, x, y]);
-
-  React.useEffect(() => {
-    const handleResize = () => {
-      if (position) {
-        x.set(position.clientX);
-        y.set(position.clientY);
-      }
-    };
-
-    window.addEventListener("resize", handleResize);
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, [position, x, y]);
+  };
+  useResize(open, handleResize);
 
   useOutsideClick(ref, closePopper);
 
@@ -131,10 +151,7 @@ const ContextMenuContent = ({ children, className }: PopperContentProps) => {
             "bg-ui-background rounded-ui-content min-w-52 p-ui-content border fixed z-50",
             className,
           )}
-          style={{
-            left: x,
-            top: y,
-          }}
+          style={style}
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}

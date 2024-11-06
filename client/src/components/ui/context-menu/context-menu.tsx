@@ -218,7 +218,7 @@ const ContextMenuContent = ({ children }: { children: ReactNode }) => {
       : undefined;
 
     setMenuStyle(newMenuStyle);
-  }, [handleOpen, open]);
+  }, [clientPosition, handleOpen, menuStyle, open]);
 
   if (!open || !clientPosition) return null;
 
