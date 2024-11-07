@@ -176,7 +176,7 @@ function PopperWrapper({
         : undefined,
       left,
     });
-  }, [align, menuType, open, triggerPosition]);
+  }, [align, menuType, open, ref, triggerPosition]);
 
   function handleKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
     if (!ref.current) return;

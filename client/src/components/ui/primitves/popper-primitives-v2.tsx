@@ -230,14 +230,23 @@ const PopperPrimitiveContent = ({
   };
 
   const handleResize = React.useCallback(() => {
-    if (position && triggerPosition) {
-      const { left, top } = position;
+    if (position && triggerPosition && ref.current) {
+      const { left: clientLeft, top } = position;
+      const canFitRight =
+        innerWidth - clientLeft - triggerPosition.left >
+        ref.current.offsetWidth;
+
+      let left = undefined;
+      let right = undefined;
+      if (canFitRight) left = triggerPosition.left + clientLeft;
+      else right = 8;
       setStyle({
-        left: Math.max(triggerPosition.left + left, 0),
+        left: left,
         top: triggerPosition.top + top,
+        right,
       });
     }
-  }, [position, triggerPosition]);
+  }, [position, ref, triggerPosition]);
 
   React.useEffect(() => {
     if (open && ref.current) {

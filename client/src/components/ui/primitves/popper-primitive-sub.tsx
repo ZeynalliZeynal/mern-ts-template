@@ -209,9 +209,7 @@ const PopperSubPrimitiveContent = ({
 
     navigateItems({
       event,
-      close: () => {
-        closePopper();
-      },
+      close: closePopper,
       highlightItem,
       currentItemIndex,
       setCurrentItemIndex,
@@ -222,7 +220,12 @@ const PopperSubPrimitiveContent = ({
 
   const handleResize = React.useCallback(() => {
     if (ref.current && openSub && position) {
-      const left = position.left + position.width;
+      const canFitRight =
+        innerWidth - position.left - position.width > ref.current.offsetWidth;
+
+      let left;
+      if (canFitRight) left = position.left + position.width;
+      else left = position.left - ref.current.offsetWidth;
       setStyle({
         left,
         top: position.top,
