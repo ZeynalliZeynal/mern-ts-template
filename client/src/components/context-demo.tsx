@@ -1,6 +1,6 @@
 import Stack from "@/components/ui/stack.tsx";
 import ContextMenu from "@/components/ui/context-menu/context-menu.tsx";
-import ContextMenuSub from "@/components/ui/context-menu/context-menu-sub-v2.tsx";
+import ContextMenuSub from "@/components/ui/context-menu/context-menu-sub.tsx";
 
 export default function ContextDemo() {
   return (
@@ -15,13 +15,6 @@ export default function ContextDemo() {
             <ContextMenu.Item inset disabled shortcut="⌘]">
               Forward
             </ContextMenu.Item>
-            <ContextMenuSub>
-              <ContextMenuSub.Trigger inset>More tools</ContextMenuSub.Trigger>
-              <ContextMenuSub.Content>
-                <ContextMenu.Item inset>Add friend</ContextMenu.Item>
-                <ContextMenu.Item inset>Remove friend</ContextMenu.Item>
-              </ContextMenuSub.Content>
-            </ContextMenuSub>
             <ContextMenuSub>
               <ContextMenuSub.Trigger inset>More tools</ContextMenuSub.Trigger>
               <ContextMenuSub.Content>

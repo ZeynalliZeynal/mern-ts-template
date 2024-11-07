@@ -1,8 +1,5 @@
 import React, { Dispatch, SetStateAction, useState } from "react";
 import { PopperContentProps, PopperItemProps } from "@/types/ui/popper.ts";
-import ContextMenu, {
-  usePopper,
-} from "@/components/ui/context-menu/context-menu.tsx";
 import { cn } from "@/lib/utils.ts";
 import { LuChevronRight } from "react-icons/lu";
 import { useOutsideClick } from "@/hooks/useOutsideClick.ts";
@@ -13,6 +10,9 @@ import {
   ANIMATION_TIMEOUT,
 } from "@/components/ui/parameters.ts";
 import { useResize } from "@/hooks/useResize.ts";
+import PopperPrimitive, {
+  usePopperPrimitive,
+} from "@/components/ui/primitves/popper-primitives-v2.tsx";
 
 type PopperContextSubProps = {
   openSubPopper: (event: React.MouseEvent<HTMLElement>) => void;
@@ -36,15 +36,15 @@ const PopperSubContext = React.createContext<PopperContextSubProps | undefined>(
   undefined,
 );
 
-const usePopperSub = () => {
+const usePopperSubPrimitive = () => {
   const context = React.useContext(PopperSubContext);
   if (!context) {
-    throw new Error("usePopper must be used within a PopperContext.Provider");
+    throw new Error("Sub context must be used within a PopperContext.Provider");
   }
   return context;
 };
 
-const ContextMenuSub = ({ children }: { children: React.ReactNode }) => {
+const PopperSubPrimitive = ({ children }: { children: React.ReactNode }) => {
   const [openSub, setOpenSub] = useState(false);
   const [triggerPosition, setTriggerPosition] = useState<DOMRect | undefined>(
     undefined,
@@ -96,7 +96,7 @@ const ContextMenuSub = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-const ContextMenuSubTrigger = ({
+const PopperSubPrimitiveTrigger = ({
   children,
   className,
   inset,
@@ -104,9 +104,9 @@ const ContextMenuSubTrigger = ({
   prefix,
   suffix = <LuChevronRight />,
 }: PopperItemProps) => {
-  const { isHighlighted, highlightItem } = usePopper();
+  const { isHighlighted, highlightItem } = usePopperPrimitive();
   const { openSubPopper, closeSubPopper, openSub, setCurrentItemIndex } =
-    usePopperSub();
+    usePopperSubPrimitive();
   const [openedWithKey, setOpenedWithKey] = useState(false);
   const ref = React.useRef<HTMLElement | null>(null);
 
@@ -154,7 +154,7 @@ const ContextMenuSubTrigger = ({
   }, [highlightItem, openSub, openedWithKey, setCurrentItemIndex]);
 
   return (
-    <ContextMenu.Item
+    <PopperPrimitive.Item
       ref={ref}
       popper-sub-trigger=""
       aria-expanded={openSub}
@@ -169,12 +169,15 @@ const ContextMenuSubTrigger = ({
       onKeyDown={handleKeyDown}
     >
       {children}
-    </ContextMenu.Item>
+    </PopperPrimitive.Item>
   );
 };
 
-const ContextMenuSubContent = ({ children, className }: PopperContentProps) => {
-  const { highlightItem, closePopper } = usePopper();
+const PopperSubPrimitiveContent = ({
+  children,
+  className,
+}: PopperContentProps) => {
+  const { highlightItem, closePopper } = usePopperPrimitive();
   const {
     animate,
     openSub,
@@ -183,7 +186,7 @@ const ContextMenuSubContent = ({ children, className }: PopperContentProps) => {
     setCurrentItemIndex,
     position,
     activeTrigger,
-  } = usePopperSub();
+  } = usePopperSubPrimitive();
   const [style, setStyle] = React.useState<React.CSSProperties>({});
 
   const ref = useOutsideClick({ onTrigger: closeSubPopper });
@@ -234,7 +237,6 @@ const ContextMenuSubContent = ({ children, className }: PopperContentProps) => {
         ref={ref}
         data-portal=""
         role="menu"
-        popper-content=""
         popper-content-sub-menu=""
         aria-expanded={openSub}
         data-state={!animate ? "open" : "closed"}
@@ -253,7 +255,7 @@ const ContextMenuSubContent = ({ children, className }: PopperContentProps) => {
     );
 };
 
-ContextMenuSub.Trigger = ContextMenuSubTrigger;
-ContextMenuSub.Content = ContextMenuSubContent;
+PopperSubPrimitive.Trigger = PopperSubPrimitiveTrigger;
+PopperSubPrimitive.Content = PopperSubPrimitiveContent;
 
-export default ContextMenuSub;
+export default PopperSubPrimitive;

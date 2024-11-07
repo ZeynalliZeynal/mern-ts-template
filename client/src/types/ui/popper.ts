@@ -12,6 +12,8 @@ type ClientPosition =
     }
   | undefined;
 
+export type MenuTypes = "popover" | "dropdown" | "context";
+
 type PopperContextProps = {
   openPopper: (event: React.MouseEvent<HTMLElement>) => void;
   closePopper: () => void;
@@ -24,11 +26,18 @@ type PopperContextProps = {
   isHighlighted: (currentElement: HTMLElement) => boolean;
   currentItemIndex: number | undefined;
   setCurrentItemIndex: Dispatch<SetStateAction<number | undefined>>;
+  menuType?: MenuTypes;
 };
 
 type PopperContentProps = {
   children: React.ReactNode;
   className?: string;
+};
+
+type PopperTriggerProps = {
+  children: React.ReactNode;
+  className?: string;
+  asChild?: boolean;
 };
 
 type PopperItemProps = {
@@ -52,4 +61,5 @@ export type {
   PopperContentProps,
   PopperContextProps,
   PopperItemProps,
+  PopperTriggerProps,
 };
