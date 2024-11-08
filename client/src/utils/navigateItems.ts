@@ -12,7 +12,7 @@ export const navigateItems = ({
 }: {
   event: React.KeyboardEvent<HTMLElement>;
   root: HTMLElement | null;
-  close: () => void;
+  close?: () => void;
   currentItemIndex?: number;
   highlightItem: (value: HTMLElement | undefined) => void;
   itemSelector: string;
@@ -20,12 +20,14 @@ export const navigateItems = ({
   loop?: boolean;
 }) => {
   if (!event.currentTarget || !root) return;
-  if (event.code === "Escape") {
-    event.preventDefault();
-    close();
-  }
-  if (event.code === "Tab") {
-    event.preventDefault();
+  if (close) {
+    if (event.code === "Escape") {
+      event.preventDefault();
+      close();
+    }
+    if (event.code === "Tab") {
+      event.preventDefault();
+    }
   }
 
   if (event.code === "ArrowUp" || event.code === "ArrowDown") {

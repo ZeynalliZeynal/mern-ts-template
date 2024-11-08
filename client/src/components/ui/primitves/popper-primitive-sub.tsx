@@ -10,7 +10,7 @@ import {
   ANIMATION_TIMEOUT,
 } from "@/components/ui/parameters.ts";
 import { useResize } from "@/hooks/useResize.ts";
-import { usePopper } from "@/components/ui/primitves/popper-primitives-v2.tsx";
+import { usePopper } from "@/components/ui/primitves/popper-primitives.tsx";
 import { useDebounce } from "@/hooks/useDebounce.ts";
 
 type PopperContextSubProps = {

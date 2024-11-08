@@ -82,7 +82,9 @@ type CommonItemProps = {
 };
 
 type PopperItemProps = {
-  onClick?: (event: React.MouseEvent<HTMLElement>) => void | Promise<void>;
+  onClick?: (
+    event: React.MouseEvent<HTMLElement>,
+  ) => string | number | void | Promise<string | number | void>;
   href?: string;
   role?: React.AriaRole;
   onSelect?: (value: string) => void;

@@ -1,8 +1,11 @@
 import { ReactNode } from "react";
 import { cn } from "@/lib/utils.ts";
-import Popper from "@/components/ui/primitves/popper-primitives-v2.tsx";
-import { PopperItemProps, PopperTriggerProps } from "@/types/ui/popper.ts";
-import { AlignWrapperProps } from "@/components/ui/primitves/popper-primitives.tsx";
+import Popper from "@/components/ui/primitves/popper-primitives.tsx";
+import {
+  AlignContentProps,
+  PopperItemProps,
+  PopperTriggerProps,
+} from "@/types/ui/popper.ts";
 
 export default function DropdownMenu({ children }: { children: ReactNode }) {
   return <Popper menuType="dropdown">{children}</Popper>;
@@ -36,7 +39,7 @@ function DropdownMenuContent({
 }: {
   children: ReactNode;
   className?: string;
-  align?: AlignWrapperProps;
+  align?: AlignContentProps;
 }) {
   return (
     <Popper.Content align={align} className={className}>
