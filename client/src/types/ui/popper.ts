@@ -29,6 +29,18 @@ type PopperContextProps = {
   menuType?: MenuTypes;
 };
 
+type PopperRadioGroupContextProps = {
+  radioValue: string;
+  selectValue: (value: string) => void;
+};
+type PopperRadioItemProps = {
+  value: string;
+  onChange: (value: string) => void;
+} & CommonItemProps;
+type PopperRadioGroupProps = {
+  value: string;
+} & CommonGroupProps;
+
 type PopperContentProps = {
   children: React.ReactNode;
   className?: string;
@@ -40,26 +52,47 @@ type PopperTriggerProps = {
   asChild?: boolean;
 };
 
-type PopperItemProps = {
+type CommonItemProps = {
   children: ReactNode | ReactElement;
-  onClick?: (event: React.MouseEvent<HTMLElement>) => void | Promise<void>;
   asChild?: boolean;
   disabled?: boolean;
   className?: string;
   prefix?: ReactNode;
   suffix?: ReactNode;
   inset?: boolean;
-  href?: string;
   shortcut?: ReactNode;
-  onMouseEnter?: React.MouseEventHandler<HTMLElement>;
-  onMouseLeave?: React.MouseEventHandler<HTMLElement>;
   onKeyDown?: React.KeyboardEventHandler<HTMLElement>;
 };
+
+type PopperItemProps = {
+  onClick?: (event: React.MouseEvent<HTMLElement>) => void | Promise<void>;
+  href?: string;
+  role?: React.AriaRole;
+} & CommonItemProps;
+
+type PopperCheckboxItemProps = {
+  onCheck: () => void;
+  checked?: boolean;
+} & CommonItemProps;
+
+type CommonGroupProps = {
+  children: ReactNode;
+  className?: string;
+};
+
+type PopperGroupProps = {
+  role?: React.AriaRole;
+} & CommonGroupProps;
 
 export type {
   ClientPosition,
   PopperContentProps,
   PopperContextProps,
+  PopperCheckboxItemProps,
   PopperItemProps,
   PopperTriggerProps,
+  PopperRadioGroupProps,
+  PopperGroupProps,
+  PopperRadioGroupContextProps,
+  PopperRadioItemProps,
 };

@@ -1,190 +1,108 @@
 import Stack from "@/components/ui/stack.tsx";
 import ContextMenu from "@/components/ui/context-menu/context-menu.tsx";
 import ContextMenuSub from "@/components/ui/context-menu/context-menu-sub.tsx";
+import { toast } from "sonner";
+import { useState } from "react";
+import Spinner from "@/components/ui/spinner.tsx";
+import { useAdvancedParams } from "@/hooks/useAdvancedParams.ts";
+
+const radioValues = [
+  {
+    value: "pedroduarte",
+    label: "Pedro Duarte",
+  },
+  {
+    value: "zeynallizeynal",
+    label: "Zeynalli Zeynal",
+  },
+];
 
 export default function ContextDemo() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { handleSingleParam, params } = useAdvancedParams();
+  const [radioValue, setRadioValue] = useState(radioValues[0].value);
+
   return (
     <>
       <Stack>
         <ContextMenu>
           <ContextMenu.Trigger>Right click here</ContextMenu.Trigger>
-          <ContextMenu.Content>
-            <ContextMenu.Item inset shortcut="⌘[">
-              Back
-            </ContextMenu.Item>
-            <ContextMenu.Item inset disabled shortcut="⌘]">
-              Forward
-            </ContextMenu.Item>
-            <ContextMenuSub>
-              <ContextMenuSub.Trigger inset>More tools</ContextMenuSub.Trigger>
-              <ContextMenuSub.Content>
-                <ContextMenu.Item inset>Add friend</ContextMenu.Item>
-                <ContextMenu.Item inset>Remove friend</ContextMenu.Item>
-              </ContextMenuSub.Content>
-            </ContextMenuSub>
-            <ContextMenu.Item inset shortcut="⌘]">
-              Reload
-            </ContextMenu.Item>
-          </ContextMenu.Content>
-        </ContextMenu>
-        {/*
-        <ContextMenu>
-          <ContextMenu.Trigger>
-            <div
-              style={{
-                width: 300,
-                padding: "45px 0",
-                border: "1px hsla(var(--ds-gray-alpha-400)) dashed",
-                borderRadius: 4,
-                textAlign: "center",
-                fontSize: 14,
-              }}
-            >
-              Right click here
-            </div>
-          </ContextMenu.Trigger>
-          <ContextMenu.Content>
-            <ContextMenuSub>
-              <ContextMenu.Group>
-                <ContextMenu.Label prefix={<SiBurgerking />}>
-                  Burger KING
-                </ContextMenu.Label>
-                <ContextMenu.Separator />
-                <ContextMenuSub.Trigger inset>
-                  Zeynalli Zeynal
-                </ContextMenuSub.Trigger>
-                <ContextMenuSub.Content>
-                  <ContextMenu.Item
-                    prefix={<MdOutlineAccountCircle />}
-                    href="/account/profile"
-                  >
-                    Profile
-                  </ContextMenu.Item>
-                  <ContextMenu.Item
-                    prefix={<IoSettingsOutline />}
-                    href="/account/settings"
-                  >
-                    Settings
-                  </ContextMenu.Item>
-                  <ContextMenu.Separator />
-                  <ContextMenu.Group>
-                    <ContextMenu.Item
-                      prefix={<IoBookmarksOutline />}
-                      href="/account/wishlist"
-                    >
-                      Wishlist
-                    </ContextMenu.Item>
-                    <ContextMenu.Item
-                      prefix={<AiOutlineProduct />}
-                      href="/account/products"
-                    >
-                      Products
-                    </ContextMenu.Item>
-                  </ContextMenu.Group>
-                </ContextMenuSub.Content>
-              </ContextMenu.Group>
-            </ContextMenuSub>
-            <ContextMenuSub>
-              <ContextMenuSub.Trigger inset>People</ContextMenuSub.Trigger>
-              <ContextMenuSub.Content>
-                <ContextMenu.Item
-                  onClick={({ currentTarget }) =>
-                    toast(currentTarget.innerText)
-                  }
-                >
-                  Telman
-                </ContextMenu.Item>
-                <ContextMenu.Item
-                  onClick={({ currentTarget }) =>
-                    toast(currentTarget.innerText)
-                  }
-                >
-                  Simran
-                </ContextMenu.Item>
-                <ContextMenu.Item
-                  onClick={({ currentTarget }) =>
-                    toast(currentTarget.innerText)
-                  }
-                >
-                  Samir
-                </ContextMenu.Item>
-                <ContextMenu.Item
-                  onClick={({ currentTarget }) =>
-                    toast(currentTarget.innerText)
-                  }
-                >
-                  Femil
-                </ContextMenu.Item>
-                <ContextMenu.Item
-                  onClick={({ currentTarget }) =>
-                    toast(currentTarget.innerText)
-                  }
-                >
-                  Josef
-                </ContextMenu.Item>
-              </ContextMenuSub.Content>
-            </ContextMenuSub>
+          <ContextMenu.Content className="min-w-64">
             <ContextMenu.Group>
-              <ContextMenu.Item
-                onClick={() => window.history.back()}
-                inset
-                suffix={<IoReturnDownBackOutline />}
-                disabled
-              >
+              <ContextMenu.Item inset shortcut="⌘[">
                 Back
               </ContextMenu.Item>
-              <ContextMenu.Item
-                onClick={() => window.history.forward()}
-                inset
-                suffix={<IoReturnDownForwardOutline />}
-              >
+              <ContextMenu.Item inset disabled shortcut="⌘]">
                 Forward
               </ContextMenu.Item>
-            </ContextMenu.Group>
-            <ContextMenu.Separator />
-            <ContextMenu.Group>
-              <ContextMenu.Item
-                asChild
-                inset
-                suffix={<ArrowUpRight />}
-                href="/account/dashboard"
-              >
-                Dashboard
-              </ContextMenu.Item>
-            </ContextMenu.Group>
-            <ContextMenu.Separator />
-            <ContextMenu.Group>
-              <ContextMenu.Item
-                onClick={() => window.location.reload()}
-                inset
-                suffix={<IoReload />}
-              >
+              <ContextMenu.Item inset shortcut="⌘]">
                 Reload
               </ContextMenu.Item>
+              <ContextMenuSub>
+                <ContextMenuSub.Trigger inset>
+                  More tools
+                </ContextMenuSub.Trigger>
+                <ContextMenuSub.Content className="w-48">
+                  <ContextMenu.Group>
+                    <ContextMenu.Item
+                      shortcut="⇧⌘S"
+                      prefix={isLoading ? <Spinner size={16} /> : null}
+                      disabled={isLoading}
+                      onClick={async () => {
+                        setIsLoading(true);
+                        await new Promise((resolve) =>
+                          setTimeout(resolve, 1000),
+                        );
+                        setIsLoading(false);
+                        toast.info("new friend added");
+                      }}
+                    >
+                      Save page as...
+                    </ContextMenu.Item>
+                    <ContextMenu.Item>Create shortcut...</ContextMenu.Item>
+                    <ContextMenu.Item>Name window...</ContextMenu.Item>
+                  </ContextMenu.Group>
+                  <ContextMenu.Separator />
+                  <ContextMenu.Group>
+                    <ContextMenu.Item>Developer tools</ContextMenu.Item>
+                  </ContextMenu.Group>
+                </ContextMenuSub.Content>
+              </ContextMenuSub>
             </ContextMenu.Group>
+            <ContextMenu.Separator />
+            <ContextMenu.Group>
+              <ContextMenu.CheckboxItem
+                inset
+                checked={params("bookmarks")?.includes("show")}
+                onCheck={() => handleSingleParam("bookmarks", "show")}
+              >
+                Show Bookmarks bar
+              </ContextMenu.CheckboxItem>
+              <ContextMenu.CheckboxItem
+                inset
+                checked={params("fullUrls")?.includes("show")}
+                onCheck={() => handleSingleParam("fullUrls", "show")}
+              >
+                Show full URLs
+              </ContextMenu.CheckboxItem>
+            </ContextMenu.Group>
+            <ContextMenu.Separator />
+            <ContextMenu.RadioGroup value={radioValue}>
+              <ContextMenu.Label inset>People</ContextMenu.Label>
+              <ContextMenu.Separator />
+              {radioValues.map((value) => (
+                <ContextMenu.RadioItem
+                  inset
+                  key={value.value}
+                  value={value.value}
+                  onChange={(currentValue) => setRadioValue(currentValue)}
+                >
+                  {value.label}
+                </ContextMenu.RadioItem>
+              ))}
+            </ContextMenu.RadioGroup>
           </ContextMenu.Content>
         </ContextMenu>
-
-        <ContextMenu>
-          <ContextMenu.Trigger>
-            <div
-              style={{
-                width: 300,
-                padding: "45px 0",
-                border: "1px hsla(var(--ds-gray-alpha-400)) dashed",
-                borderRadius: 4,
-                textAlign: "center",
-                fontSize: 14,
-              }}
-            >
-              Right click here
-            </div>
-          </ContextMenu.Trigger>
-          <ContextMenu.Content>
-            <ContextMenu.Item>Test</ContextMenu.Item>
-          </ContextMenu.Content>
-        </ContextMenu>
-        */}
       </Stack>
     </>
   );

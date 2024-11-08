@@ -10,9 +10,7 @@ import {
   ANIMATION_TIMEOUT,
 } from "@/components/ui/parameters.ts";
 import { useResize } from "@/hooks/useResize.ts";
-import PopperPrimitive, {
-  usePopperPrimitive,
-} from "@/components/ui/primitves/popper-primitives-v2.tsx";
+import { usePopper } from "@/components/ui/primitves/popper-primitives-v2.tsx";
 
 type PopperContextSubProps = {
   openSubPopper: (event: React.MouseEvent<HTMLElement>) => void;
@@ -36,7 +34,7 @@ const PopperSubContext = React.createContext<PopperContextSubProps | undefined>(
   undefined,
 );
 
-const usePopperSubPrimitive = () => {
+const usePopperSub = () => {
   const context = React.useContext(PopperSubContext);
   if (!context) {
     throw new Error("Sub context must be used within a PopperContext.Provider");
@@ -44,7 +42,7 @@ const usePopperSubPrimitive = () => {
   return context;
 };
 
-const PopperSubPrimitive = ({ children }: { children: React.ReactNode }) => {
+const PopperSub = ({ children }: { children: React.ReactNode }) => {
   const [openSub, setOpenSub] = useState(false);
   const [triggerPosition, setTriggerPosition] = useState<DOMRect | undefined>(
     undefined,
@@ -96,7 +94,7 @@ const PopperSubPrimitive = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-const PopperSubPrimitiveTrigger = ({
+const PopperSubTrigger = ({
   children,
   className,
   inset,
@@ -104,11 +102,11 @@ const PopperSubPrimitiveTrigger = ({
   prefix,
   suffix = <LuChevronRight />,
 }: PopperItemProps) => {
-  const { isHighlighted, highlightItem } = usePopperPrimitive();
+  const { isHighlighted, highlightItem } = usePopper();
   const { openSubPopper, closeSubPopper, openSub, setCurrentItemIndex } =
-    usePopperSubPrimitive();
+    usePopperSub();
   const [openedWithKey, setOpenedWithKey] = useState(false);
-  const ref = React.useRef<HTMLElement | null>(null);
+  const ref = React.useRef<HTMLDivElement | null>(null);
 
   const handleKeyDown = (
     event: React.KeyboardEvent<HTMLElement> | React.MouseEvent<HTMLElement>,
@@ -133,6 +131,7 @@ const PopperSubPrimitiveTrigger = ({
 
   const handleMouseEnter = (event: React.MouseEvent<HTMLElement>) => {
     openSubPopper(event);
+    highlightItem(event.currentTarget);
   };
 
   const handleMouseLeave = (event: React.MouseEvent<HTMLElement>) => {
@@ -154,30 +153,47 @@ const PopperSubPrimitiveTrigger = ({
   }, [highlightItem, openSub, openedWithKey, setCurrentItemIndex]);
 
   return (
-    <PopperPrimitive.Item
+    <div
       ref={ref}
-      popper-sub-trigger=""
-      aria-expanded={openSub}
+      tabIndex={-1}
+      role="menuitem"
+      popper-content-item=""
       data-state={openSub ? "open" : "closed"}
-      className={cn("data-[state=open]:bg-ui-item-background-hover", className)}
-      inset={inset}
-      prefix={prefix}
-      disabled={disabled}
-      suffix={suffix || <LuChevronRight />}
+      aria-disabled={disabled}
+      data-disabled={disabled}
+      data-highlighted={
+        ref.current && isHighlighted(ref.current) ? "" : undefined
+      }
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onKeyDown={handleKeyDown}
+      className={cn(
+        "text-foreground flex items-center justify-start rounded-ui-item w-full focus:ring-0 cursor-default transition-colors",
+        "data-[highlighted]:bg-ui-item-background-hover data-[disabled]:text-ui-disabled-foreground data-[disabled]:pointer-events-none data-[disabled]:select-none data-[state=open]:bg-ui-item-background-hover",
+        {
+          "gap-2": prefix,
+          "p-ui-item-inset": inset,
+          "p-ui-item": !inset,
+        },
+        className,
+      )}
     >
+      {prefix}
       {children}
-    </PopperPrimitive.Item>
+      <div className="ml-auto flex items-center gap-1">
+        {suffix || <LuChevronRight />}
+      </div>
+    </div>
   );
 };
 
-const PopperSubPrimitiveContent = ({
-  children,
-  className,
-}: PopperContentProps) => {
-  const { highlightItem, closePopper } = usePopperPrimitive();
+const PopperSubContent = ({ children, className }: PopperContentProps) => {
+  const {
+    highlightItem,
+    closePopper,
+    open,
+    animate: animateMain,
+  } = usePopper();
   const {
     animate,
     openSub,
@@ -186,7 +202,7 @@ const PopperSubPrimitiveContent = ({
     setCurrentItemIndex,
     position,
     activeTrigger,
-  } = usePopperSubPrimitive();
+  } = usePopperSub();
   const [style, setStyle] = React.useState<React.CSSProperties>({});
 
   const ref = useOutsideClick({ onTrigger: closeSubPopper });
@@ -223,18 +239,23 @@ const PopperSubPrimitiveContent = ({
       const canFitRight =
         innerWidth - position.left - position.width > ref.current.offsetWidth;
 
+      const canFitBottom =
+        innerHeight - position.top - position.height > ref.current.offsetWidth;
+
       let left;
       if (canFitRight) left = position.left + position.width;
       else left = position.left - ref.current.offsetWidth;
+
       setStyle({
         left,
-        top: position.top,
+        top: canFitBottom ? position.top : undefined,
+        bottom: !canFitBottom ? 8 : undefined,
       });
     }
   }, [openSub, position, ref]);
   useResize(openSub, handleResize);
 
-  if (openSub)
+  if (openSub && open)
     return createPortal(
       <div
         ref={ref}
@@ -242,9 +263,9 @@ const PopperSubPrimitiveContent = ({
         role="menu"
         popper-content-sub-menu=""
         aria-expanded={openSub}
-        data-state={!animate ? "open" : "closed"}
+        data-state={!animateMain || animate ? "open" : "closed"}
         className={cn(
-          "bg-ui-background rounded-ui-content min-w-52 p-ui-content border fixed z-50 pointer-events-auto focus:ring-0",
+          "bg-ui-background rounded-ui-content p-ui-content border fixed z-50 pointer-events-auto focus:ring-0",
           "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
           className,
         )}
@@ -258,7 +279,7 @@ const PopperSubPrimitiveContent = ({
     );
 };
 
-PopperSubPrimitive.Trigger = PopperSubPrimitiveTrigger;
-PopperSubPrimitive.Content = PopperSubPrimitiveContent;
+PopperSub.Trigger = PopperSubTrigger;
+PopperSub.Content = PopperSubContent;
 
-export default PopperSubPrimitive;
+export default PopperSub;
