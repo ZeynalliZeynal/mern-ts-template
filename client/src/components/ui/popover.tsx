@@ -45,7 +45,7 @@ function PopoverTrigger({
 function PopoverContent({
   children,
   className,
-  align = "center",
+  align,
 }: {
   children: ReactNode;
   className?: string;

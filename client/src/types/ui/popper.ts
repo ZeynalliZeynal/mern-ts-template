@@ -43,7 +43,17 @@ type PopperRadioGroupProps = {
   value: string;
 } & CommonGroupProps;
 
-type AlignContentProps = "center" | "left" | "right";
+type AlignContentProps =
+  | "horizontal-center-top"
+  | "horizontal-center-bottom"
+  | "horizontal-left-top"
+  | "horizontal-left-bottom"
+  | "horizontal-right-top"
+  | "horizontal-right-bottom"
+  | "vertical-left-bottom"
+  | "vertical-left-top"
+  | "vertical-right-bottom"
+  | "vertical-right-top";
 
 type PopperContentProps = {
   children: React.ReactNode;

@@ -27,7 +27,7 @@ export default function HomePage() {
         </Button>
       </Stack>
       <ThemeSwitcher />
-      <Spinner size="md" />
+      <Spinner />
       <Stack>
         <Badge size="md" icon={<ArrowDown />} style="purple-subtle">
           Badge

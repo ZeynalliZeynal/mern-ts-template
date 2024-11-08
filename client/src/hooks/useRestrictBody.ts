@@ -9,7 +9,7 @@ export const useRestrictBody = (condition: boolean) => {
     const nestedDialog = !!(dialog && menu);
 
     if (portalExists) {
-      document.body.style.marginRight = "6px";
+      // document.body.style.marginRight = "6px";
       document.body.style.overflow = "hidden";
       document.body.style.pointerEvents = "none";
 

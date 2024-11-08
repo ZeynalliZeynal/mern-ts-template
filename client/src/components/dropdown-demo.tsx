@@ -24,11 +24,15 @@ export default function DropdownDemo() {
     <Stack>
       <DropdownMenu>
         <DropdownMenu.Trigger>Samir Zeymurlu</DropdownMenu.Trigger>
-        <DropdownMenu.Content className="w-56">
+        <DropdownMenu.Content className="w-56" align="horizontal-right-bottom">
           <DropdownMenu.Label>My Account</DropdownMenu.Label>
           <DropdownMenu.Separator />
           <DropdownMenu.Group>
-            <DropdownMenu.Item prefix={<LuUser />} shortcut="⇧⌘P">
+            <DropdownMenu.Item
+              prefix={<LuUser />}
+              href="/dropdownMenu"
+              shortcut="⇧⌘P"
+            >
               Profile
             </DropdownMenu.Item>
             <DropdownMenu.Item prefix={<LuCreditCard />} shortcut="⌘B">

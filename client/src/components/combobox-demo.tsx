@@ -1,6 +1,8 @@
 import Stack from "@/components/ui/stack.tsx";
-import Combobox from "@/components/ui/combobox-vercel.tsx";
 import { useState } from "react";
+import Popover from "@/components/ui/popover.tsx";
+import Command from "@/components/ui/command.tsx";
+import { LuMail, LuSettings2, LuUser2 } from "react-icons/lu";
 
 const comboboxValues = [
   {
@@ -33,31 +35,45 @@ const comboboxValues2 = [
 ];
 
 export default function ComboboxDemo() {
-  const [comboboxValue, setComboboxValue] = useState("");
-  const [value2, setValue2] = useState("");
+  const [value, setValue] = useState();
 
   return (
     <Stack>
-      <Combobox value={comboboxValue} onChange={setComboboxValue}>
-        <Combobox.Input />
-        <Combobox.Content>
-          {comboboxValues.map((v) => (
-            <Combobox.Item value={v.value} key={v.value}>
-              {v.label}
-            </Combobox.Item>
-          ))}
-        </Combobox.Content>
-      </Combobox>
-      <Combobox value={value2} onChange={setValue2}>
-        <Combobox.Input />
-        <Combobox.Content>
-          {comboboxValues2.map((v) => (
-            <Combobox.Item value={v.value} key={v.value}>
-              {v.label}
-            </Combobox.Item>
-          ))}
-        </Combobox.Content>
-      </Combobox>
+      <Popover>
+        <Popover.Trigger>Open combobox</Popover.Trigger>
+        <Popover.Content className="w-56">
+          <Command>
+            <Command.Input placeholder="search" />
+            <Command.Content>
+              <Command.Item href="/profile" prefix={<LuUser2 />}>
+                Profile
+              </Command.Item>
+              <Command.Item prefix={<LuMail />}>Mail</Command.Item>
+              <Command.Item prefix={<LuSettings2 />}>Settings</Command.Item>
+            </Command.Content>
+          </Command>
+        </Popover.Content>
+      </Popover>
+      {/*<Combobox value={comboboxValue} onChange={setComboboxValue}>*/}
+      {/*  <Combobox.Input />*/}
+      {/*  <Combobox.Content>*/}
+      {/*    {comboboxValues.map((v) => (*/}
+      {/*      <Combobox.Item value={v.value} key={v.value}>*/}
+      {/*        {v.label}*/}
+      {/*      </Combobox.Item>*/}
+      {/*    ))}*/}
+      {/*  </Combobox.Content>*/}
+      {/*</Combobox>*/}
+      {/*<Combobox value={value2} onChange={setValue2}>*/}
+      {/*  <Combobox.Input />*/}
+      {/*  <Combobox.Content>*/}
+      {/*    {comboboxValues2.map((v) => (*/}
+      {/*      <Combobox.Item value={v.value} key={v.value}>*/}
+      {/*        {v.label}*/}
+      {/*      </Combobox.Item>*/}
+      {/*    ))}*/}
+      {/*  </Combobox.Content>*/}
+      {/*</Combobox>*/}
     </Stack>
   );
 }

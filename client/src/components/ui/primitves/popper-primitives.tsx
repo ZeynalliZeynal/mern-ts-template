@@ -47,11 +47,14 @@ import { GoDotFill } from "react-icons/go";
 import { useDebounce } from "@/hooks/useDebounce.ts";
 import { PiCaretUpDownBold } from "react-icons/pi";
 import Button from "@/components/ui/button.tsx";
+import { alignBox } from "@/utils/alignBox.ts";
 
 const POPPER_TRIGGER_SELECTOR = "[popper-trigger]";
 
 const POPPER_CONTENT_SELECTOR = "[popper-content-menu]";
 const POPPER_ITEM_SELECTOR = "[popper-content-item]:not([data-disabled])";
+
+const DEFAULT_SPACE = 8;
 
 const PopperContext = createContext<PopperContextProps | null>(null);
 const PopperRadioGroupContext =
@@ -331,7 +334,7 @@ const PopperTrigger = React.forwardRef<HTMLElement, PopperTriggerProps>(
 const PopperContent = ({
   children,
   className,
-  align = "center",
+  align = "horizontal-center-bottom",
   ...etc
 }: PopperContentProps) => {
   const {
@@ -375,10 +378,10 @@ const PopperContent = ({
           innerHeight - clientTop - triggerPosition.top >
           ref.current.offsetHeight;
 
-        let left = undefined;
-        let right = undefined;
-        let top = undefined;
-        let bottom = undefined;
+        let left;
+        let right;
+        let top;
+        let bottom;
 
         if (canFitRight) left = triggerPosition.left + clientLeft;
         else right = 8;
@@ -391,30 +394,13 @@ const PopperContent = ({
           bottom,
         });
       } else {
-        const spaceLeftBottom = window.innerHeight - triggerPosition.bottom;
-
-        const canFitBottom = spaceLeftBottom > ref.current.clientHeight;
-
-        const centerX = triggerPosition.left + triggerPosition.width / 2;
-
-        let left = undefined;
-        if (align === "center") {
-          left = Math.max(0, centerX - ref.current.clientWidth / 2);
-        } else if (align === "right") {
-          left = triggerPosition.right - ref.current.offsetWidth;
-        } else {
-          left = triggerPosition.left;
-        }
-
-        setStyle({
-          top: canFitBottom
-            ? triggerPosition.top + triggerPosition.height + 8
-            : undefined,
-          bottom: !canFitBottom
-            ? spaceLeftBottom + triggerPosition.height + 8
-            : undefined,
-          left,
+        const alignedObject = alignBox({
+          align,
+          element: ref.current,
+          triggerPosition,
+          defaultSpace: DEFAULT_SPACE,
         });
+        setStyle(alignedObject);
       }
     }
   }, [align, menuType, position, ref, triggerPosition]);
@@ -524,7 +510,8 @@ const PopperItem = React.forwardRef<HTMLElement, PopperItemProps>(
     const handleClick = (event: React.MouseEvent<HTMLElement>) => {
       event.preventDefault();
       if (disabled) return;
-      if (onClick) {
+      if (href) navigate(href);
+      else if (onClick) {
         const result = onClick(event);
         if (result instanceof Promise) {
           result

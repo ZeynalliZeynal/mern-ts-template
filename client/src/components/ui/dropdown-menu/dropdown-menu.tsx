@@ -35,7 +35,7 @@ function DropdownMenuTrigger({
 function DropdownMenuContent({
   children,
   className,
-  align = "center",
+  align,
 }: {
   children: ReactNode;
   className?: string;
@@ -57,6 +57,7 @@ function DropdownMenuItem({
   prefix,
   onClick,
   inset,
+  href,
 }: PopperItemProps) {
   return (
     <Popper.Item
@@ -67,6 +68,7 @@ function DropdownMenuItem({
       className={className}
       onClick={onClick}
       inset={inset}
+      href={href}
     >
       {children}
     </Popper.Item>
