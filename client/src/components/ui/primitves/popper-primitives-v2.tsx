@@ -37,6 +37,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { FaCheck } from "react-icons/fa6";
 import { GoDotFill } from "react-icons/go";
+import { useDebounce } from "@/hooks/useDebounce.ts";
 
 const POPPER_TRIGGER_SELECTOR = "[popper-trigger]";
 
@@ -83,39 +84,44 @@ export default function Popper({
     HTMLElement | undefined
   >(undefined);
 
-  const openPopper = (event: React.MouseEvent<HTMLElement>) => {
-    if (menuType === "context") {
-      const { clientX, clientY } = event;
-      const rect = event.currentTarget.getBoundingClientRect();
-      if (!rect) return;
-      const left = Math.abs(clientX - rect.left);
-      const top = Math.abs(clientY - rect.top);
-      setPosition({ left, top });
-    }
-    setAnimate(false);
-    setOpen(true);
-    setActiveTrigger(event.currentTarget);
-  };
+  const { debounce, clearDebounce } = useDebounce();
 
-  const closePopper = () => {
+  const openPopper = React.useCallback(
+    (event: React.MouseEvent<HTMLElement>) => {
+      clearDebounce();
+
+      if (menuType === "context") {
+        const { clientX, clientY } = event;
+        const rect = event.currentTarget.getBoundingClientRect();
+        if (!rect) return;
+        const left = Math.abs(clientX - rect.left);
+        const top = Math.abs(clientY - rect.top);
+        setPosition({ left, top });
+      }
+      setAnimate(false);
+      setOpen(true);
+      setActiveTrigger(event.currentTarget);
+    },
+    [menuType],
+  );
+
+  const closePopper = React.useCallback(() => {
     setAnimate(true);
-    setTimeout(
-      () => {
-        setOpen(false);
-        setAnimate(false);
+    debounce(() => {
+      setOpen(false);
+      setAnimate(false);
+      setHighlightedItem(undefined);
+      setPosition(undefined);
 
-        const triggers = Array.from(
-          document.querySelectorAll(POPPER_TRIGGER_SELECTOR),
-        ) as HTMLElement[];
-        const triggered = triggers.indexOf(activeTrigger as HTMLElement);
-        triggers[triggered].focus();
-        setHighlightedItem(undefined);
-        setPosition(undefined);
-      },
-      menuType === "context" ? 50 : ANIMATION_TIMEOUT,
-    );
-    setActiveTrigger(undefined);
-  };
+      const triggers = Array.from(
+        document.querySelectorAll(POPPER_TRIGGER_SELECTOR),
+      ) as HTMLElement[];
+      const triggered = triggers.indexOf(activeTrigger as HTMLElement);
+      triggers[triggered]?.focus();
+
+      setActiveTrigger(undefined);
+    }, ANIMATION_TIMEOUT);
+  }, [activeTrigger, debounce]);
 
   const highlightItem = React.useCallback((value: HTMLElement | undefined) => {
     if (!value) return;
@@ -178,13 +184,9 @@ const PopperTrigger = React.forwardRef<HTMLElement, PopperTriggerProps>(
       React.useCallback(
         (event) => {
           event.preventDefault();
-          if (open) {
-            setTimeout(() => {
-              openPopper(event);
-            }, ANIMATION_TIMEOUT);
-          } else openPopper(event);
+          openPopper(event);
         },
-        [open, openPopper],
+        [openPopper],
       );
 
     const attributes = {

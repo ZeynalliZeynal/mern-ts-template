@@ -1,6 +1,7 @@
 import { createBrowserRouter } from "react-router-dom";
 import { MainLayout } from "@/layouts/main/main-layout.tsx";
 import HomePage from "@/pages/home-page.tsx";
+import ContextDemo from "@/components/context-demo.tsx";
 
 export const router = createBrowserRouter([
   {
@@ -9,6 +10,10 @@ export const router = createBrowserRouter([
       {
         index: true,
         element: <HomePage />,
+      },
+      {
+        path: "/contextMenu",
+        element: <ContextDemo />,
       },
     ],
   },

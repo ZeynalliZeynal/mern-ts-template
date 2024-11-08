@@ -4,12 +4,12 @@ import Footer from "@/layouts/main/footer/footer.tsx";
 
 export function MainLayout() {
   return (
-    <>
+    <div className="flex flex-col h-screen">
       <Header />
-      <main>
+      <main className="flex-grow">
         <Outlet />
       </main>
       <Footer />
-    </>
+    </div>
   );
 }

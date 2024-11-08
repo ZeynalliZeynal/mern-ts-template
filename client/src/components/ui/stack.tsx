@@ -20,7 +20,7 @@ export default function Stack({
 }: Stack) {
   return (
     <div
-      className="flex"
+      className="flex w-fit"
       style={{
         flexDirection: direction,
         alignItems: align,
