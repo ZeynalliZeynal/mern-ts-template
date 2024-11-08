@@ -41,15 +41,24 @@ type PopperRadioGroupProps = {
   value: string;
 } & CommonGroupProps;
 
+type AlignContentProps = "center" | "left" | "right";
+
 type PopperContentProps = {
   children: React.ReactNode;
   className?: string;
+  align?: AlignContentProps;
 };
 
-type PopperTriggerProps = {
-  children: React.ReactNode;
+type PopperContextTriggerProps = {
+  children: ReactNode;
   className?: string;
   asChild?: boolean;
+};
+
+type PopperTriggerProps = PopperContextTriggerProps & {
+  prefix: ReactNode;
+  suffix: ReactNode;
+  disabled: boolean;
 };
 
 type CommonItemProps = {
@@ -95,4 +104,6 @@ export type {
   PopperGroupProps,
   PopperRadioGroupContextProps,
   PopperRadioItemProps,
+  PopperContextTriggerProps,
+  AlignContentProps,
 };

@@ -1,8 +1,8 @@
 import React from "react";
 import {
   PopperContentProps,
+  PopperContextTriggerProps,
   PopperItemProps,
-  PopperTriggerProps,
 } from "@/types/ui/popper.ts";
 import Popper from "@/components/ui/primitves/popper-primitives-v2.tsx";
 
@@ -14,11 +14,11 @@ const ContextMenuTrigger = ({
   children,
   className = undefined,
   asChild,
-}: PopperTriggerProps) => {
+}: PopperContextTriggerProps) => {
   return (
-    <Popper.Trigger className={className} asChild={asChild}>
+    <Popper.ContextTrigger className={className} asChild={asChild}>
       {children}
-    </Popper.Trigger>
+    </Popper.ContextTrigger>
   );
 };
 

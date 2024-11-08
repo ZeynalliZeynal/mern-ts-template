@@ -1,10 +1,8 @@
 import { ReactNode } from "react";
-import { MenuItemProps, MenuTriggerProps } from "@/components/ui/types.ts";
-import Popper, {
-  AlignWrapperProps,
-} from "@/components/ui/primitves/popper-primitives.tsx";
 import { cn } from "@/lib/utils.ts";
-import Primitive from "@/components/ui/primitves/primitives.tsx";
+import Popper from "@/components/ui/primitves/popper-primitives-v2.tsx";
+import { PopperItemProps, PopperTriggerProps } from "@/types/ui/popper.ts";
+import { AlignWrapperProps } from "@/components/ui/primitves/popper-primitives.tsx";
 
 export default function DropdownMenu({ children }: { children: ReactNode }) {
   return <Popper menuType="dropdown">{children}</Popper>;
@@ -17,7 +15,7 @@ function DropdownMenuTrigger({
   className,
   disabled,
   asChild,
-}: MenuTriggerProps) {
+}: PopperTriggerProps) {
   return (
     <Popper.Trigger
       suffix={suffix}
@@ -41,9 +39,9 @@ function DropdownMenuContent({
   align?: AlignWrapperProps;
 }) {
   return (
-    <Popper.Wrapper align={align} className={cn("min-w-52", className)}>
+    <Popper.Content align={align} className={className}>
       {children}
-    </Popper.Wrapper>
+    </Popper.Content>
   );
 }
 
@@ -55,7 +53,8 @@ function DropdownMenuItem({
   suffix,
   prefix,
   onClick,
-}: MenuItemProps) {
+  inset,
+}: PopperItemProps) {
   return (
     <Popper.Item
       disabled={disabled}
@@ -64,15 +63,19 @@ function DropdownMenuItem({
       asChild={asChild}
       className={className}
       onClick={onClick}
+      inset={inset}
     >
       {children}
     </Popper.Item>
   );
 }
 
-DropdownMenu.Group = Primitive.Group;
-DropdownMenu.Label = Primitive.Label;
-DropdownMenu.Separator = Primitive.Separator;
+DropdownMenu.Group = Popper.Group;
+DropdownMenu.RadioGroup = Popper.RadioGroup;
+DropdownMenu.RadioItem = Popper.RadioItem;
+DropdownMenu.CheckboxItem = Popper.CheckboxItem;
+DropdownMenu.Label = Popper.Label;
+DropdownMenu.Separator = Popper.Separator;
 DropdownMenu.Trigger = DropdownMenuTrigger;
 DropdownMenu.Item = DropdownMenuItem;
 DropdownMenu.Content = DropdownMenuContent;

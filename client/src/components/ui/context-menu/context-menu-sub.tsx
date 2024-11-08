@@ -1,10 +1,10 @@
 import React from "react";
 import { PopperContentProps, PopperItemProps } from "@/types/ui/popper.ts";
 import { LuChevronRight } from "react-icons/lu";
-import PopperSubPrimitive from "@/components/ui/primitves/popper-primitive-sub.tsx";
+import PopperSub from "@/components/ui/primitves/popper-primitive-sub.tsx";
 
 const ContextMenuSub = ({ children }: { children: React.ReactNode }) => {
-  return <PopperSubPrimitive>{children}</PopperSubPrimitive>;
+  return <PopperSub>{children}</PopperSub>;
 };
 
 const ContextMenuSubTrigger = ({
@@ -16,7 +16,7 @@ const ContextMenuSubTrigger = ({
   suffix = <LuChevronRight />,
 }: PopperItemProps) => {
   return (
-    <PopperSubPrimitive.Trigger
+    <PopperSub.Trigger
       className={className}
       suffix={suffix}
       prefix={prefix}
@@ -24,15 +24,13 @@ const ContextMenuSubTrigger = ({
       disabled={disabled}
     >
       {children}
-    </PopperSubPrimitive.Trigger>
+    </PopperSub.Trigger>
   );
 };
 
 const ContextMenuSubContent = ({ children, className }: PopperContentProps) => {
   return (
-    <PopperSubPrimitive.Content className={className}>
-      {children}
-    </PopperSubPrimitive.Content>
+    <PopperSub.Content className={className}>{children}</PopperSub.Content>
   );
 };
 

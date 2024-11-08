@@ -1,4 +1,4 @@
-import React, { Dispatch, SetStateAction, useState } from "react";
+import React, { Dispatch, SetStateAction, useCallback, useState } from "react";
 import { PopperContentProps, PopperItemProps } from "@/types/ui/popper.ts";
 import { cn } from "@/lib/utils.ts";
 import { LuChevronRight } from "react-icons/lu";
@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/parameters.ts";
 import { useResize } from "@/hooks/useResize.ts";
 import { usePopper } from "@/components/ui/primitves/popper-primitives-v2.tsx";
+import { useDebounce } from "@/hooks/useDebounce.ts";
 
 type PopperContextSubProps = {
   openSubPopper: (event: React.MouseEvent<HTMLElement>) => void;
@@ -56,23 +57,29 @@ const PopperSub = ({ children }: { children: React.ReactNode }) => {
     0,
   );
 
-  const openSubPopper = (event: React.MouseEvent<HTMLElement>) => {
-    const rect = event.currentTarget.getBoundingClientRect();
-    if (!rect) return;
-    setAnimate(false);
-    setOpenSub(true);
-    setPosition(rect);
-    setActiveTrigger(event.currentTarget);
-  };
+  const { clearDebounce, debounce } = useDebounce();
 
-  const closeSubPopper = () => {
+  const openSubPopper = useCallback(
+    (event: React.MouseEvent<HTMLElement>) => {
+      clearDebounce();
+      const rect = event.currentTarget.getBoundingClientRect();
+      if (!rect) return;
+      setAnimate(false);
+      setOpenSub(true);
+      setPosition(rect);
+      setActiveTrigger(event.currentTarget);
+    },
+    [clearDebounce],
+  );
+
+  const closeSubPopper = useCallback(() => {
     setAnimate(true);
-    setTimeout(() => {
+    debounce(() => {
       setOpenSub(false);
       setAnimate(false);
     }, ANIMATION_TIMEOUT);
     setActiveTrigger(undefined);
-  };
+  }, [debounce]);
 
   return (
     <PopperSubContext.Provider

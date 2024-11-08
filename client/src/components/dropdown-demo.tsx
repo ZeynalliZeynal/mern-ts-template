@@ -9,12 +9,14 @@ import {
   LuPlus,
   LuSettings,
   LuUser,
+  LuUserPlus,
   LuUsers,
 } from "react-icons/lu";
 import { HiOutlineSupport } from "react-icons/hi";
 import { QuestionMarkCircledIcon } from "@radix-ui/react-icons";
 import { useState } from "react";
 import Spinner from "@/components/ui/spinner.tsx";
+import DropdownMenuSub from "@/components/ui/dropdown-menu/dropdown-menu-sub.tsx";
 
 export default function DropdownDemo() {
   const [isPending, setIsPending] = useState(false);
@@ -22,7 +24,7 @@ export default function DropdownDemo() {
     <Stack>
       <DropdownMenu>
         <DropdownMenu.Trigger>Samir Zeymurlu</DropdownMenu.Trigger>
-        <DropdownMenu.Content>
+        <DropdownMenu.Content className="w-56">
           <DropdownMenu.Label>My Account</DropdownMenu.Label>
           <DropdownMenu.Separator />
           <DropdownMenu.Group>
@@ -44,6 +46,21 @@ export default function DropdownDemo() {
             <DropdownMenu.Item prefix={<LuUsers />} shortcut="⇧⌘P">
               Team
             </DropdownMenu.Item>
+            <DropdownMenuSub>
+              <DropdownMenuSub.Trigger prefix={<LuUserPlus />}>
+                Add users
+              </DropdownMenuSub.Trigger>
+              <DropdownMenuSub.Content className="w-32">
+                <DropdownMenu.Group>
+                  <DropdownMenu.Item>Menu</DropdownMenu.Item>
+                  <DropdownMenu.Item>Message</DropdownMenu.Item>
+                </DropdownMenu.Group>
+                <DropdownMenu.Separator />
+                <DropdownMenu.Group>
+                  <DropdownMenu.Item>More...</DropdownMenu.Item>
+                </DropdownMenu.Group>
+              </DropdownMenuSub.Content>
+            </DropdownMenuSub>
             <DropdownMenu.Item prefix={<LuPlus />} shortcut="⌘T">
               New team
             </DropdownMenu.Item>
@@ -62,6 +79,7 @@ export default function DropdownDemo() {
           <DropdownMenu.Group>
             <DropdownMenu.Item
               prefix={<LuLogOut />}
+              disabled={isPending}
               suffix={isPending ? <Spinner /> : null}
               onClick={async () => {
                 setIsPending(true);

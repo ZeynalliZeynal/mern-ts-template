@@ -1,5 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
-
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -224,16 +223,12 @@
         }
     }
 
-    @font-face {
-        font-family: "Inter", sans-serif;
-    }
-
     * {
         @apply focus-visible:ring ring-blue-900 outline-0
     }
 
     body {
-        @apply bg-background-100 text-foreground text-sm font-['Inter'];
+        @apply bg-background-100 text-foreground text-sm font-body;
     }
 
     img, svg {

@@ -1,7 +1,12 @@
 import React, {
+  cloneElement,
   createContext,
   forwardRef,
+  HTMLAttributes,
+  isValidElement,
+  MouseEventHandler,
   ReactNode,
+  useCallback,
   useContext,
   useImperativeHandle,
   useRef,
@@ -14,6 +19,7 @@ import {
   PopperCheckboxItemProps,
   PopperContentProps,
   PopperContextProps,
+  PopperContextTriggerProps,
   PopperGroupProps,
   PopperItemProps,
   PopperRadioGroupContextProps,
@@ -38,6 +44,8 @@ import { useNavigate } from "react-router-dom";
 import { FaCheck } from "react-icons/fa6";
 import { GoDotFill } from "react-icons/go";
 import { useDebounce } from "@/hooks/useDebounce.ts";
+import { PiCaretUpDownBold } from "react-icons/pi";
+import Button from "@/components/ui/button.tsx";
 
 const POPPER_TRIGGER_SELECTOR = "[popper-trigger]";
 
@@ -89,20 +97,21 @@ export default function Popper({
   const openPopper = React.useCallback(
     (event: React.MouseEvent<HTMLElement>) => {
       clearDebounce();
+      const rect = event.currentTarget.getBoundingClientRect();
+      if (!rect) return;
 
       if (menuType === "context") {
         const { clientX, clientY } = event;
-        const rect = event.currentTarget.getBoundingClientRect();
-        if (!rect) return;
         const left = Math.abs(clientX - rect.left);
         const top = Math.abs(clientY - rect.top);
         setPosition({ left, top });
       }
+      setTriggerPosition(rect);
       setAnimate(false);
       setOpen(true);
       setActiveTrigger(event.currentTarget);
     },
-    [menuType],
+    [clearDebounce, menuType],
   );
 
   const closePopper = React.useCallback(() => {
@@ -165,9 +174,64 @@ export default function Popper({
   );
 }
 
+const PopperContextTrigger = React.forwardRef<
+  HTMLElement,
+  PopperContextTriggerProps
+>(({ children, className = undefined, asChild }, forwardRef) => {
+  const { open, openPopper, setTriggerPosition, menuType } = usePopper();
+
+  const ref = React.useRef<HTMLElement | null>(null);
+  React.useImperativeHandle(forwardRef, () => ref.current as HTMLElement);
+
+  const updatePosition = React.useCallback(() => {
+    if (ref.current) {
+      setTriggerPosition(ref.current.getBoundingClientRect());
+    }
+  }, [setTriggerPosition]);
+
+  useResize(open, updatePosition);
+
+  const handleContextMenu: React.MouseEventHandler<HTMLDivElement> =
+    React.useCallback(
+      (event) => {
+        event.preventDefault();
+        openPopper(event);
+      },
+      [openPopper],
+    );
+
+  const attributes = {
+    tabIndex: 0,
+    ref,
+    "popper-trigger": "",
+    "aria-expanded": open,
+    "data-state": open ? "open" : "closed",
+    className: cn("pointer-events-auto", className),
+    onContextMenu: menuType === "context" ? handleContextMenu : undefined,
+  };
+
+  return asChild && React.isValidElement(children) ? (
+    React.cloneElement(children, attributes)
+  ) : (
+    <div
+      {...(attributes as React.HTMLAttributes<HTMLDivElement>)}
+      className={cn(
+        "select-none pointer-events-auto min-w-72 min-h-32 flex items-center justify-center text-gray-800 rounded-ui-content border border-dashed",
+        className,
+      )}
+    >
+      {children}
+    </div>
+  );
+});
+
 const PopperTrigger = React.forwardRef<HTMLElement, PopperTriggerProps>(
-  ({ children, className = undefined, asChild }, forwardRef) => {
+  (
+    { children, className = undefined, asChild, prefix, suffix, disabled },
+    forwardRef,
+  ) => {
     const { open, openPopper, setTriggerPosition, menuType } = usePopper();
+    const [isHovering, setIsHovering] = useState(false);
 
     const ref = React.useRef<HTMLElement | null>(null);
     React.useImperativeHandle(forwardRef, () => ref.current as HTMLElement);
@@ -180,42 +244,84 @@ const PopperTrigger = React.forwardRef<HTMLElement, PopperTriggerProps>(
 
     useResize(open, updatePosition);
 
-    const handleContextMenu: React.MouseEventHandler<HTMLDivElement> =
-      React.useCallback(
-        (event) => {
-          event.preventDefault();
-          openPopper(event);
-        },
-        [openPopper],
-      );
-
-    const attributes = {
-      tabIndex: 0,
-      ref,
-      "popper-trigger": "",
-      "aria-expanded": open,
-      "data-state": open ? "open" : "closed",
-      className: cn("pointer-events-auto", className),
-      onContextMenu: menuType === "context" ? handleContextMenu : undefined,
+    const handleClick: MouseEventHandler<HTMLButtonElement> = (event) => {
+      event.preventDefault();
+      openPopper(event);
     };
 
-    return asChild && React.isValidElement(children) ? (
-      React.cloneElement(children, attributes)
-    ) : (
-      <div
-        {...(attributes as React.HTMLAttributes<HTMLDivElement>)}
+    useResize(
+      open,
+      useCallback(() => {
+        if (!ref.current) return;
+        setTriggerPosition(ref.current.getBoundingClientRect());
+      }, [setTriggerPosition]),
+    );
+
+    const commonAttributes = {
+      ref,
+      "popper-trigger": "",
+      role: "combobox",
+      type: "button",
+      "aria-expanded": open,
+      "aria-disabled": disabled,
+      "data-disabled": disabled ? "" : undefined,
+      "data-state": open ? "open" : "close",
+      onClick: handleClick,
+    };
+
+    return asChild && isValidElement(children) ? (
+      cloneElement(children, commonAttributes)
+    ) : menuType === "popover" ? (
+      <button
+        {...(commonAttributes as HTMLAttributes<HTMLButtonElement>)}
         className={cn(
-          "select-none pointer-events-auto min-w-72 min-h-32 flex items-center justify-center text-gray-800 rounded-ui-content border border-dashed",
+          "h-7 px-3 rounded-md border text-foreground flex items-center justify-between gap-1.5 transition",
+          {
+            "bg-ui-item-background-hover": isHovering,
+            "data-[disabled]:text-ui-disabled-foreground data-[disabled]:pointer-events-none":
+              disabled,
+          },
           className,
         )}
+        onMouseEnter={() => {
+          setIsHovering(true);
+        }}
+        onMouseLeave={() => {
+          setIsHovering(false);
+        }}
+      >
+        {prefix && <span className="opacity-60">{prefix}</span>}
+        {children}
+        {suffix ? (
+          suffix
+        ) : (
+          <span className="opacity-60 size-3">
+            <PiCaretUpDownBold />
+          </span>
+        )}
+      </button>
+    ) : (
+      <Button
+        {...(commonAttributes as HTMLAttributes<HTMLButtonElement>)}
+        primary
+        prefix={prefix}
+        suffix={suffix}
+        size="sm"
+        className={cn(className)}
+        disabled={disabled}
       >
         {children}
-      </div>
+      </Button>
     );
   },
 );
 
-const PopperContent = ({ children, className }: PopperContentProps) => {
+const PopperContent = ({
+  children,
+  className,
+  align = "center",
+  ...etc
+}: PopperContentProps) => {
   const {
     open,
     position,
@@ -225,6 +331,7 @@ const PopperContent = ({ children, className }: PopperContentProps) => {
     highlightItem,
     currentItemIndex,
     setCurrentItemIndex,
+    menuType,
   } = usePopper();
   const [style, setStyle] = React.useState<React.CSSProperties>({});
 
@@ -244,33 +351,61 @@ const PopperContent = ({ children, className }: PopperContentProps) => {
   };
 
   const handleResize = React.useCallback(() => {
-    if (position && triggerPosition && ref.current) {
-      const { left: clientLeft, top: clientTop } = position;
-      const canFitRight =
-        innerWidth - clientLeft - triggerPosition.left >
-        ref.current.offsetWidth;
+    if (triggerPosition && ref.current) {
+      if (menuType === "context") {
+        if (!position) return;
+        const { left: clientLeft, top: clientTop } = position;
+        const canFitRight =
+          innerWidth - clientLeft - triggerPosition.left >
+          ref.current.offsetWidth;
 
-      const canFitBottom =
-        innerHeight - clientTop - triggerPosition.top >
-        ref.current.offsetHeight;
+        const canFitBottom =
+          innerHeight - clientTop - triggerPosition.top >
+          ref.current.offsetHeight;
 
-      let left = undefined;
-      let right = undefined;
-      let top = undefined;
-      let bottom = undefined;
+        let left = undefined;
+        let right = undefined;
+        let top = undefined;
+        let bottom = undefined;
 
-      if (canFitRight) left = triggerPosition.left + clientLeft;
-      else right = 8;
-      if (canFitBottom) top = triggerPosition.top + clientTop;
-      else bottom = 8;
-      setStyle({
-        left: left,
-        top,
-        right,
-        bottom,
-      });
+        if (canFitRight) left = triggerPosition.left + clientLeft;
+        else right = 8;
+        if (canFitBottom) top = triggerPosition.top + clientTop;
+        else bottom = 8;
+        setStyle({
+          left: left,
+          top,
+          right,
+          bottom,
+        });
+      } else {
+        const spaceLeftBottom = window.innerHeight - triggerPosition.bottom;
+
+        const canFitBottom = spaceLeftBottom > ref.current.clientHeight;
+
+        const centerX = triggerPosition.left + triggerPosition.width / 2;
+
+        let left = undefined;
+        if (align === "center") {
+          left = Math.max(0, centerX - ref.current.clientWidth / 2);
+        } else if (align === "right") {
+          left = triggerPosition.right - ref.current.offsetWidth;
+        } else {
+          left = triggerPosition.left;
+        }
+
+        setStyle({
+          top: canFitBottom
+            ? triggerPosition.top + triggerPosition.height + 8
+            : undefined,
+          bottom: !canFitBottom
+            ? spaceLeftBottom + triggerPosition.height + 8
+            : undefined,
+          left,
+        });
+      }
     }
-  }, [position, ref, triggerPosition]);
+  }, [align, menuType, position, ref, triggerPosition]);
 
   React.useEffect(() => {
     if (open && ref.current) {
@@ -283,7 +418,7 @@ const PopperContent = ({ children, className }: PopperContentProps) => {
 
   useResize(open, handleResize);
 
-  if (open && position)
+  if (open)
     return createPortal(
       <div
         ref={ref}
@@ -299,6 +434,7 @@ const PopperContent = ({ children, className }: PopperContentProps) => {
         )}
         style={{ ...style, animationDuration: ANIMATION_DURATION + "ms" }}
         onKeyDown={handleKeyDown}
+        {...etc}
       >
         {children}
       </div>,
@@ -448,7 +584,7 @@ const PopperItem = React.forwardRef<HTMLElement, PopperItemProps>(
         {prefix}
         {children}
         {(shortcut || suffix) && (
-          <div className="ml-auto flex items-center gap-1">
+          <div className="ml-auto flex items-center gap-1 font-geist">
             {suffix}
             {shortcut && (
               <span className="text-xs opacity-60 tracking-widest">
@@ -590,6 +726,7 @@ const PopperLabel = forwardRef<
 Popper.Label = PopperLabel;
 Popper.Group = PopperGroup;
 Popper.Separator = PopperSeparator;
+Popper.ContextTrigger = PopperContextTrigger;
 Popper.Trigger = PopperTrigger;
 Popper.Item = PopperItem;
 Popper.Content = PopperContent;

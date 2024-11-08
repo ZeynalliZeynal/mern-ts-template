@@ -1,6 +1,5 @@
-import {
+import React, {
   forwardRef,
-  MouseEventHandler,
   MutableRefObject,
   ReactNode,
   useImperativeHandle,
@@ -19,7 +18,9 @@ interface ButtonProps {
   prefix?: ReactNode;
   suffix?: ReactNode;
   primary?: true;
-  onClick?: MouseEventHandler<HTMLButtonElement>;
+  onClick?: (
+    event: React.MouseEvent<HTMLButtonElement>,
+  ) => void | Promise<void>;
   disabled?: boolean;
   type?: "button" | "submit" | "reset";
   className?: string;
