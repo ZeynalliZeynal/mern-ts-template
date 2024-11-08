@@ -42,7 +42,7 @@ export default function PopoverDemo() {
 
   return (
     <Stack>
-      <Popover defaultValue={values1[0].value}>
+      <Popover>
         <Popover.Trigger prefix="Style:" className="min-w-36 text-xs">
           {values1.find((value) => value.value === value1)?.label}
         </Popover.Trigger>
@@ -60,7 +60,7 @@ export default function PopoverDemo() {
           ))}
         </Popover.Content>
       </Popover>
-      <Popover>
+      <Popover valueRemovable>
         <Popover.Trigger asChild>
           <Button full size="sm">
             {initialValue || "Select a framework"}

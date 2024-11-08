@@ -27,6 +27,8 @@ type PopperContextProps = {
   currentItemIndex: number | undefined;
   setCurrentItemIndex: Dispatch<SetStateAction<number | undefined>>;
   menuType?: MenuTypes;
+  selectValue?: (value: string, onSelect: (value: string) => void) => void;
+  selectedValue?: string;
 };
 
 type PopperRadioGroupContextProps = {
@@ -56,9 +58,15 @@ type PopperContextTriggerProps = {
 };
 
 type PopperTriggerProps = PopperContextTriggerProps & {
-  prefix: ReactNode;
-  suffix: ReactNode;
-  disabled: boolean;
+  prefix?: ReactNode;
+  suffix?: ReactNode;
+  disabled?: boolean;
+};
+
+type PopperProps = {
+  children: ReactNode;
+  menuType?: MenuTypes;
+  valueRemovable?: boolean;
 };
 
 type CommonItemProps = {
@@ -77,6 +85,9 @@ type PopperItemProps = {
   onClick?: (event: React.MouseEvent<HTMLElement>) => void | Promise<void>;
   href?: string;
   role?: React.AriaRole;
+  onSelect?: (value: string) => void;
+  value?: string;
+  removable?: boolean;
 } & CommonItemProps;
 
 type PopperCheckboxItemProps = {
@@ -106,4 +117,5 @@ export type {
   PopperRadioItemProps,
   PopperContextTriggerProps,
   AlignContentProps,
+  PopperProps,
 };

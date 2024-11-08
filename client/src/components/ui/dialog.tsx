@@ -22,6 +22,7 @@ import { useOutsideClick } from "@/hooks/useOutsideClick.ts";
 import { useRestrictBody } from "@/hooks/useRestrictBody.ts";
 import { loopThroughFocusableElements } from "@/components/ui/utils.ts";
 import { useFocusFirstElement } from "@/hooks/useFocusFirstElement.ts";
+import { useDebounce } from "@/hooks/useDebounce.ts";
 
 type DialogContextProps = {
   openDialog: (element: HTMLElement) => void;
@@ -55,12 +56,15 @@ export default function Dialog({
   );
   const [animate, setAnimate] = React.useState(false);
 
+  const { debounce, clearDebounce } = useDebounce();
+
   const setControlledOpen = (isOpen: boolean) => {
     setOpen(isOpen);
     onOpenChange?.(isOpen);
   };
 
   const openDialog = (element: HTMLElement) => {
+    clearDebounce();
     setAnimate(false);
     setActiveTrigger(element as HTMLElement);
     setControlledOpen(true);
@@ -69,7 +73,7 @@ export default function Dialog({
   const closeDialog = () => {
     if (document.body.querySelector("[role=menu]")) return;
     setAnimate(true);
-    setTimeout(() => {
+    debounce(() => {
       setControlledOpen(false);
       setAnimate(false);
 
@@ -86,7 +90,7 @@ export default function Dialog({
 
   useEffect(() => {
     if (customOpen !== open) setOpen(customOpen);
-  }, [customOpen]);
+  }, [customOpen, open]);
 
   return (
     <DialogContext.Provider value={{ open, openDialog, animate, closeDialog }}>

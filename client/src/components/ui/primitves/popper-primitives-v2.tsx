@@ -8,6 +8,7 @@ import React, {
   ReactNode,
   useCallback,
   useContext,
+  useEffect,
   useImperativeHandle,
   useRef,
   useState,
@@ -15,13 +16,13 @@ import React, {
 import { cn } from "@/lib/utils.ts";
 import {
   ClientPosition,
-  MenuTypes,
   PopperCheckboxItemProps,
   PopperContentProps,
   PopperContextProps,
   PopperContextTriggerProps,
   PopperGroupProps,
   PopperItemProps,
+  PopperProps,
   PopperRadioGroupContextProps,
   PopperRadioGroupProps,
   PopperRadioItemProps,
@@ -72,29 +73,28 @@ const usePopperRadioGroup = () => {
 export default function Popper({
   children,
   menuType,
-}: {
-  children: ReactNode;
-  menuType?: MenuTypes;
-}) {
-  const [open, setOpen] = React.useState<boolean>(false);
-  const [triggerPosition, setTriggerPosition] = React.useState<
-    DOMRect | undefined
-  >(undefined);
-  const [animate, setAnimate] = React.useState<boolean>(false);
-  const [position, setPosition] = React.useState<ClientPosition>(undefined);
-  const [activeTrigger, setActiveTrigger] = React.useState<
-    HTMLElement | undefined
-  >(undefined);
-  const [currentItemIndex, setCurrentItemIndex] = React.useState<
-    number | undefined
-  >(0);
-  const [highlightedItem, setHighlightedItem] = React.useState<
+  valueRemovable,
+}: PopperProps) {
+  const [open, setOpen] = useState<boolean>(false);
+  const [triggerPosition, setTriggerPosition] = useState<DOMRect | undefined>(
+    undefined,
+  );
+  const [animate, setAnimate] = useState<boolean>(false);
+  const [position, setPosition] = useState<ClientPosition>(undefined);
+  const [activeTrigger, setActiveTrigger] = useState<HTMLElement | undefined>(
+    undefined,
+  );
+  const [selectedValue, setSelectedValue] = useState("");
+  const [currentItemIndex, setCurrentItemIndex] = useState<number | undefined>(
+    0,
+  );
+  const [highlightedItem, setHighlightedItem] = useState<
     HTMLElement | undefined
   >(undefined);
 
   const { debounce, clearDebounce } = useDebounce();
 
-  const openPopper = React.useCallback(
+  const openPopper = useCallback(
     (event: React.MouseEvent<HTMLElement>) => {
       clearDebounce();
       const rect = event.currentTarget.getBoundingClientRect();
@@ -114,7 +114,17 @@ export default function Popper({
     [clearDebounce, menuType],
   );
 
-  const closePopper = React.useCallback(() => {
+  const selectValue = (value: string, onSelect: (value: string) => void) => {
+    if (selectedValue !== value) {
+      onSelect(value);
+      setSelectedValue(value);
+    } else if (selectedValue === value && valueRemovable) {
+      onSelect("");
+      setSelectedValue("");
+    }
+  };
+
+  const closePopper = useCallback(() => {
     setAnimate(true);
     debounce(() => {
       setOpen(false);
@@ -132,7 +142,7 @@ export default function Popper({
     }, ANIMATION_TIMEOUT);
   }, [activeTrigger, debounce]);
 
-  const highlightItem = React.useCallback((value: HTMLElement | undefined) => {
+  const highlightItem = useCallback((value: HTMLElement | undefined) => {
     if (!value) return;
     setHighlightedItem(value);
     const root =
@@ -167,6 +177,8 @@ export default function Popper({
         currentItemIndex,
         setCurrentItemIndex,
         menuType,
+        selectedValue,
+        selectValue,
       }}
     >
       {children}
@@ -180,10 +192,10 @@ const PopperContextTrigger = React.forwardRef<
 >(({ children, className = undefined, asChild }, forwardRef) => {
   const { open, openPopper, setTriggerPosition, menuType } = usePopper();
 
-  const ref = React.useRef<HTMLElement | null>(null);
-  React.useImperativeHandle(forwardRef, () => ref.current as HTMLElement);
+  const ref = useRef<HTMLElement | null>(null);
+  useImperativeHandle(forwardRef, () => ref.current as HTMLElement);
 
-  const updatePosition = React.useCallback(() => {
+  const updatePosition = useCallback(() => {
     if (ref.current) {
       setTriggerPosition(ref.current.getBoundingClientRect());
     }
@@ -192,7 +204,7 @@ const PopperContextTrigger = React.forwardRef<
   useResize(open, updatePosition);
 
   const handleContextMenu: React.MouseEventHandler<HTMLDivElement> =
-    React.useCallback(
+    useCallback(
       (event) => {
         event.preventDefault();
         openPopper(event);
@@ -233,10 +245,10 @@ const PopperTrigger = React.forwardRef<HTMLElement, PopperTriggerProps>(
     const { open, openPopper, setTriggerPosition, menuType } = usePopper();
     const [isHovering, setIsHovering] = useState(false);
 
-    const ref = React.useRef<HTMLElement | null>(null);
-    React.useImperativeHandle(forwardRef, () => ref.current as HTMLElement);
+    const ref = useRef<HTMLElement | null>(null);
+    useImperativeHandle(forwardRef, () => ref.current as HTMLElement);
 
-    const updatePosition = React.useCallback(() => {
+    const updatePosition = useCallback(() => {
       if (ref.current) {
         setTriggerPosition(ref.current.getBoundingClientRect());
       }
@@ -333,7 +345,7 @@ const PopperContent = ({
     setCurrentItemIndex,
     menuType,
   } = usePopper();
-  const [style, setStyle] = React.useState<React.CSSProperties>({});
+  const [style, setStyle] = useState<React.CSSProperties>({});
 
   const ref = useOutsideClick({ onTrigger: closePopper });
 
@@ -350,7 +362,7 @@ const PopperContent = ({
     });
   };
 
-  const handleResize = React.useCallback(() => {
+  const handleResize = useCallback(() => {
     if (triggerPosition && ref.current) {
       if (menuType === "context") {
         if (!position) return;
@@ -407,7 +419,7 @@ const PopperContent = ({
     }
   }, [align, menuType, position, ref, triggerPosition]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (open && ref.current) {
       highlightItem(
         ref.current.querySelector(POPPER_ITEM_SELECTOR) as HTMLElement,
@@ -489,16 +501,25 @@ const PopperItem = React.forwardRef<HTMLElement, PopperItemProps>(
       onKeyDown,
       onClick,
       role,
+      value,
+      onSelect,
       ...etc
     },
     forwardRef,
   ) => {
-    const { highlightItem, isHighlighted, closePopper } = usePopper();
+    const {
+      highlightItem,
+      isHighlighted,
+      closePopper,
+      selectedValue,
+      selectValue,
+      menuType,
+    } = usePopper();
 
     const navigate = useNavigate();
 
-    const ref = React.useRef<HTMLElement | null>(null);
-    React.useImperativeHandle(forwardRef, () => ref.current as HTMLElement);
+    const ref = useRef<HTMLElement | null>(null);
+    useImperativeHandle(forwardRef, () => ref.current as HTMLElement);
 
     const handleClick = (event: React.MouseEvent<HTMLElement>) => {
       event.preventDefault();
@@ -516,6 +537,9 @@ const PopperItem = React.forwardRef<HTMLElement, PopperItemProps>(
         } else {
           closePopper();
         }
+      } else if (onSelect && value && selectValue) {
+        selectValue(value, onSelect);
+        closePopper();
       } else closePopper();
     };
 
@@ -544,6 +568,11 @@ const PopperItem = React.forwardRef<HTMLElement, PopperItemProps>(
       }
     };
 
+    const popoverAttributes = {
+      "aria-selected": selectedValue === value,
+      "data-selected": selectedValue === value,
+    };
+
     const attributes = {
       ref,
       tabIndex: -1,
@@ -562,6 +591,7 @@ const PopperItem = React.forwardRef<HTMLElement, PopperItemProps>(
       onKeyDown: handleKeyDown,
       onClick: handleClick,
       ...etc,
+      ...(menuType === "popover" && popoverAttributes),
     };
 
     return asChild && React.isValidElement(children) ? (

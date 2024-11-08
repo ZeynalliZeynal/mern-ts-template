@@ -1,13 +1,24 @@
 import { ReactNode } from "react";
-import { MenuItemProps, MenuTriggerProps } from "@/components/ui/types.ts";
-import Popper, {
-  AlignWrapperProps,
-} from "@/components/ui/primitves/popper-primitives.tsx";
 import { cn } from "@/lib/utils.ts";
-import Primitive from "@/components/ui/primitves/primitives.tsx";
+import Popper from "@/components/ui/primitves/popper-primitives-v2.tsx";
+import {
+  AlignContentProps,
+  PopperItemProps,
+  PopperTriggerProps,
+} from "@/types/ui/popper.ts";
 
-export default function Popover({ children }: { children: ReactNode }) {
-  return <Popper menuType="popover">{children}</Popper>;
+export default function Popover({
+  children,
+  valueRemovable,
+}: {
+  children: ReactNode;
+  valueRemovable?: boolean;
+}) {
+  return (
+    <Popper valueRemovable={valueRemovable} menuType="popover">
+      {children}
+    </Popper>
+  );
 }
 
 function PopoverTrigger({
@@ -17,7 +28,7 @@ function PopoverTrigger({
   className,
   disabled,
   asChild,
-}: MenuTriggerProps) {
+}: PopperTriggerProps) {
   return (
     <Popper.Trigger
       suffix={suffix}
@@ -38,12 +49,12 @@ function PopoverContent({
 }: {
   children: ReactNode;
   className?: string;
-  align?: AlignWrapperProps;
+  align?: AlignContentProps;
 }) {
   return (
-    <Popper.Wrapper align={align} className={cn("min-w-52", className)}>
+    <Popper.Content align={align} className={cn("min-w-52", className)}>
       {children}
-    </Popper.Wrapper>
+    </Popper.Content>
   );
 }
 
@@ -56,15 +67,9 @@ function PopoverItem({
   prefix,
   value,
   onSelect,
-  removable,
-}: {
-  value: string;
-  onSelect: (currentValue: string) => void;
-  removable?: boolean;
-} & MenuItemProps) {
+}: PopperItemProps) {
   return (
     <Popper.Item
-      valueRemovable={removable}
       disabled={disabled}
       prefix={prefix}
       suffix={suffix}
@@ -78,9 +83,9 @@ function PopoverItem({
   );
 }
 
-Popover.Group = Primitive.Group;
-Popover.Label = Primitive.Label;
-Popover.Separator = Primitive.Separator;
+Popover.Group = Popper.Group;
+Popover.Label = Popper.Label;
+Popover.Separator = Popper.Separator;
 Popover.Trigger = PopoverTrigger;
 Popover.Item = PopoverItem;
 Popover.Content = PopoverContent;
