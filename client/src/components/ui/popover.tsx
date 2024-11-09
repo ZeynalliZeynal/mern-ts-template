@@ -7,7 +7,7 @@ import {
   PopperTriggerProps,
 } from "@/types/ui/popper.ts";
 
-export default function Popover({
+export default function Select({
   children,
   valueRemovable,
 }: {
@@ -15,13 +15,13 @@ export default function Popover({
   valueRemovable?: boolean;
 }) {
   return (
-    <Popper valueRemovable={valueRemovable} menuType="popover">
+    <Popper valueRemovable={valueRemovable} menuType="select">
       {children}
     </Popper>
   );
 }
 
-function PopoverTrigger({
+function SelectTrigger({
   children,
   prefix,
   suffix,
@@ -42,7 +42,7 @@ function PopoverTrigger({
   );
 }
 
-function PopoverContent({
+function SelectContent({
   children,
   className,
   align,
@@ -58,7 +58,7 @@ function PopoverContent({
   );
 }
 
-function PopoverItem({
+function SelectItem({
   children,
   disabled = false,
   className,
@@ -83,9 +83,9 @@ function PopoverItem({
   );
 }
 
-Popover.Group = Popper.Group;
-Popover.Label = Popper.Label;
-Popover.Separator = Popper.Separator;
-Popover.Trigger = PopoverTrigger;
-Popover.Item = PopoverItem;
-Popover.Content = PopoverContent;
+Select.Group = Popper.Group;
+Select.Label = Popper.Label;
+Select.Separator = Popper.Separator;
+Select.Trigger = SelectTrigger;
+Select.Item = SelectItem;
+Select.Content = SelectContent;

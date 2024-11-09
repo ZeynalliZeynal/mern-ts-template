@@ -158,8 +158,18 @@ export default {
       margin: ({ theme }) => theme("padding"),
       animation: {
         spinner: "spinner 1.1s linear infinite",
+        "accordion-up": "accordion-up 0.25s ease-out both",
+        "accordion-down": "accordion-down 0.25s ease-in both",
       },
       keyframes: {
+        "accordion-down": {
+          "0%": { height: 0 },
+          "100%": { height: "var(--accordion-content-height)" },
+        },
+        "accordion-up": {
+          "0%": { height: "var(--accordion-content-height)" },
+          "100%": { height: 0 },
+        },
         spinner: {
           "0%": {
             opacity: "1",

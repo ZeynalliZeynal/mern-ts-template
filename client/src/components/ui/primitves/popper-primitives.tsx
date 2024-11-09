@@ -286,7 +286,7 @@ const PopperTrigger = React.forwardRef<HTMLElement, PopperTriggerProps>(
 
     return asChild && isValidElement(children) ? (
       cloneElement(children, commonAttributes)
-    ) : menuType === "popover" ? (
+    ) : menuType === "select" ? (
       <button
         {...(commonAttributes as HTMLAttributes<HTMLButtonElement>)}
         className={cn(
@@ -555,7 +555,7 @@ const PopperItem = React.forwardRef<HTMLElement, PopperItemProps>(
       }
     };
 
-    const popoverAttributes = {
+    const selectAttributes = {
       "aria-selected": selectedValue === value,
       "data-selected": selectedValue === value,
     };
@@ -578,7 +578,7 @@ const PopperItem = React.forwardRef<HTMLElement, PopperItemProps>(
       onKeyDown: handleKeyDown,
       onClick: handleClick,
       ...etc,
-      ...(menuType === "popover" && popoverAttributes),
+      ...(menuType === "select" && selectAttributes),
     };
 
     return asChild && React.isValidElement(children) ? (

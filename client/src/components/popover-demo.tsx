@@ -1,6 +1,6 @@
 import Stack from "@/components/ui/stack.tsx";
 import { useState } from "react";
-import Popover from "@/components/ui/popover.tsx";
+import Select from "@/components/ui/popover.tsx";
 import { IoCheckmarkOutline } from "react-icons/io5";
 import Button from "@/components/ui/button.tsx";
 
@@ -34,7 +34,7 @@ const values2 = [
   },
 ];
 
-export default function PopoverDemo() {
+export default function SelectDemo() {
   const [value1, setValue1] = useState(values1[0].value);
   const [value2, setValue2] = useState("");
 
@@ -42,13 +42,13 @@ export default function PopoverDemo() {
 
   return (
     <Stack>
-      <Popover>
-        <Popover.Trigger prefix="Style:" className="min-w-36 text-xs">
+      <Select>
+        <Select.Trigger prefix="Style:" className="min-w-36 text-xs">
           {values1.find((value) => value.value === value1)?.label}
-        </Popover.Trigger>
-        <Popover.Content>
+        </Select.Trigger>
+        <Select.Content>
           {values1.map((item) => (
-            <Popover.Item
+            <Select.Item
               className="text-xs"
               key={item.value}
               value={item.value}
@@ -56,40 +56,40 @@ export default function PopoverDemo() {
               onSelect={(currentValue) => setValue1(currentValue)}
             >
               {item.label}
-            </Popover.Item>
+            </Select.Item>
           ))}
-        </Popover.Content>
-      </Popover>
-      <Popover valueRemovable>
-        <Popover.Trigger asChild>
+        </Select.Content>
+      </Select>
+      <Select valueRemovable>
+        <Select.Trigger asChild>
           <Button full size="sm">
             {initialValue || "Select a framework"}
           </Button>
-        </Popover.Trigger>
-        <Popover.Content>
-          <Popover.Label>Frameworks</Popover.Label>
-          <Popover.Separator />
-          <Popover.Group>
+        </Select.Trigger>
+        <Select.Content>
+          <Select.Label>Frameworks</Select.Label>
+          <Select.Separator />
+          <Select.Group>
             {values2.map((item) => (
-              <Popover.Item
+              <Select.Item
                 key={item.value}
                 value={item.value}
                 suffix={item.value === value2 ? <IoCheckmarkOutline /> : null}
                 onSelect={(currentValue) => setValue2(currentValue)}
               >
                 {item.label}
-              </Popover.Item>
+              </Select.Item>
             ))}
-            <Popover.Item
+            <Select.Item
               value="disabled"
               disabled
               onSelect={(currentValue) => setValue2(currentValue)}
             >
               disabled
-            </Popover.Item>
-          </Popover.Group>
-        </Popover.Content>
-      </Popover>
+            </Select.Item>
+          </Select.Group>
+        </Select.Content>
+      </Select>
     </Stack>
   );
 }

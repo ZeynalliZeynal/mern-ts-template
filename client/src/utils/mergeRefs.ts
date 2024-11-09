@@ -1,8 +1,8 @@
 import React from "react";
 
-export default function mergeRefs<T>(
-  ...refs: (React.Ref<T> | null | undefined)[]
-) {
+export function mergeRefs<T>(
+  ...refs: (React.Ref<T> | undefined)[]
+): React.RefCallback<T> {
   return (instance: T | null) => {
     refs.forEach((ref) => {
       if (typeof ref === "function") {

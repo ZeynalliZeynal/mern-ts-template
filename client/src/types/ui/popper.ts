@@ -12,7 +12,7 @@ type ClientPosition =
     }
   | undefined;
 
-export type MenuTypes = "popover" | "dropdown" | "context";
+export type MenuTypes = "select" | "dropdown" | "context";
 
 type PopperContextProps = {
   openPopper: (event: React.MouseEvent<HTMLElement>) => void;

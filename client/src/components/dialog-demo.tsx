@@ -1,7 +1,7 @@
 import Dialog from "@/components/ui/dialog.tsx";
 import { IoCheckmarkOutline, IoClose } from "react-icons/io5";
 import Button from "@/components/ui/button.tsx";
-import Popover from "@/components/ui/popover.tsx";
+import Select from "@/components/ui/popover.tsx";
 import { useState } from "react";
 import { FaCookieBite } from "react-icons/fa6";
 import { PiCaretUpDownBold } from "react-icons/pi";
@@ -48,8 +48,8 @@ export default function DialogDemo() {
             </Dialog.Description>
           </Dialog.Header>
           <Dialog.Footer className="justify-between">
-            <Popover>
-              <Popover.Trigger asChild>
+            <Select>
+              <Select.Trigger asChild>
                 {/*<button className="rounded-md flex items-center justify-between gap-2 text-xs h-8 px-3 min-w-20 border hover:bg-gray-alpha-200 text-gray-900 hover:text-foreground transition">*/}
                 {/*  <span className="size-3">*/}
                 {/*    <PiCaretUpDownBold className="opacity-60" />*/}
@@ -61,11 +61,14 @@ export default function DialogDemo() {
                 >
                   {initialValue?.label}
                 </Button>
-              </Popover.Trigger>
-              <Popover.Content className="min-w-40" align="left">
-                <Popover.Group>
+              </Select.Trigger>
+              <Select.Content
+                className="min-w-40"
+                align="horizontal-left-bottom"
+              >
+                <Select.Group>
                   {values.map((val) => (
-                    <Popover.Item
+                    <Select.Item
                       key={val.value}
                       value={val.value}
                       onSelect={(currentValue) => setValue(currentValue)}
@@ -74,11 +77,11 @@ export default function DialogDemo() {
                       }
                     >
                       {val.label}
-                    </Popover.Item>
+                    </Select.Item>
                   ))}
-                </Popover.Group>
-              </Popover.Content>{" "}
-            </Popover>
+                </Select.Group>
+              </Select.Content>{" "}
+            </Select>
             <div className="flex-grow h-px bg-gray-alpha-400 mx-3" />
             <div className="flex items-center gap-2">
               <Button
