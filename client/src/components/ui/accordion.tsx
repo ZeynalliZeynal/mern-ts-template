@@ -64,9 +64,7 @@ const Accordion = ({
     <AccordionContext.Provider
       value={{ singleOpen, openAccordion, closeAccordion, collapsible, type }}
     >
-      <div accordion-root="" className={cn(className)}>
-        {children}
-      </div>
+      <div className={cn(className)}>{children}</div>
     </AccordionContext.Provider>
   );
 };
@@ -82,7 +80,6 @@ const AccordionItem = forwardRef<HTMLElement, AccordionItemProps>(
 
     const attributes = {
       ref,
-      "accordion-item": "",
       "data-state": state,
       "data-disabled": isDisabled,
       "aria-disabled": isDisabled,
@@ -127,7 +124,6 @@ const AccordionTrigger = forwardRef<HTMLElement, AccordionTriggerProps>(
 
     const attributes = {
       ref,
-      "accordion-trigger": "",
       "data-state": open ? "open" : "closed",
       "aria-expanded": open,
       className,
@@ -178,7 +174,6 @@ const AccordionContent = forwardRef<HTMLElement, AccordionContentProps>(
 
     return (
       <div
-        accordion-content=""
         data-state={open ? "open" : "closed"}
         aria-expanded={value === singleOpen}
         className={cn(
