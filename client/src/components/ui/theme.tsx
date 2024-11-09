@@ -1,13 +1,19 @@
 import { useThemeSwitcher } from "@/context/theme-context";
 import { cn } from "@/lib/utils";
 import { DeviceAlternate, Moon, Sun } from "@/components/icons/geist.tsx";
-import { KeyboardEventHandler, useRef, useState } from "react";
+import {
+  KeyboardEventHandler,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 type Theme = "device" | "light" | "dark";
 
 export default function ThemeSwitcher({ size = 32 }: { size?: number }) {
   const { theme, changeTheme } = useThemeSwitcher();
-  const themes: Theme[] = ["device", "light", "dark"];
+  const themes: Theme[] = useMemo(() => ["device", "light", "dark"], []);
   const [index, setIndex] = useState(themes.indexOf(theme));
   const ref = useRef<HTMLDivElement | null>(null);
 
@@ -31,6 +37,10 @@ export default function ThemeSwitcher({ size = 32 }: { size?: number }) {
     changeTheme(newTheme);
     setIndex(newIndex);
   };
+
+  useEffect(() => {
+    setIndex(themes.indexOf(theme));
+  }, [theme, themes]);
 
   return (
     <div

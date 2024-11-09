@@ -18,7 +18,7 @@ export default function CollapseDemo() {
       {/*    nulla!*/}
       {/*  </Collapse>*/}
       {/*</CollapseGroup>*/}
-      <Accordion type="multiple" collapsible>
+      <Accordion type="single" collapsible>
         <Accordion.Item value="item 1" className="max-w-xl w-full">
           <Accordion.Trigger>Is it accessible?</Accordion.Trigger>
           <Accordion.Content className="border-b">

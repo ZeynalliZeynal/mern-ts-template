@@ -28,6 +28,7 @@ type AccordionProps = {
   children: ReactNode;
   type: AccordionTypes;
   collapsible?: boolean;
+  className?: string;
 };
 
 type AccordionItemContextProps = {

@@ -44,7 +44,12 @@ const useAccordionItem = () => {
   return context;
 };
 
-const Accordion = ({ children, type, collapsible }: AccordionProps) => {
+const Accordion = ({
+  children,
+  className,
+  type,
+  collapsible,
+}: AccordionProps) => {
   const [singleOpen, setSingleOpen] = useState("");
 
   const openAccordion = (value: string) => {
@@ -59,7 +64,9 @@ const Accordion = ({ children, type, collapsible }: AccordionProps) => {
     <AccordionContext.Provider
       value={{ singleOpen, openAccordion, closeAccordion, collapsible, type }}
     >
-      {children}
+      <div accordion-root="" className={cn(className)}>
+        {children}
+      </div>
     </AccordionContext.Provider>
   );
 };
