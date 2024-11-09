@@ -229,10 +229,16 @@ const PopperSubContent = ({ children, className }: PopperContentProps) => {
       closeSubPopper();
       highlightItem(activeTrigger);
     }
+    if (event.code === "Escape") {
+      event.preventDefault();
+      closePopper();
+    }
+    if (event.code === "Tab") {
+      event.preventDefault();
+    }
 
     navigateItems({
       event,
-      close: closePopper,
       highlightItem,
       currentItemIndex,
       setCurrentItemIndex,

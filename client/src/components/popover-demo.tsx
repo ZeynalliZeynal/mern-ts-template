@@ -1,6 +1,6 @@
 import Stack from "@/components/ui/stack.tsx";
 import { useState } from "react";
-import Select from "@/components/ui/popover.tsx";
+import Select from "@/components/ui/select.tsx";
 import { IoCheckmarkOutline } from "react-icons/io5";
 import Button from "@/components/ui/button.tsx";
 

@@ -6,6 +6,7 @@ import React, {
   MouseEventHandler,
   ReactNode,
   SetStateAction,
+  useCallback,
   useContext,
   useEffect,
   useImperativeHandle,
@@ -13,11 +14,11 @@ import React, {
   useState,
 } from "react";
 import { cn } from "@/lib/utils.ts";
-import { IoIosSearch } from "react-icons/io";
 import { useOutsideClick } from "@/hooks/useOutsideClick.ts";
 import { PopperItemProps } from "@/types/ui/popper.ts";
-import { navigateItems } from "@/utils/navigateItems.ts";
 import { useNavigate } from "react-router-dom";
+import { navigateItems } from "@/utils/navigateItems.ts";
+import { ImSearch } from "react-icons/im";
 
 type CommandContextType = {
   inputValue: string;
@@ -30,21 +31,25 @@ type CommandContextType = {
   currentItemIndex: number | undefined;
   setCurrentItemIndex: Dispatch<SetStateAction<number | undefined>>;
   highlightedItem: HTMLElement | undefined;
+  selectValue?: (value: string, onSelect: (value: string) => void) => void;
+  selectedValue?: string;
 };
 
-const GROUP_SELECTOR = "[command-group]";
-const ITEM_SELECTOR = "[command-item]:not([data-disabled])";
-const ROOT_SELECTOR = "[command-root]";
-const SEPARATOR_SELECTOR = "[command-separator]";
-// const LABEL_SELECTOR = '[command-label]'
-const INPUT_SELECTOR = "[command-input]";
+export const COMMAND_GROUP_SELECTOR = "[command-group]";
+export const COMMAND_ITEM_SELECTOR = "[command-item]:not([data-disabled])";
+export const COMMAND_ROOT_SELECTOR = "[command-root]";
+const COMMAND_SEPARATOR_SELECTOR = "[command-separator]";
+// const COMMAND_CONTENT_SELECTOR = "[command-content]";
+export const COMMAND_INPUT_SELECTOR = "[command-input]";
 
 const CommandContext = createContext<CommandContextType | null>(null);
 
-const getElements = () => {
-  const root = document.querySelector(ROOT_SELECTOR);
+const getElements = (element?: HTMLElement) => {
+  const root = element?.closest(COMMAND_ROOT_SELECTOR);
   if (!root) return [];
-  return Array.from(root.querySelectorAll(ITEM_SELECTOR)) as HTMLElement[];
+  return Array.from(
+    root.querySelectorAll(COMMAND_ITEM_SELECTOR),
+  ) as HTMLElement[];
 };
 
 const useCommand = () => {
@@ -63,6 +68,7 @@ export default function Command({
   const [inputValue, setInputValue] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [noResult, setNoResult] = useState(false);
+  const [selectedValue, setSelectedValue] = useState("");
   const [currentItemIndex, setCurrentItemIndex] = useState<number | undefined>(
     -1,
   );
@@ -77,8 +83,18 @@ export default function Command({
     },
   });
 
+  const selectValue = (value: string, onSelect: (value: string) => void) => {
+    if (selectedValue !== value) {
+      onSelect(value);
+      setSelectedValue(value);
+    } else if (selectedValue === value) {
+      onSelect("");
+      setSelectedValue("");
+    }
+  };
+
   const highlightItem = (element?: HTMLElement) => {
-    const elements = getElements();
+    const elements = getElements(element);
     if (element) {
       setCurrentItemIndex(elements.indexOf(element));
       setHighlightedItem(element);
@@ -95,11 +111,11 @@ export default function Command({
   useEffect(() => {
     if (!ref.current) return;
     const groups = [
-      ...document.querySelectorAll(GROUP_SELECTOR),
+      ...document.querySelectorAll(COMMAND_GROUP_SELECTOR),
     ] as HTMLElement[];
 
     const separators = [
-      ...document.querySelectorAll(SEPARATOR_SELECTOR),
+      ...document.querySelectorAll(COMMAND_SEPARATOR_SELECTOR),
     ] as HTMLElement[];
 
     groups.forEach((group) => {
@@ -123,7 +139,7 @@ export default function Command({
       }
     });
 
-    if (!ref.current.querySelector(ITEM_SELECTOR)) {
+    if (!ref.current.querySelector(COMMAND_ITEM_SELECTOR)) {
       setNoResult(true);
     } else {
       setNoResult(false);
@@ -143,13 +159,11 @@ export default function Command({
         isHighlighted,
         currentItemIndex,
         setCurrentItemIndex,
+        selectedValue,
+        selectValue,
       }}
     >
-      <div
-        ref={ref}
-        command-root=""
-        className={cn("border rounded-ui-content", className)}
-      >
+      <div ref={ref} command-root="" className={cn("", className)}>
         {children}
       </div>
     </CommandContext.Provider>
@@ -159,9 +173,11 @@ export default function Command({
 const CommandInput = ({
   className,
   placeholder,
+  disableFocusShortcut,
 }: {
   className?: string;
   placeholder: string;
+  disableFocusShortcut?: boolean;
 }) => {
   const {
     inputValue,
@@ -175,29 +191,40 @@ const CommandInput = ({
 
   const ref = useRef<HTMLInputElement | null>(null);
 
-  const handleKeyDown: KeyboardEventHandler<HTMLInputElement> = (event) => {
-    const root = event.currentTarget.closest("[command-root]");
-    if (!root) return;
-    navigateItems({
-      event,
-      root: document.querySelector(ROOT_SELECTOR),
-      highlightItem,
-      currentItemIndex,
-      setCurrentItemIndex,
-      itemSelector: ITEM_SELECTOR,
-    });
-
-    if ((event.code === "Enter" || event.code === "Space") && highlightedItem) {
-      highlightedItem.click();
-    }
-  };
+  const handleKeyDown: KeyboardEventHandler<HTMLInputElement> = useCallback(
+    (event) => {
+      const root = event.currentTarget.closest("[command-root]") as HTMLElement;
+      if (!root) return;
+      if (event.code === "Tab" && root.closest("[data-portal]")) {
+        event.preventDefault();
+      }
+      if (
+        (event.code === "Enter" || event.code === "Space") &&
+        highlightedItem
+      ) {
+        highlightedItem.click();
+      }
+      navigateItems({
+        event,
+        root,
+        highlightItem,
+        currentItemIndex,
+        setCurrentItemIndex,
+        itemSelector: COMMAND_ITEM_SELECTOR,
+      });
+    },
+    [currentItemIndex, highlightItem, highlightedItem, setCurrentItemIndex],
+  );
 
   useEffect(() => {
+    if (!ref.current || disableFocusShortcut) return;
     function focusOnKeyDown(event: KeyboardEvent) {
       if (!ref.current) return;
       if (event.ctrlKey && (event.code === "KeyK" || event.code === "Keyk")) {
         event.preventDefault();
-        (document.querySelector(INPUT_SELECTOR) as HTMLInputElement).focus();
+        (
+          document.querySelector(COMMAND_INPUT_SELECTOR) as HTMLInputElement
+        ).focus();
       }
     }
 
@@ -205,7 +232,7 @@ const CommandInput = ({
     return () => {
       document.removeEventListener("keydown", focusOnKeyDown);
     };
-  }, []);
+  }, [disableFocusShortcut]);
 
   return (
     <div
@@ -216,14 +243,14 @@ const CommandInput = ({
       )}
     >
       <span className="size-4 text-gray-alpha-600" aria-hidden="true">
-        <IoIosSearch />
+        <ImSearch />
       </span>
       <span className="flex-grow relative z-[1]">
         <input
           ref={ref}
           command-input=""
           type="text"
-          className="placeholder:font-medium placeholder:text-gray-900 text-sm"
+          className="placeholder:font-medium placeholder:text-gray-900 text-sm py-3"
           placeholder={placeholder}
           value={inputValue}
           onChange={({ target }) => {
@@ -233,12 +260,14 @@ const CommandInput = ({
           onKeyDown={handleKeyDown}
         />
       </span>
-      <span
-        aria-hidden="true"
-        className="absolute group-focus-within:opacity-0 opacity-100 transition right-3 top-1/2 -translate-y-1/2 text-xs rounded px-2 py-1 bg-gray-200 text-gray-900 select-none"
-      >
-        ⌘+K
-      </span>
+      {!disableFocusShortcut && (
+        <span
+          aria-hidden="true"
+          className="absolute group-focus-within:opacity-0 opacity-100 transition right-3 top-1/2 -translate-y-1/2 text-xs rounded px-2 py-1 bg-gray-200 text-gray-900 select-none"
+        >
+          ⌘+K
+        </span>
+      )}
     </div>
   );
 };
@@ -254,10 +283,7 @@ const CommandContent = ({
     <div
       command-content=""
       role="listbox"
-      className={cn(
-        "bg-ui-background p-ui-content rounded-ui-content",
-        className,
-      )}
+      className={cn("bg-ui-background rounded-ui-content", className)}
     >
       {children}
     </div>
@@ -277,11 +303,19 @@ const CommandItem = forwardRef<HTMLElement, PopperItemProps>(
       suffix,
       shortcut,
       href,
+      value,
+      onSelect,
     },
     forwardRef,
   ) => {
-    const { highlightItem, isHighlighted, inputValue, isSearching } =
-      useCommand();
+    const {
+      highlightItem,
+      isHighlighted,
+      inputValue,
+      isSearching,
+      selectValue,
+      selectedValue,
+    } = useCommand();
     const ref = useRef<HTMLElement | null>(null);
 
     const navigate = useNavigate();
@@ -297,7 +331,10 @@ const CommandItem = forwardRef<HTMLElement, PopperItemProps>(
       if (disabled) return;
       event.preventDefault();
       if (href) navigate(href);
-      else onClick?.(event);
+      else if (onClick) onClick(event);
+      else if (onSelect && value && selectValue) {
+        selectValue(value, onSelect);
+      }
     };
 
     const attributes = {
@@ -305,8 +342,10 @@ const CommandItem = forwardRef<HTMLElement, PopperItemProps>(
       "command-item": "",
       tabIndex: -1,
       role: "option",
-      "aria-selected": ref.current && isHighlighted(ref.current),
-      "data-selected": ref.current && isHighlighted(ref.current),
+      "aria-selected": selectedValue === value,
+      "data-selected": selectedValue === value,
+      "data-highlighted":
+        ref.current && isHighlighted(ref.current) ? "" : undefined,
       "aria-disabled": disabled,
       "data-disabled": disabled ? "" : undefined,
       onMouseEnter: handleMouseEnter,
@@ -327,7 +366,7 @@ const CommandItem = forwardRef<HTMLElement, PopperItemProps>(
         {...(attributes as React.HTMLAttributes<HTMLButtonElement>)}
         className={cn(
           "text-foreground flex items-center justify-start rounded-ui-item w-full focus:ring-0 cursor-default transition-colors",
-          "data-[selected=true]:bg-ui-item-background-hover data-[disabled]:text-ui-disabled-foreground data-[disabled]:pointer-events-none data-[disabled]:select-none",
+          "data-[highlighted]:bg-ui-item-background-hover data-[disabled]:text-ui-disabled-foreground data-[disabled]:pointer-events-none data-[disabled]:select-none",
           {
             "cursor-pointer": href,
             "gap-2": prefix,

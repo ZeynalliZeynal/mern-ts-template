@@ -2,7 +2,6 @@ import React from "react";
 
 export const navigateItems = ({
   event,
-  close,
   currentItemIndex,
   highlightItem,
   root,
@@ -12,7 +11,6 @@ export const navigateItems = ({
 }: {
   event: React.KeyboardEvent<HTMLElement>;
   root: HTMLElement | null;
-  close?: () => void;
   currentItemIndex?: number;
   highlightItem: (value: HTMLElement | undefined) => void;
   itemSelector: string;
@@ -20,16 +18,6 @@ export const navigateItems = ({
   loop?: boolean;
 }) => {
   if (!event.currentTarget || !root) return;
-  if (close) {
-    if (event.code === "Escape") {
-      event.preventDefault();
-      close();
-    }
-    if (event.code === "Tab") {
-      event.preventDefault();
-    }
-  }
-
   if (event.code === "ArrowUp" || event.code === "ArrowDown") {
     event.preventDefault();
     const direction: "next" | "previous" =

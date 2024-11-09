@@ -37,9 +37,7 @@ export function MainLayout() {
             </Breadcrumb.Link>
           </Breadcrumb.Item>
           <Breadcrumb.Separator />
-          <Breadcrumb.Item>
-            <Breadcrumb.Page>Breadcrumb</Breadcrumb.Page>
-          </Breadcrumb.Item>
+          <Breadcrumb.Page>Breadcrumb</Breadcrumb.Page>
         </Breadcrumb.List>
       </Breadcrumb>
       <main className="flex-grow">

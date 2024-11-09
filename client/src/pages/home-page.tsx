@@ -14,6 +14,7 @@ import PopoverDemo from "@/components/popover-demo.tsx";
 import CommandDemo from "@/components/command-demo.tsx";
 import DialogDemo from "@/components/dialog-demo.tsx";
 import Copy from "@/components/ui/copy.tsx";
+import ComboboxDemo from "@/components/combobox-demo.tsx";
 
 const demoText = "This is a text, yo!";
 
@@ -42,7 +43,7 @@ export default function HomePage() {
       <AvatarsDemo />
       <CheckboxDemo />
       <CollapseDemo />
-      {/*<ComboboxDemo />*/}
+      <ComboboxDemo />
       <Stack direction="row" align="center">
         {demoText}
         <Copy text={demoText}>Copy</Copy>

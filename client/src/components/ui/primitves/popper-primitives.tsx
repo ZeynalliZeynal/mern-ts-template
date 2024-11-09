@@ -35,7 +35,6 @@ import {
 import { useRestrictBody } from "@/hooks/useRestrictBody.ts";
 import { useResize } from "@/hooks/useResize.ts";
 import { useOutsideClick } from "@/hooks/useOutsideClick.ts";
-import { navigateItems } from "@/utils/navigateItems.ts";
 import { createPortal } from "react-dom";
 import {
   POPPER_SUB_CONTENT_SELECTOR,
@@ -48,10 +47,15 @@ import { useDebounce } from "@/hooks/useDebounce.ts";
 import { PiCaretUpDownBold } from "react-icons/pi";
 import Button from "@/components/ui/button.tsx";
 import { alignBox } from "@/utils/alignBox.ts";
+import {
+  COMMAND_INPUT_SELECTOR,
+  COMMAND_ROOT_SELECTOR,
+} from "@/components/ui/command.tsx";
+import { navigateItems } from "@/utils/navigateItems.ts";
 
 const POPPER_TRIGGER_SELECTOR = "[popper-trigger]";
 
-const POPPER_CONTENT_SELECTOR = "[popper-content-menu]";
+export const POPPER_CONTENT_SELECTOR = "[popper-content-menu]";
 const POPPER_ITEM_SELECTOR = "[popper-content-item]:not([data-disabled])";
 
 const DEFAULT_SPACE = 8;
@@ -354,9 +358,16 @@ const PopperContent = ({
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
     if (document.querySelector(POPPER_SUB_CONTENT_SELECTOR)) return;
+    if (event.code === "Escape") {
+      event.preventDefault();
+      closePopper();
+    }
+    if (event.code === "Tab") {
+      event.preventDefault();
+    }
+    if (event.currentTarget.querySelector(COMMAND_ROOT_SELECTOR)) return;
     navigateItems({
       event,
-      close: closePopper,
       highlightItem,
       currentItemIndex,
       setCurrentItemIndex,
@@ -405,11 +416,24 @@ const PopperContent = ({
     }
   }, [align, menuType, position, ref, triggerPosition]);
 
+  const handleClick: MouseEventHandler<HTMLElement> = (event) => {
+    if ((event.target as HTMLElement).hasAttribute("command-item")) {
+      event.preventDefault();
+      closePopper();
+    }
+  };
+
   useEffect(() => {
     if (open && ref.current) {
-      highlightItem(
-        ref.current.querySelector(POPPER_ITEM_SELECTOR) as HTMLElement,
-      );
+      const popperItem = ref.current.querySelector(POPPER_ITEM_SELECTOR);
+      const commandInput = ref.current.querySelector(
+        COMMAND_INPUT_SELECTOR,
+      ) as HTMLElement;
+      if (popperItem)
+        highlightItem(
+          ref.current.querySelector(POPPER_ITEM_SELECTOR) as HTMLElement,
+        );
+      else commandInput.focus();
       setCurrentItemIndex(0);
     }
   }, [highlightItem, open, ref, setCurrentItemIndex]);
@@ -432,6 +456,7 @@ const PopperContent = ({
         )}
         style={{ ...style, animationDuration: ANIMATION_DURATION + "ms" }}
         onKeyDown={handleKeyDown}
+        onClick={handleClick}
         {...etc}
       >
         {children}
