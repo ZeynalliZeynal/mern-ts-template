@@ -376,6 +376,13 @@ const PopperContent = ({
     });
   };
 
+  const handleClick: MouseEventHandler<HTMLElement> = (event) => {
+    if ((event.target as HTMLElement).hasAttribute("command-item")) {
+      event.preventDefault();
+      closePopper();
+    }
+  };
+
   const handleResize = useCallback(() => {
     if (triggerPosition && ref.current) {
       if (menuType === "context") {
@@ -416,13 +423,6 @@ const PopperContent = ({
     }
   }, [align, menuType, position, ref, triggerPosition]);
 
-  const handleClick: MouseEventHandler<HTMLElement> = (event) => {
-    if ((event.target as HTMLElement).hasAttribute("command-item")) {
-      event.preventDefault();
-      closePopper();
-    }
-  };
-
   useEffect(() => {
     if (open && ref.current) {
       const popperItem = ref.current.querySelector(POPPER_ITEM_SELECTOR);
@@ -454,7 +454,11 @@ const PopperContent = ({
           "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
           className,
         )}
-        style={{ ...style, animationDuration: ANIMATION_DURATION + "ms" }}
+        style={{
+          ...style,
+
+          animationDuration: ANIMATION_DURATION + "ms",
+        }}
         onKeyDown={handleKeyDown}
         onClick={handleClick}
         {...etc}

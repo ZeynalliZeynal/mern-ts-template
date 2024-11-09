@@ -33,6 +33,7 @@ type CommandContextType = {
   highlightedItem: HTMLElement | undefined;
   selectValue?: (value: string, onSelect: (value: string) => void) => void;
   selectedValue?: string;
+  closePopper?: () => void;
 };
 
 export const COMMAND_GROUP_SELECTOR = "[command-group]";
@@ -61,14 +62,18 @@ const useCommand = () => {
 export default function Command({
   children,
   className,
+  valueRemovable,
+  value,
 }: {
   children: ReactNode;
   className?: string;
+  valueRemovable?: boolean;
+  value?: string;
 }) {
   const [inputValue, setInputValue] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [noResult, setNoResult] = useState(false);
-  const [selectedValue, setSelectedValue] = useState("");
+  const [selectedValue, setSelectedValue] = useState(value);
   const [currentItemIndex, setCurrentItemIndex] = useState<number | undefined>(
     -1,
   );
@@ -87,7 +92,7 @@ export default function Command({
     if (selectedValue !== value) {
       onSelect(value);
       setSelectedValue(value);
-    } else if (selectedValue === value) {
+    } else if (selectedValue === value && valueRemovable) {
       onSelect("");
       setSelectedValue("");
     }
@@ -145,6 +150,8 @@ export default function Command({
       setNoResult(false);
     }
   }, [inputValue, ref]);
+
+  console.log(selectedValue);
 
   return (
     <CommandContext.Provider
@@ -328,8 +335,9 @@ const CommandItem = forwardRef<HTMLElement, PopperItemProps>(
     };
 
     const handleClick: MouseEventHandler<HTMLElement> = (event) => {
-      if (disabled) return;
       event.preventDefault();
+      if (disabled) return;
+
       if (href) navigate(href);
       else if (onClick) onClick(event);
       else if (onSelect && value && selectValue) {
@@ -418,7 +426,7 @@ const CommandGroup = ({
   heading,
 }: {
   children: ReactNode;
-  heading: string;
+  heading?: string;
   className?: string;
 }) => {
   return (
@@ -428,7 +436,7 @@ const CommandGroup = ({
       data-value={heading}
       className={cn(className)}
     >
-      <CommandLabel>{heading}</CommandLabel>
+      {heading && <CommandLabel>{heading}</CommandLabel>}
       {children}
     </div>
   );

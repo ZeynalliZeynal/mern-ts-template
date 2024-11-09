@@ -4,6 +4,7 @@ import Button from "@/components/ui/button.tsx";
 import { IoCheckmarkOutline } from "react-icons/io5";
 import { useState } from "react";
 import Command from "@/components/ui/command.tsx";
+import { LuChevronsUpDown } from "react-icons/lu";
 
 const values = [
   {
@@ -32,39 +33,50 @@ const ComboboxDemo = () => {
 
   return (
     <Stack>
-      <Select valueRemovable>
+      <Select>
         <Select.Trigger asChild>
-          <Button full size="sm">
+          <Button
+            primary
+            suffix={<LuChevronsUpDown className="opacity-60" />}
+            className="w-48"
+          >
             {initialValue || "Select a framework"}
           </Button>
         </Select.Trigger>
-        <Select.Content>
-          <Command>
+        <Select.Content className="w-48 p-0">
+          <Command value={comboboxValue} valueRemovable>
             <Command.Input
               placeholder="Search framework..."
               disableFocusShortcut
             />
-            <Command.Group heading="Frameworks">
-              {values.map((item) => (
+            <Command.Content>
+              <Command.Empty>No frameworks found</Command.Empty>
+              <Command.Group className="p-1">
+                <Command.Label>Frameworks</Command.Label>
+                <Select.Separator />
+                {values.map((item) => (
+                  <Command.Item
+                    key={item.value}
+                    value={item.value}
+                    suffix={
+                      item.value === comboboxValue ? (
+                        <IoCheckmarkOutline />
+                      ) : null
+                    }
+                    onSelect={(currentValue) => setComboboxValue(currentValue)}
+                  >
+                    {item.label}
+                  </Command.Item>
+                ))}
                 <Command.Item
-                  key={item.value}
-                  value={item.value}
-                  suffix={
-                    item.value === comboboxValue ? <IoCheckmarkOutline /> : null
-                  }
+                  value="disabled"
+                  disabled
                   onSelect={(currentValue) => setComboboxValue(currentValue)}
                 >
-                  {item.label}
+                  disabled
                 </Command.Item>
-              ))}
-              <Command.Item
-                value="disabled"
-                disabled
-                onSelect={(currentValue) => setComboboxValue(currentValue)}
-              >
-                disabled
-              </Command.Item>
-            </Command.Group>
+              </Command.Group>
+            </Command.Content>
           </Command>
         </Select.Content>
       </Select>

@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 import { cn } from "@/lib/utils.ts";
 import Popper from "@/components/ui/primitves/popper-primitives.tsx";
 import {
-  AlignContentProps,
+  PopperContentProps,
   PopperItemProps,
   PopperTriggerProps,
 } from "@/types/ui/popper.ts";
@@ -42,17 +42,9 @@ function SelectTrigger({
   );
 }
 
-function SelectContent({
-  children,
-  className,
-  align,
-}: {
-  children: ReactNode;
-  className?: string;
-  align?: AlignContentProps;
-}) {
+function SelectContent({ children, className, align }: PopperContentProps) {
   return (
-    <Popper.Content align={align} className={cn("min-w-52", className)}>
+    <Popper.Content align={align} className={cn("w-52", className)}>
       {children}
     </Popper.Content>
   );
