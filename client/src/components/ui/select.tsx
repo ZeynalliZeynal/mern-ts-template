@@ -4,6 +4,7 @@ import Popper from "@/components/ui/primitves/popper-primitives.tsx";
 import {
   PopperContentProps,
   PopperItemProps,
+  PopperSeparatorProps,
   PopperTriggerProps,
 } from "@/types/ui/popper.ts";
 
@@ -51,7 +52,10 @@ function SelectContent({
   return (
     <Popper.Content
       align={align}
-      className={cn(className)}
+      className={cn(
+        "bg-ui-background rounded-ui-content p-ui-content border",
+        className,
+      )}
       fitToTrigger={fitToTrigger}
     >
       {children}
@@ -84,9 +88,18 @@ function SelectItem({
   );
 }
 
+const SelectSeparator = ({ className, style }: PopperSeparatorProps) => {
+  return (
+    <Popper.Separator
+      style={style}
+      className={cn("h-px -mx-ui-content my-ui-content bg-border", className)}
+    />
+  );
+};
+
 Select.Group = Popper.Group;
 Select.Label = Popper.Label;
-Select.Separator = Popper.Separator;
+Select.Separator = SelectSeparator;
 Select.Trigger = SelectTrigger;
 Select.Item = SelectItem;
 Select.Content = SelectContent;

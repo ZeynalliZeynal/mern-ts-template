@@ -34,7 +34,7 @@ export default function ContextDemo() {
             <ContextMenu.Item inset disabled shortcut="⌘]">
               Forward
             </ContextMenu.Item>
-            <ContextMenu.Item inset shortcut="⌘]">
+            <ContextMenu.Item inset shortcut="⌘]" asChild>
               Reload
             </ContextMenu.Item>
             <ContextMenuSub>

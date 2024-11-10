@@ -4,6 +4,7 @@ import Popper from "@/components/ui/primitves/popper-primitives.tsx";
 import {
   PopperContentProps,
   PopperItemProps,
+  PopperSeparatorProps,
   PopperTriggerProps,
 } from "@/types/ui/popper.ts";
 
@@ -42,7 +43,10 @@ function DropdownMenuContent({
     <Popper.Content
       fitToTrigger={fitToTrigger}
       align={align}
-      className={className}
+      className={cn(
+        "bg-ui-background rounded-ui-content p-ui-content border",
+        className,
+      )}
     >
       {children}
     </Popper.Content>
@@ -76,12 +80,21 @@ function DropdownMenuItem({
   );
 }
 
+const DropdownMenuSeparator = ({ className, style }: PopperSeparatorProps) => {
+  return (
+    <Popper.Separator
+      style={style}
+      className={cn("h-px -mx-ui-content my-ui-content bg-border", className)}
+    />
+  );
+};
+
 DropdownMenu.Group = Popper.Group;
 DropdownMenu.RadioGroup = Popper.RadioGroup;
 DropdownMenu.RadioItem = Popper.RadioItem;
 DropdownMenu.CheckboxItem = Popper.CheckboxItem;
 DropdownMenu.Label = Popper.Label;
-DropdownMenu.Separator = Popper.Separator;
+DropdownMenu.Separator = DropdownMenuSeparator;
 DropdownMenu.Trigger = DropdownMenuTrigger;
 DropdownMenu.Item = DropdownMenuItem;
 DropdownMenu.Content = DropdownMenuContent;

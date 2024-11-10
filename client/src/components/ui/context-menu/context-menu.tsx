@@ -3,8 +3,10 @@ import {
   PopperContentProps,
   PopperContextTriggerProps,
   PopperItemProps,
+  PopperSeparatorProps,
 } from "@/types/ui/popper.ts";
 import Popper from "@/components/ui/primitves/popper-primitives.tsx";
+import { cn } from "@/lib/utils.ts";
 
 const ContextMenu = ({ children }: { children: React.ReactNode }) => {
   return <Popper menuType="context">{children}</Popper>;
@@ -23,7 +25,16 @@ const ContextMenuTrigger = ({
 };
 
 const ContextMenuContent = ({ children, className }: PopperContentProps) => {
-  return <Popper.Content className={className}>{children}</Popper.Content>;
+  return (
+    <Popper.Content
+      className={cn(
+        "bg-ui-background rounded-ui-content p-ui-content border",
+        className,
+      )}
+    >
+      {children}
+    </Popper.Content>
+  );
 };
 
 const ContextMenuItem = ({
@@ -57,12 +68,21 @@ const ContextMenuItem = ({
   );
 };
 
+const ContextMenuSeparator = ({ className, style }: PopperSeparatorProps) => {
+  return (
+    <Popper.Separator
+      style={style}
+      className={cn("h-px -mx-ui-content my-ui-content bg-border", className)}
+    />
+  );
+};
+
 ContextMenu.Trigger = ContextMenuTrigger;
 ContextMenu.Item = ContextMenuItem;
 ContextMenu.Content = ContextMenuContent;
 ContextMenu.Label = Popper.Label;
 ContextMenu.Group = Popper.Group;
-ContextMenu.Separator = Popper.Separator;
+ContextMenu.Separator = ContextMenuSeparator;
 ContextMenu.CheckboxItem = Popper.CheckboxItem;
 ContextMenu.RadioGroup = Popper.RadioGroup;
 ContextMenu.RadioGroup = Popper.RadioGroup;

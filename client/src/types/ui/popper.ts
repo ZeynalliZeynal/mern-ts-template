@@ -1,4 +1,5 @@
 import React, {
+  CSSProperties,
   Dispatch,
   ReactElement,
   ReactNode,
@@ -62,12 +63,27 @@ type PopperContentProps = {
   className?: string;
   align?: AlignContentProps;
   fitToTrigger?: boolean;
+  style?: CSSProperties;
+};
+
+type PopperLabelProps = {
+  children: ReactNode;
+  className?: string;
+  inset?: boolean;
+  asChild?: boolean;
+  style?: CSSProperties;
+};
+
+type PopperSeparatorProps = {
+  className?: string;
+  style?: CSSProperties;
 };
 
 type PopperContextTriggerProps = {
   children: ReactNode;
   className?: string;
   asChild?: boolean;
+  style?: CSSProperties;
 };
 
 type PopperTriggerProps = PopperContextTriggerProps & {
@@ -133,4 +149,6 @@ export type {
   PopperContextTriggerProps,
   AlignContentProps,
   PopperProps,
+  PopperLabelProps,
+  PopperSeparatorProps,
 };

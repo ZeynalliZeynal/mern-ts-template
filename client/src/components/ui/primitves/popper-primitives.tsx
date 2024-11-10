@@ -1,11 +1,11 @@
 import React, {
   cloneElement,
   createContext,
+  CSSProperties,
   forwardRef,
   HTMLAttributes,
   isValidElement,
   MouseEventHandler,
-  ReactNode,
   useCallback,
   useContext,
   useEffect,
@@ -22,10 +22,12 @@ import {
   PopperContextTriggerProps,
   PopperGroupProps,
   PopperItemProps,
+  PopperLabelProps,
   PopperProps,
   PopperRadioGroupContextProps,
   PopperRadioGroupProps,
   PopperRadioItemProps,
+  PopperSeparatorProps,
   PopperTriggerProps,
 } from "@/types/ui/popper.ts";
 import {
@@ -194,7 +196,7 @@ export default function Popper({
 const PopperContextTrigger = React.forwardRef<
   HTMLElement,
   PopperContextTriggerProps
->(({ children, className = undefined, asChild }, forwardRef) => {
+>(({ children, className = undefined, asChild, style }, forwardRef) => {
   const { open, openPopper, setTriggerPosition, menuType } = usePopper();
 
   const ref = useRef<HTMLElement | null>(null);
@@ -223,7 +225,11 @@ const PopperContextTrigger = React.forwardRef<
     "popper-trigger": "",
     "aria-expanded": open,
     "data-state": open ? "open" : "closed",
-    className: cn("pointer-events-auto", className),
+    className: cn(className),
+    style: {
+      ...style,
+      pointerEvents: "auto",
+    },
     onContextMenu: menuType === "context" ? handleContextMenu : undefined,
   };
 
@@ -233,9 +239,13 @@ const PopperContextTrigger = React.forwardRef<
     <div
       {...(attributes as React.HTMLAttributes<HTMLDivElement>)}
       className={cn(
-        "select-none pointer-events-auto min-w-72 min-h-32 flex items-center justify-center text-gray-800 rounded-ui-content border border-dashed",
+        "select-none min-w-72 min-h-32 flex items-center justify-center text-gray-800 rounded-ui-content border border-dashed",
         className,
       )}
+      style={{
+        ...style,
+        pointerEvents: "auto",
+      }}
     >
       {children}
     </div>
@@ -338,6 +348,7 @@ const PopperContent = ({
   className,
   align = "horizontal-center-bottom",
   fitToTrigger,
+  style,
   ...etc
 }: PopperContentProps) => {
   const {
@@ -351,7 +362,7 @@ const PopperContent = ({
     setCurrentItemIndex,
     menuType,
   } = usePopper();
-  const [style, setStyle] = useState<React.CSSProperties>({});
+  const [menuStyle, setMenuStyle] = useState<CSSProperties>({});
 
   const ref = useOutsideClick({ onTrigger: closePopper });
 
@@ -397,7 +408,7 @@ const PopperContent = ({
         else right = 8;
         if (canFitBottom) top = triggerPosition.top + clientTop;
         else bottom = 8;
-        setStyle({
+        setMenuStyle({
           left: left,
           top,
           right,
@@ -409,7 +420,7 @@ const PopperContent = ({
           element: ref.current,
           triggerPosition,
         });
-        setStyle(alignedObject);
+        setMenuStyle(alignedObject);
       }
     }
   }, [align, menuType, position, ref, triggerPosition]);
@@ -441,12 +452,14 @@ const PopperContent = ({
         aria-expanded={open}
         data-state={!animate ? "open" : "closed"}
         className={cn(
-          "bg-ui-background rounded-ui-content p-ui-content border fixed z-50 pointer-events-auto focus:ring-0",
+          "fixed z-50 focus:ring-0",
           "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
           className,
         )}
         style={{
+          ...menuStyle,
           ...style,
+          pointerEvents: "auto",
           width: fitToTrigger ? triggerPosition?.width : undefined,
           animationDuration: ANIMATION_DURATION + "ms",
         }}
@@ -606,14 +619,15 @@ const PopperItem = React.forwardRef<HTMLElement, PopperItemProps>(
       <div
         {...(attributes as React.HTMLAttributes<HTMLDivElement>)}
         className={cn(
-          "text-foreground flex items-center justify-start rounded-ui-item w-full focus:ring-0 cursor-default transition-colors",
-          "data-[highlighted]:bg-ui-item-background-hover data-[disabled]:text-ui-disabled-foreground data-[disabled]:pointer-events-none data-[disabled]:select-none",
+          "focus:ring-0",
+          "text-foreground flex items-center justify-start rounded-ui-item w-full cursor-default transition-colors",
           {
             "cursor-pointer": href,
             "gap-2": prefix,
             "p-ui-item-inset": inset && !prefix,
             "p-ui-item": !inset || prefix,
           },
+          "data-[highlighted]:bg-ui-item-background-hover data-[disabled]:text-ui-disabled-foreground data-[disabled]:pointer-events-none data-[disabled]:select-none",
           className,
         )}
       >
@@ -703,50 +717,54 @@ const PopperGroup = ({
   );
 };
 
-const PopperSeparator = forwardRef<HTMLDivElement, { className?: string }>(
-  ({ className, ...etc }, forwardRef) => {
-    const ref = useRef<HTMLDivElement | null>(null);
-    useImperativeHandle(forwardRef, () => ref.current as HTMLDivElement);
+const PopperSeparator = forwardRef<HTMLDivElement, PopperSeparatorProps>(
+  ({ className, style, ...etc }, forwardRef) => {
     return (
       <div
-        ref={ref}
+        ref={forwardRef}
         role="separator"
+        className={cn(className)}
+        style={style}
         {...etc}
-        className={cn("h-px -mx-ui-content my-ui-content bg-border", className)}
       />
     );
   },
 );
 
-const PopperLabel = forwardRef<
-  HTMLLabelElement,
-  {
-    children: ReactNode;
-    className?: string;
-    inset?: boolean;
-  }
->(({ children, className, inset = false, ...etc }, forwardRef) => {
-  const ref = useRef<HTMLLabelElement | null>(null);
-  useImperativeHandle(forwardRef, () => ref.current as HTMLLabelElement);
+const PopperLabel = forwardRef<HTMLLabelElement, PopperLabelProps>(
+  (
+    { children, className, inset = false, style, asChild, ...etc },
+    forwardRef,
+  ) => {
+    const attributes = {
+      tabIndex: -1,
+      ref: forwardRef,
+      className,
+      style,
+    };
 
-  return (
-    <label
-      ref={ref}
-      tabIndex={-1}
-      {...etc}
-      className={cn(
-        "text-foreground font-semibold flex items-center w-full",
-        {
-          "p-ui-item-inset": inset,
-          "p-ui-item": !inset,
-        },
-        className,
-      )}
-    >
-      {children}
-    </label>
-  );
-});
+    return asChild && isValidElement(children) ? (
+      cloneElement(children, attributes)
+    ) : (
+      <label
+        ref={forwardRef}
+        tabIndex={-1}
+        className={cn(
+          "text-foreground font-semibold flex items-center w-full",
+          {
+            "p-ui-item-inset": inset,
+            "p-ui-item": !inset,
+          },
+          className,
+        )}
+        style={style}
+        {...etc}
+      >
+        {children}
+      </label>
+    );
+  },
+);
 
 Popper.Label = PopperLabel;
 Popper.Group = PopperGroup;
