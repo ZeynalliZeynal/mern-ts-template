@@ -33,7 +33,7 @@ export default function HomePage() {
               Primary button
             </Button>
           </Tooltip.Trigger>
-          <Tooltip.Content align="vertical-right-top">test</Tooltip.Content>
+          <Tooltip.Content align="vertical-right-center">test</Tooltip.Content>
         </Tooltip>
       </Stack>
       <ThemeSwitcher />

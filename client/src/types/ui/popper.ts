@@ -51,9 +51,11 @@ type AlignContentProps =
   | "horizontal-right-top"
   | "horizontal-right-bottom"
   | "vertical-left-bottom"
+  | "vertical-left-center"
   | "vertical-left-top"
   | "vertical-right-bottom"
-  | "vertical-right-top";
+  | "vertical-right-top"
+  | "vertical-right-center";
 
 type PopperContentProps = {
   children: React.ReactNode;

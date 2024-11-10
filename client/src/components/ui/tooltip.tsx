@@ -2,9 +2,11 @@ import React, {
   cloneElement,
   createContext,
   CSSProperties,
+  Dispatch,
   isValidElement,
   MouseEventHandler,
   ReactNode,
+  SetStateAction,
   useCallback,
   useContext,
   useRef,
@@ -29,6 +31,7 @@ type TooltipContextProps = {
   triggerPosition: DOMRect | null;
   animate: boolean;
   isClosing: boolean;
+  setTriggerPosition: Dispatch<SetStateAction<DOMRect | null>>;
 };
 
 const TooltipContext = createContext<TooltipContextProps | null>(null);
@@ -71,7 +74,7 @@ const Tooltip = ({
         }, openDelay);
       }
     },
-    [clearDebounce, debounce, isClosing],
+    [clearDebounce, debounce, isClosing, openDelay],
   );
 
   const closeTooltip = useCallback(() => {
@@ -85,7 +88,7 @@ const Tooltip = ({
         setIsClosing(false);
       }, ANIMATION_TIMEOUT);
     }, closeDelay);
-  }, [clearDebounce, debounce]);
+  }, [clearDebounce, closeDelay, debounce]);
 
   const cancelCloseTooltip = useCallback(() => {
     clearDebounce();
@@ -101,6 +104,7 @@ const Tooltip = ({
         animate,
         open,
         triggerPosition,
+        setTriggerPosition,
         isClosing,
       }}
     >
@@ -110,7 +114,9 @@ const Tooltip = ({
 };
 
 const TooltipTrigger = ({ children, disabled }: PopperTriggerProps) => {
-  const { open, openTooltip, closeTooltip } = useTooltip();
+  const { open, openTooltip, closeTooltip, setTriggerPosition } = useTooltip();
+
+  const ref = useRef<HTMLElement | null>(null);
 
   const handleMouseEnter: MouseEventHandler<HTMLElement> = (event) => {
     event.preventDefault();
@@ -123,7 +129,17 @@ const TooltipTrigger = ({ children, disabled }: PopperTriggerProps) => {
     closeTooltip();
   };
 
+  useResize(
+    open,
+    useCallback(() => {
+      if (ref.current) {
+        setTriggerPosition(ref.current.getBoundingClientRect());
+      }
+    }, [setTriggerPosition]),
+  );
+
   const attributes = {
+    ref,
     "data-state": open ? "open" : "closed",
     "data-disabled": disabled ? "" : undefined,
     "aria-disabled": disabled,
@@ -180,7 +196,7 @@ const TooltipContent = ({
         data-state={!animate ? "open" : "closed"}
         aria-expanded={open}
         className={cn(
-          "fixed z-50 bg-ui-background px-3 rounded-lg py-1.5 text-foreground text-xs border w-fit",
+          "fixed z-50 bg-gray-1000 px-3 rounded-lg py-1.5 text-gray-100 text-xs border w-fit",
           "animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
           className,
         )}
