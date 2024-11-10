@@ -58,7 +58,7 @@ const POPPER_TRIGGER_SELECTOR = "[popper-trigger]";
 export const POPPER_CONTENT_SELECTOR = "[popper-content-menu]";
 const POPPER_ITEM_SELECTOR = "[popper-content-item]:not([data-disabled])";
 
-const PopperContext = createContext<PopperContextProps | null>(null);
+export const PopperContext = createContext<PopperContextProps | null>(null);
 const PopperRadioGroupContext =
   createContext<PopperRadioGroupContextProps | null>(null);
 
@@ -337,6 +337,7 @@ const PopperContent = ({
   children,
   className,
   align = "horizontal-center-bottom",
+  fitToTrigger,
   ...etc
 }: PopperContentProps) => {
   const {
@@ -372,13 +373,6 @@ const PopperContent = ({
       root: event.currentTarget,
       itemSelector: `${POPPER_ITEM_SELECTOR}`,
     });
-  };
-
-  const handleClick: MouseEventHandler<HTMLElement> = (event) => {
-    if ((event.target as HTMLElement).hasAttribute("command-item")) {
-      event.preventDefault();
-      closePopper();
-    }
   };
 
   const handleResize = useCallback(() => {
@@ -453,11 +447,10 @@ const PopperContent = ({
         )}
         style={{
           ...style,
-
+          width: fitToTrigger ? triggerPosition?.width : undefined,
           animationDuration: ANIMATION_DURATION + "ms",
         }}
         onKeyDown={handleKeyDown}
-        onClick={handleClick}
         {...etc}
       >
         {children}

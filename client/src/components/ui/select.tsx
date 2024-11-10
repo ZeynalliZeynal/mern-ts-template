@@ -42,9 +42,18 @@ function SelectTrigger({
   );
 }
 
-function SelectContent({ children, className, align }: PopperContentProps) {
+function SelectContent({
+  children,
+  className,
+  align,
+  fitToTrigger,
+}: PopperContentProps) {
   return (
-    <Popper.Content align={align} className={cn("w-52", className)}>
+    <Popper.Content
+      align={align}
+      className={cn(className)}
+      fitToTrigger={fitToTrigger}
+    >
       {children}
     </Popper.Content>
   );

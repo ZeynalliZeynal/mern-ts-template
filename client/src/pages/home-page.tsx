@@ -16,6 +16,7 @@ import DialogDemo from "@/components/dialog-demo.tsx";
 import Copy from "@/components/ui/copy.tsx";
 import ComboboxDemo from "@/components/combobox-demo.tsx";
 import Tooltip from "@/components/ui/tooltip.tsx";
+import TabsDemo from "@/components/tabs-demo.tsx";
 
 const demoText = "This is a text, yo!";
 
@@ -46,6 +47,7 @@ export default function HomePage() {
           Badge with icon
         </Badge>
       </Stack>
+      <TabsDemo />
       <AvatarsDemo />
       <CheckboxDemo />
       <CollapseDemo />

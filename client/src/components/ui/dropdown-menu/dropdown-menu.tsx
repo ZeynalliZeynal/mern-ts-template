@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 import { cn } from "@/lib/utils.ts";
 import Popper from "@/components/ui/primitves/popper-primitives.tsx";
 import {
-  AlignContentProps,
+  PopperContentProps,
   PopperItemProps,
   PopperTriggerProps,
 } from "@/types/ui/popper.ts";
@@ -36,13 +36,14 @@ function DropdownMenuContent({
   children,
   className,
   align,
-}: {
-  children: ReactNode;
-  className?: string;
-  align?: AlignContentProps;
-}) {
+  fitToTrigger,
+}: PopperContentProps) {
   return (
-    <Popper.Content align={align} className={className}>
+    <Popper.Content
+      fitToTrigger={fitToTrigger}
+      align={align}
+      className={className}
+    >
       {children}
     </Popper.Content>
   );

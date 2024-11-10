@@ -61,6 +61,7 @@ type PopperContentProps = {
   children: React.ReactNode;
   className?: string;
   align?: AlignContentProps;
+  fitToTrigger?: boolean;
 };
 
 type PopperContextTriggerProps = {

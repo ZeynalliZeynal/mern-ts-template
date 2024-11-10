@@ -18,7 +18,7 @@ export const navigateItems = ({
   loop?: boolean;
 }) => {
   if (!event.currentTarget || !root) return;
-  if (event.code === "ArrowUp" || event.code === "ArrowDown") {
+  if (event.key === "ArrowUp" || event.key === "ArrowDown") {
     event.preventDefault();
     const direction: "next" | "previous" =
       event.code === "ArrowUp" ? "previous" : "next";

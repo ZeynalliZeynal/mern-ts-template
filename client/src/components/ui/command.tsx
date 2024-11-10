@@ -19,6 +19,7 @@ import { PopperItemProps } from "@/types/ui/popper.ts";
 import { useNavigate } from "react-router-dom";
 import { navigateItems } from "@/utils/navigateItems.ts";
 import { ImSearch } from "react-icons/im";
+import { PopperContext } from "@/components/ui/primitves/popper-primitives.tsx";
 
 type CommandContextType = {
   inputValue: string;
@@ -31,8 +32,6 @@ type CommandContextType = {
   currentItemIndex: number | undefined;
   setCurrentItemIndex: Dispatch<SetStateAction<number | undefined>>;
   highlightedItem: HTMLElement | undefined;
-  selectValue?: (value: string, onSelect: (value: string) => void) => void;
-  selectedValue?: string;
   closePopper?: () => void;
 };
 
@@ -62,18 +61,13 @@ const useCommand = () => {
 export default function Command({
   children,
   className,
-  valueRemovable,
-  value,
 }: {
   children: ReactNode;
   className?: string;
-  valueRemovable?: boolean;
-  value?: string;
 }) {
   const [inputValue, setInputValue] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [noResult, setNoResult] = useState(false);
-  const [selectedValue, setSelectedValue] = useState(value);
   const [currentItemIndex, setCurrentItemIndex] = useState<number | undefined>(
     -1,
   );
@@ -87,16 +81,6 @@ export default function Command({
       setInputValue("");
     },
   });
-
-  const selectValue = (value: string, onSelect: (value: string) => void) => {
-    if (selectedValue !== value) {
-      onSelect(value);
-      setSelectedValue(value);
-    } else if (selectedValue === value && valueRemovable) {
-      onSelect("");
-      setSelectedValue("");
-    }
-  };
 
   const highlightItem = (element?: HTMLElement) => {
     const elements = getElements(element);
@@ -151,8 +135,6 @@ export default function Command({
     }
   }, [inputValue, ref]);
 
-  console.log(selectedValue);
-
   return (
     <CommandContext.Provider
       value={{
@@ -166,8 +148,6 @@ export default function Command({
         isHighlighted,
         currentItemIndex,
         setCurrentItemIndex,
-        selectedValue,
-        selectValue,
       }}
     >
       <div ref={ref} command-root="" className={cn("", className)}>
@@ -226,8 +206,8 @@ const CommandInput = ({
   useEffect(() => {
     if (!ref.current || disableFocusShortcut) return;
     function focusOnKeyDown(event: KeyboardEvent) {
-      if (!ref.current) return;
-      if (event.ctrlKey && (event.code === "KeyK" || event.code === "Keyk")) {
+      if (!ref.current || document.body.querySelector("[data-portal]")) return;
+      if (event.ctrlKey && (event.key === "k" || event.code === "K")) {
         event.preventDefault();
         (
           document.querySelector(COMMAND_INPUT_SELECTOR) as HTMLInputElement
@@ -315,14 +295,9 @@ const CommandItem = forwardRef<HTMLElement, PopperItemProps>(
     },
     forwardRef,
   ) => {
-    const {
-      highlightItem,
-      isHighlighted,
-      inputValue,
-      isSearching,
-      selectValue,
-      selectedValue,
-    } = useCommand();
+    const popperContext = useContext(PopperContext);
+    const { highlightItem, isHighlighted, inputValue, isSearching } =
+      useCommand();
     const ref = useRef<HTMLElement | null>(null);
 
     const navigate = useNavigate();
@@ -340,8 +315,14 @@ const CommandItem = forwardRef<HTMLElement, PopperItemProps>(
 
       if (href) navigate(href);
       else if (onClick) onClick(event);
-      else if (onSelect && value && selectValue) {
-        selectValue(value, onSelect);
+      else if (
+        onSelect &&
+        value &&
+        popperContext &&
+        popperContext.selectValue
+      ) {
+        popperContext.selectValue(value, onSelect);
+        popperContext.closePopper();
       }
     };
 
@@ -350,8 +331,12 @@ const CommandItem = forwardRef<HTMLElement, PopperItemProps>(
       "command-item": "",
       tabIndex: -1,
       role: "option",
-      "aria-selected": selectedValue === value,
-      "data-selected": selectedValue === value,
+      "aria-selected": popperContext?.selectedValue
+        ? popperContext.selectedValue === value
+        : null,
+      "data-selected": popperContext?.selectedValue
+        ? popperContext.selectedValue === value
+        : null,
       "data-highlighted":
         ref.current && isHighlighted(ref.current) ? "" : undefined,
       "aria-disabled": disabled,

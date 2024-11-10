@@ -33,7 +33,7 @@ const ComboboxDemo = () => {
 
   return (
     <Stack>
-      <Select>
+      <Select valueRemovable>
         <Select.Trigger asChild>
           <Button
             primary
@@ -43,8 +43,8 @@ const ComboboxDemo = () => {
             {initialValue || "Select a framework"}
           </Button>
         </Select.Trigger>
-        <Select.Content className="w-48 p-0">
-          <Command value={comboboxValue} valueRemovable>
+        <Select.Content className="!p-0" fitToTrigger>
+          <Command>
             <Command.Input
               placeholder="Search framework..."
               disableFocusShortcut

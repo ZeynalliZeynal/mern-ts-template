@@ -46,7 +46,7 @@ export default function SelectDemo() {
         <Select.Trigger prefix="Style:" className="min-w-36 text-xs">
           {values1.find((value) => value.value === value1)?.label}
         </Select.Trigger>
-        <Select.Content>
+        <Select.Content fitToTrigger>
           {values1.map((item) => (
             <Select.Item
               className="text-xs"
@@ -66,7 +66,7 @@ export default function SelectDemo() {
             {initialValue || "Select a framework"}
           </Button>
         </Select.Trigger>
-        <Select.Content>
+        <Select.Content fitToTrigger>
           <Select.Label>Frameworks</Select.Label>
           <Select.Separator />
           <Select.Group>

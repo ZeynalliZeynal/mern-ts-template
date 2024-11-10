@@ -11,7 +11,7 @@ import {
 
 type Theme = "device" | "light" | "dark";
 
-export default function ThemeSwitcher({ size = 32 }: { size?: number }) {
+export default function ThemeSwitcher({ size = 24 }: { size?: number }) {
   const { theme, changeTheme } = useThemeSwitcher();
   const themes: Theme[] = useMemo(() => ["device", "light", "dark"], []);
   const [index, setIndex] = useState(themes.indexOf(theme));

@@ -224,7 +224,7 @@
     }
 
     * {
-        @apply focus-visible:ring-1 ring-blue-900 outline-0
+        @apply focus-visible:ring-2 ring-blue-900 outline-0
     }
 
     body {
