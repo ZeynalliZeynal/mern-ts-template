@@ -15,6 +15,7 @@ import CommandDemo from "@/components/command-demo.tsx";
 import DialogDemo from "@/components/dialog-demo.tsx";
 import Copy from "@/components/ui/copy.tsx";
 import ComboboxDemo from "@/components/combobox-demo.tsx";
+import Tooltip from "@/components/ui/tooltip.tsx";
 
 const demoText = "This is a text, yo!";
 
@@ -26,9 +27,14 @@ export default function HomePage() {
         <Button size="sm" primary prefix={<Spinner />} disabled>
           Disabled button
         </Button>
-        <Button size="sm" primary>
-          Primary button
-        </Button>
+        <Tooltip>
+          <Tooltip.Trigger>
+            <Button size="sm" primary>
+              Primary button
+            </Button>
+          </Tooltip.Trigger>
+          <Tooltip.Content align="vertical-right-top">test</Tooltip.Content>
+        </Tooltip>
       </Stack>
       <ThemeSwitcher />
       <Spinner />

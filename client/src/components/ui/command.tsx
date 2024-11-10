@@ -362,7 +362,7 @@ const CommandItem = forwardRef<HTMLElement, PopperItemProps>(
     if (typeof children === "string") {
       const isFound = children
         .toLowerCase()
-        .startsWith(inputValue.toLowerCase().trim());
+        .includes(inputValue.toLowerCase().trim());
       if (!isFound && isSearching) return null;
     }
 

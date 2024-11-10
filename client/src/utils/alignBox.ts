@@ -1,15 +1,14 @@
 import { AlignContentProps } from "@/types/ui/popper.ts";
+import { DEFAULT_SPACE } from "@/components/ui/parameters.ts";
 
 export const alignBox = ({
   align,
   triggerPosition,
   element,
-  defaultSpace = 8,
 }: {
   align: AlignContentProps;
   triggerPosition: DOMRect;
   element: HTMLElement;
-  defaultSpace?: number;
 }) => {
   const spaceLeftBottom = window.innerHeight - triggerPosition.bottom;
 
@@ -32,32 +31,32 @@ export const alignBox = ({
       right = window.innerWidth - triggerPosition.left - element.clientWidth;
     if (align.includes("top")) {
       bottom = canFitTop
-        ? spaceLeftBottom + triggerPosition.height + defaultSpace
+        ? spaceLeftBottom + triggerPosition.height + DEFAULT_SPACE
         : undefined;
       top = !canFitTop
-        ? triggerPosition.top + triggerPosition.height + defaultSpace
+        ? triggerPosition.top + triggerPosition.height + DEFAULT_SPACE
         : undefined;
     }
     if (align.includes("bottom")) {
       bottom = !canFitBottom
-        ? spaceLeftBottom + triggerPosition.height + defaultSpace
+        ? spaceLeftBottom + triggerPosition.height + DEFAULT_SPACE
         : undefined;
       top = canFitBottom
-        ? triggerPosition.top + triggerPosition.height + defaultSpace
+        ? triggerPosition.top + triggerPosition.height + DEFAULT_SPACE
         : undefined;
     }
   } else {
     if (align.includes("right"))
-      left = triggerPosition.left + triggerPosition.width + defaultSpace;
+      left = triggerPosition.left + triggerPosition.width + DEFAULT_SPACE;
     if (align.includes("left"))
-      right = window.innerWidth - triggerPosition.left + defaultSpace;
+      right = window.innerWidth - triggerPosition.left + DEFAULT_SPACE;
     if (align.includes("top")) {
       top = canFitBottom ? triggerPosition.top : undefined;
-      bottom = !canFitBottom ? defaultSpace : undefined;
+      bottom = !canFitBottom ? DEFAULT_SPACE : undefined;
     }
     if (align.includes("bottom")) {
       bottom = canFitTop ? spaceLeftBottom : undefined;
-      top = !canFitTop ? defaultSpace : undefined;
+      top = !canFitTop ? DEFAULT_SPACE : undefined;
     }
   }
 

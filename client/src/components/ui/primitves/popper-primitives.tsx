@@ -58,8 +58,6 @@ const POPPER_TRIGGER_SELECTOR = "[popper-trigger]";
 export const POPPER_CONTENT_SELECTOR = "[popper-content-menu]";
 const POPPER_ITEM_SELECTOR = "[popper-content-item]:not([data-disabled])";
 
-const DEFAULT_SPACE = 8;
-
 const PopperContext = createContext<PopperContextProps | null>(null);
 const PopperRadioGroupContext =
   createContext<PopperRadioGroupContextProps | null>(null);
@@ -416,7 +414,6 @@ const PopperContent = ({
           align,
           element: ref.current,
           triggerPosition,
-          defaultSpace: DEFAULT_SPACE,
         });
         setStyle(alignedObject);
       }

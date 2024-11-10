@@ -18,10 +18,10 @@ type PopperContextProps = {
   openPopper: (event: React.MouseEvent<HTMLElement>) => void;
   closePopper: () => void;
   open: boolean;
-  position?: ClientPosition;
   triggerPosition?: DOMRect;
-  setTriggerPosition: Dispatch<SetStateAction<DOMRect | undefined>>;
   animate: boolean;
+  position?: ClientPosition;
+  setTriggerPosition: Dispatch<SetStateAction<DOMRect | undefined>>;
   highlightItem: (value: HTMLElement | undefined) => void;
   isHighlighted: (currentElement: HTMLElement) => boolean;
   currentItemIndex: number | undefined;

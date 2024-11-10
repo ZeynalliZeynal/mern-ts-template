@@ -54,8 +54,10 @@ const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps>(
     const cl = cn(
       `flex items-center justify-center transition duration-200 font-medium border select-none rounded-${rounded}`,
       {
-        "text-gray-900 border bg-background-100": primary,
-        "text-gray-500 border-gray-200 bg-gray-1000": !primary,
+        "text-gray-900 border bg-background-100 hover:text-foreground hover:bg-gray-alpha-200":
+          primary,
+        "text-gray-500 border-gray-200 bg-gray-1000 hover:text-background-100 hover:bg-button-invert-hover":
+          !primary,
         "px-2.5 h-10 text-sm": size === "md",
         "px-3.5 h-12": size === "lg",
         "text-sm h-8 px-1.5": size === "sm",
