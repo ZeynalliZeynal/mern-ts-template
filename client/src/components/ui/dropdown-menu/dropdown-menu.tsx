@@ -1,15 +1,19 @@
-import { ReactNode } from "react";
 import { cn } from "@/lib/utils.ts";
-import Popper from "@/components/ui/primitves/popper-primitives.tsx";
+import Popper from "@/components/ui/primitves/popper.tsx";
 import {
+  CommonParentProps,
   PopperContentProps,
   PopperItemProps,
   PopperSeparatorProps,
   PopperTriggerProps,
 } from "@/types/ui/popper.ts";
 
-export default function DropdownMenu({ children }: { children: ReactNode }) {
-  return <Popper menuType="dropdown">{children}</Popper>;
+export default function DropdownMenu(props: CommonParentProps) {
+  return (
+    <Popper menuType="dropdown" {...props}>
+      {props.children}
+    </Popper>
+  );
 }
 
 function DropdownMenuTrigger({

@@ -1,7 +1,7 @@
 import React from "react";
 import { PopperContentProps, PopperItemProps } from "@/types/ui/popper.ts";
 import { LuChevronRight } from "react-icons/lu";
-import PopperSub from "@/components/ui/primitves/popper-primitive-sub.tsx";
+import PopperSub from "@/components/ui/primitves/popper-sub.tsx";
 
 const ContextMenuSub = ({ children }: { children: React.ReactNode }) => {
   return <PopperSub>{children}</PopperSub>;

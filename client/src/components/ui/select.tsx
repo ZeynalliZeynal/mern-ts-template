@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { cn } from "@/lib/utils.ts";
-import Popper from "@/components/ui/primitves/popper-primitives.tsx";
+import Popper from "@/components/ui/primitves/popper.tsx";
 import {
   PopperContentProps,
   PopperItemProps,

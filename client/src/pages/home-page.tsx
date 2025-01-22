@@ -1,4 +1,3 @@
-import Button from "@/components/ui/button.tsx";
 import ThemeSwitcher from "@/components/ui/theme.tsx";
 import Spinner from "@/components/ui/spinner.tsx";
 import Badge from "@/components/ui/badge.tsx";
@@ -17,6 +16,9 @@ import Copy from "@/components/ui/copy.tsx";
 import ComboboxDemo from "@/components/combobox-demo.tsx";
 import Tooltip from "@/components/ui/tooltip.tsx";
 import TabsDemo from "@/components/tabs-demo.tsx";
+import Input from "@/components/ui/input.tsx";
+import Label from "@/label.tsx";
+import Button from "@/components/ui/button.tsx";
 
 const demoText = "This is a text, yo!";
 
@@ -48,6 +50,10 @@ export default function HomePage() {
         </Badge>
       </Stack>
       <TabsDemo />
+      <Stack>
+        <Label htmlFor="name">Name</Label>
+        <Input id="name" type="text" placeholder="Enter your name" />
+      </Stack>
       <AvatarsDemo />
       <CheckboxDemo />
       <CollapseDemo />

@@ -6,6 +6,12 @@ import React, {
   SetStateAction,
 } from "react";
 
+type CommonParentProps = {
+  children: ReactNode;
+  open?: boolean;
+  onOpenChange?: Dispatch<SetStateAction<boolean>>;
+};
+
 type ClientPosition =
   | {
       left: number;
@@ -151,4 +157,5 @@ export type {
   PopperProps,
   PopperLabelProps,
   PopperSeparatorProps,
+  CommonParentProps,
 };

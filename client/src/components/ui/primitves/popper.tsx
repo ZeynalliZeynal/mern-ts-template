@@ -16,6 +16,7 @@ import React, {
 import { cn } from "@/lib/utils.ts";
 import {
   ClientPosition,
+  CommonParentProps,
   PopperCheckboxItemProps,
   PopperContentProps,
   PopperContextProps,
@@ -41,7 +42,7 @@ import { createPortal } from "react-dom";
 import {
   POPPER_SUB_CONTENT_SELECTOR,
   POPPER_SUB_ITEM_SELECTOR,
-} from "@/components/ui/primitves/popper-primitive-sub.tsx";
+} from "@/components/ui/primitves/popper-sub.tsx";
 import { useNavigate } from "react-router-dom";
 import { FaCheck } from "react-icons/fa6";
 import { GoDotFill } from "react-icons/go";
@@ -81,8 +82,10 @@ export default function Popper({
   children,
   menuType,
   valueRemovable,
-}: PopperProps) {
-  const [open, setOpen] = useState<boolean>(false);
+  open: controlledOpen = false,
+  onOpenChange,
+}: PopperProps & CommonParentProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
   const [triggerPosition, setTriggerPosition] = useState<DOMRect | undefined>(
     undefined,
   );
@@ -98,6 +101,13 @@ export default function Popper({
   const [highlightedItem, setHighlightedItem] = useState<
     HTMLElement | undefined
   >(undefined);
+
+  const open = controlledOpen ? controlledOpen : internalOpen;
+
+  const setOpen = (state: boolean) => {
+    if (!controlledOpen) setInternalOpen(state);
+    onOpenChange?.(state);
+  };
 
   const { debounce, clearDebounce } = useDebounce();
 

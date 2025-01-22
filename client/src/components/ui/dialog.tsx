@@ -1,12 +1,9 @@
 import React, {
   cloneElement,
-  Dispatch,
   forwardRef,
   HTMLAttributes,
   isValidElement,
   MouseEventHandler,
-  SetStateAction,
-  useEffect,
   useImperativeHandle,
   useRef,
 } from "react";
@@ -23,6 +20,7 @@ import { useRestrictBody } from "@/hooks/useRestrictBody.ts";
 import { loopThroughFocusableElements } from "@/components/ui/utils.ts";
 import { useFocusFirstElement } from "@/hooks/useFocusFirstElement.ts";
 import { useDebounce } from "@/hooks/useDebounce.ts";
+import { CommonParentProps } from "@/types/ui/popper.ts";
 
 type DialogContextProps = {
   openDialog: (element: HTMLElement) => void;
@@ -43,39 +41,37 @@ const useDialog = () => {
 
 export default function Dialog({
   children,
-  open: customOpen = false,
+  open: controlledOpen = false,
   onOpenChange,
-}: {
-  children: React.ReactNode;
-  open?: boolean;
-  onOpenChange?: Dispatch<SetStateAction<boolean>>;
-}) {
-  const [open, setOpen] = React.useState(customOpen);
+}: CommonParentProps) {
+  const [internalOpen, setInternalOpen] = React.useState(controlledOpen);
   const [activeTrigger, setActiveTrigger] = React.useState<HTMLElement | null>(
     null,
   );
   const [animate, setAnimate] = React.useState(false);
 
+  const open = controlledOpen ? controlledOpen : internalOpen;
+
   const { debounce, clearDebounce } = useDebounce();
 
-  const setControlledOpen = (isOpen: boolean) => {
-    setOpen(isOpen);
-    onOpenChange?.(isOpen);
+  const setOpen = (state: boolean) => {
+    if (!controlledOpen) setInternalOpen(state);
+    onOpenChange?.(state);
   };
 
   const openDialog = (element: HTMLElement) => {
     clearDebounce();
     setAnimate(false);
     setActiveTrigger(element as HTMLElement);
-    setControlledOpen(true);
+    setOpen(true);
   };
 
   const closeDialog = () => {
     if (document.body.querySelector("[role=menu]")) return;
     setAnimate(true);
     debounce(() => {
-      setControlledOpen(false);
       setAnimate(false);
+      setOpen(false);
 
       const triggers = Array.from(
         document.querySelectorAll("[dialog-trigger]"),
@@ -87,10 +83,6 @@ export default function Dialog({
   };
 
   useRestrictBody(open);
-
-  useEffect(() => {
-    if (customOpen !== open) setOpen(customOpen);
-  }, [customOpen, open]);
 
   return (
     <DialogContext.Provider value={{ open, openDialog, animate, closeDialog }}>
@@ -230,7 +222,7 @@ const DialogContent = ({
 
   useFocusFirstElement(open, ref);
 
-  if (!open) return;
+  if (!open && !animate) return;
 
   return createPortal(
     <div

@@ -5,7 +5,7 @@ import {
   PopperItemProps,
   PopperSeparatorProps,
 } from "@/types/ui/popper.ts";
-import Popper from "@/components/ui/primitves/popper-primitives.tsx";
+import Popper from "@/components/ui/primitves/popper.tsx";
 import { cn } from "@/lib/utils.ts";
 
 const ContextMenu = ({ children }: { children: React.ReactNode }) => {

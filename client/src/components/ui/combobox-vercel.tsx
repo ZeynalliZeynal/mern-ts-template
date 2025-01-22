@@ -64,7 +64,12 @@ export default function Combobox({
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [activeTrigger, setActiveTrigger] = useState<HTMLElement | null>(null);
 
-  const comboboxRef = useRef<HTMLDivElement | null>(null);
+  const comboboxRef = useOutsideClick({
+    onTrigger: () => {
+      handleClose();
+    },
+  });
+
   const inputRef = useRef<HTMLInputElement | null>(null);
   const listboxRef = useRef<HTMLDivElement | null>(null);
 
@@ -88,10 +93,6 @@ export default function Combobox({
     }, ANIMATION_TIMEOUT);
     setActiveTrigger(null);
   };
-
-  useOutsideClick(comboboxRef, () => {
-    handleClose();
-  });
 
   useEffect(() => {
     if (open) inputRef.current?.focus();

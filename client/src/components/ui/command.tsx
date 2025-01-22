@@ -19,7 +19,7 @@ import { PopperItemProps } from "@/types/ui/popper.ts";
 import { useNavigate } from "react-router-dom";
 import { navigateItems } from "@/utils/navigateItems.ts";
 import { ImSearch } from "react-icons/im";
-import { PopperContext } from "@/components/ui/primitves/popper-primitives.tsx";
+import { PopperContext } from "@/components/ui/primitves/popper.tsx";
 
 type CommandContextType = {
   inputValue: string;
@@ -205,6 +205,7 @@ const CommandInput = ({
 
   useEffect(() => {
     if (!ref.current || disableFocusShortcut) return;
+
     function focusOnKeyDown(event: KeyboardEvent) {
       if (!ref.current || document.body.querySelector("[data-portal]")) return;
       if (event.ctrlKey && (event.key === "k" || event.code === "K")) {
@@ -344,12 +345,10 @@ const CommandItem = forwardRef<HTMLElement, PopperItemProps>(
       onMouseEnter: handleMouseEnter,
     };
 
-    if (typeof children === "string") {
-      const isFound = children
-        .toLowerCase()
-        .includes(inputValue.toLowerCase().trim());
-      if (!isFound && isSearching) return null;
-    }
+    const isFound = JSON.stringify(children)
+      .toLowerCase()
+      .includes(inputValue.toLowerCase().trim());
+    if (!isFound && isSearching) return null;
 
     return asChild && React.isValidElement(children) ? (
       React.cloneElement(children, attributes)

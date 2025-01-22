@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { POPPER_SUB_CONTENT_SELECTOR } from "@/components/ui/primitves/popper-primitive-sub.tsx";
+import { POPPER_SUB_CONTENT_SELECTOR } from "@/components/ui/primitves/popper-sub.tsx";
 
 export const useOutsideClick = ({
   onTrigger,
